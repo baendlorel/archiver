@@ -1,35 +1,43 @@
 use clap::Parser;
 use owo_colors::OwoColorize;
-use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
+#[command(group(
+    clap::ArgGroup::new("archiver")
+        .required(false)
+        .args(&["list", "log", "restore", "archive"]),
+))]
+
 struct Args {
-    /// 列出归档内容
-    #[arg(short, long)]
+    /// Show the list of archived objects
+    #[arg(short, long, group = "archiver")]
     list: bool,
 
-    /// 归档器操作日志
-    #[arg(short, long)]
+    /// Show the log of archiving operations
+    #[arg(short = 'g', long, group = "archiver")]
     log: bool,
 
-    /// 从归档中恢复指定文件或目录
-    #[arg(short, long)]
+    /// Restore an archived object by its file/directory name or id
+    #[arg(short, long, value_name = "name|id", group = "archiver")]
     restore: Option<String>,
 
-    /// 要处理的文件目录地址，如果未指定其他命令，则对该目录进行移动操作
-    #[arg(value_name = "PATH")]
-    path: Option<PathBuf>,
+    /// Archive a directory or file by its path.
+    /// Will record file/directory name for future use
+    #[arg(short, long, value_name = "path", group = "archiver")]
+    archive: Option<String>,
 }
 
 fn main() {
     let args = Args::parse();
     if args.list {
         println!("现有列表：1,2,3");
+    } else if args.log {
+        println!("查看{}", "日志".green());
     } else if let Some(obj_path) = args.restore {
         println!("要复原obj_path：{}", obj_path.yellow());
-    } else if let Some(path) = args.path {
-        println!("对目录 {} 进行移动操作", path.display().to_string().green());
+    } else if let Some(path) = args.archive {
+        println!("对目录 {} 进行移动操作", path.green());
         // 这里实现移动目录的逻辑
     }
 }
