@@ -11,11 +11,19 @@ pub struct Args {
 pub enum ArchiverCommand {
     /// Show the list of archived objects
     #[command(visible_alias = "ls")]
-    List,
+    List {
+        /// The name or id of the object to archive
+        #[arg(value_name = "name|id")]
+        name: Option<String>,
+    },
 
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]
-    Log,
+    Log {
+        /// Time interval like `YYYY-MM YYYY-MM` | `YYYY-MM` or `YYYY-MM *` | `* YYYY-MM`
+        #[arg(value_name = "time inverval")]
+        time_interval: Option<String>,
+    },
 
     /// Restore an archived object by its file/directory name or id
     #[command(visible_alias = "r")]
@@ -25,11 +33,11 @@ pub enum ArchiverCommand {
         target: String,
     },
 
-    /// Archive a directory or file by its path
+    /// Archive a file/directory by its name
     #[command(visible_alias = "a")]
     Archive {
-        /// The path to archive
-        #[arg(value_name = "target")]
+        /// The name to archive
+        #[arg(value_name = "name")]
         target: String,
     },
 }

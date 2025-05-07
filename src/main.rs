@@ -10,11 +10,11 @@ fn main() {
     let args = Args::parse();
 
     match args.command {
-        Some(ArchiverCommand::List) => {
-            commands::list::handler();
+        Some(ArchiverCommand::List { name }) => {
+            commands::list::handler(name);
         }
-        Some(ArchiverCommand::Log) => {
-            commands::log::handler();
+        Some(ArchiverCommand::Log { time_interval }) => {
+            commands::log::handler(time_interval);
         }
         Some(ArchiverCommand::Restore { target }) => {
             commands::restore::handler(target);
