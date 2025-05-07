@@ -1,0 +1,4 @@
+[alias]
+list = "run -- --list"
+restore = "run -- --restore"
+arv = "run -- "
