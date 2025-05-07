@@ -1,43 +1,35 @@
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use owo_colors::OwoColorize;
 
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(group(
-    clap::ArgGroup::new("archiver")
-        .required(false)
-        .args(&["list", "log", "restore", "archive"]),
-))]
+mod commands;
 
-struct Args {
-    /// Show the list of archived objects
-    #[arg(short, long, group = "archiver")]
-    list: bool,
-
-    /// Show the log of archiving operations
-    #[arg(short = 'g', long, group = "archiver")]
-    log: bool,
-
-    /// Restore an archived object by its file/directory name or id
-    #[arg(short, long, value_name = "name|id", group = "archiver")]
-    restore: Option<String>,
-
-    /// Archive a directory or file by its path.
-    /// Will record file/directory name for future use
-    #[arg(short, long, value_name = "path", group = "archiver")]
-    archive: Option<String>,
-}
+mod cli;
+use cli::{ArchiverCommand, Args};
 
 fn main() {
     let args = Args::parse();
-    if args.list {
-        println!("现有列表：1,2,3");
-    } else if args.log {
-        println!("查看{}", "日志".green());
-    } else if let Some(obj_path) = args.restore {
-        println!("要复原obj_path：{}", obj_path.yellow());
-    } else if let Some(path) = args.archive {
-        println!("对目录 {} 进行移动操作", path.green());
-        // 这里实现移动目录的逻辑
+
+    match args.command {
+        Some(ArchiverCommand::List) => {
+            commands::list::handler();
+        }
+        Some(ArchiverCommand::Log) => {
+            commands::log::handler();
+        }
+        Some(ArchiverCommand::Restore { target }) => {
+            commands::restore::handler(target);
+        }
+        Some(ArchiverCommand::Archive { target }) => {
+            commands::archive::handler(target);
+        }
+        None => {
+            println!("{}", "请指定一个操作命令".yellow());
+            // 打印帮助信息
+            // 一定要顶部写use clap::{CommandFactory, Parser};
+            // 下边的Args::command()才能成立，否则会说：
+            // * items from traits can only be used if the trait is in scoperustcClick for full compiler diagnostic
+            Args::command().print_help().expect("无法打印帮助信息");
+            println!(); // 添加一个空行
+        }
     }
 }
