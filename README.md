@@ -26,9 +26,9 @@ Show the operation log.
 
 `[time-interval]` is the time period to show the logs. It can be in the format of below. (both sides are included)
 
-1. normal intervals like `YYYY-MM YYYY-MM`
-2. left side only like `YYYY-MM` or `YYYY-MM *`
-3. right side only like `* YYYY-MM`
+1. normal intervals like `YYYYMM YYYYMM`
+2. left side only like `YYYYMM` or `YYYYMM *`
+3. right side only like `* YYYYMM`
 
 ```bash
 arv log [time-interval]

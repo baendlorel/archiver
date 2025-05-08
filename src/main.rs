@@ -1,9 +1,10 @@
 use clap::{CommandFactory, Parser};
 use owo_colors::OwoColorize;
 
-mod commands;
-
 mod cli;
+mod commands;
+mod misc;
+
 use cli::{ArchiverCommand, Args};
 
 fn main() {
