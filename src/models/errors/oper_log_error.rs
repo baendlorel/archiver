@@ -4,9 +4,6 @@ use std::io;
 /// 操作日志加载错误枚举
 #[derive(PartialEq, Debug)]
 pub enum OperLogError {
-    /// 无法获取用户主目录
-    HomeDirNotFound(String),
-
     /// 文件读取/写入错误
     IoError(String),
 
@@ -21,14 +18,11 @@ impl fmt::Display for OperLogError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
             OperLogError::DateParseError(m) => {
-                format!("OperLogLoad::DateParseError: {}", m)
+                format!("OperLog::DateParseError: {}", m)
             }
-            OperLogError::HomeDirNotFound(m) => {
-                format!("OperLog.load::HomeDirNotFound: {}", m)
-            }
-            OperLogError::IoError(m) => format!("OperLog.load::IoError: {}", m),
+            OperLogError::IoError(m) => format!("OperLog::IoError: {}", m),
             OperLogError::JsonParseError(m) => {
-                format!("OperLog.load::JsonParseError: {}", m)
+                format!("OperLog::JsonParseError: {}", m)
             }
         };
         f.write_str(description.as_str())

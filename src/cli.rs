@@ -27,11 +27,7 @@ pub enum ArvCmd {
 
     /// Show the list of archived objects
     #[command(visible_alias = "ls")]
-    List {
-        /// The name or id of the object to archive
-        #[arg(value_name = "name|id")]
-        name: Option<String>,
-    },
+    List,
 
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]

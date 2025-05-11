@@ -9,8 +9,10 @@ use std::io::Write;
 use std::path::Path;
 
 pub fn handler(interval: Option<String>) {
-    println!("查看日志");
-    load(interval);
+    match load(interval) {
+        Ok(_) => {}
+        Err(e) => println!("{}", e.to_string()),
+    };
 }
 
 fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDate, OperLogError> {
@@ -27,7 +29,7 @@ fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDa
     Ok(d)
 }
 
-fn log_content(content: String, counter: &mut u32) {
+fn log_content(dates: &(NaiveDate, NaiveDate), content: &String, counter: &mut u32) {
     // 解析每行JSON
     for line in content.lines() {
         if line.trim().is_empty() {
@@ -35,8 +37,18 @@ fn log_content(content: String, counter: &mut u32) {
         }
         match serde_json::from_str::<LogEntry>(line) {
             Ok(entry) => {
-                *counter += 1;
-                println!("{}", entry.to_str())
+                let dt = NaiveDate::parse_from_str(&entry.time, "%Y-%m-%d %H:%M:%S");
+                match dt {
+                    Ok(dt) => {
+                        if dt < dates.0 || dt > dates.1 {
+                            continue; // 跳过不在范围内的日期
+                        }
+
+                        *counter += 1;
+                        println!("{}", entry.to_str())
+                    }
+                    Err(_) => continue,
+                }
             }
             Err(e) => {
                 println!("{}: {}", "解析日志行失败".red(), e.to_string().yellow());
@@ -131,7 +143,6 @@ pub fn save(
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
 fn load(interval: Option<String>) -> Result<(), OperLogError> {
-    // 获取日志文件路径
     let log_dir = paths::logs_dir();
 
     // 下面开始规整入参的日期
@@ -158,10 +169,16 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
     let mut counter: u32 = 0;
     for year in dates.0.year()..=dates.1.year() {
         let log_file_path = log_dir.join(format!("{}.jsonl", year));
-        match fs::read_to_string(log_file_path) {
-            Ok(content) => log_content(content, &mut counter),
-            Err(e) => println!("{}: {}", "读取日志文件失败".red(), e.to_string().yellow()),
+        if !log_file_path.exists() {
+            continue;
         }
+
+        let content = fs::read_to_string(log_file_path)?;
+        log_content(&dates, &content, &mut counter);
+    }
+
+    if counter == 0 {
+        println!("No logs found");
     }
 
     Ok(())

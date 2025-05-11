@@ -24,7 +24,7 @@ pub fn logs_dir() -> PathBuf {
     path
 }
 
-pub fn list_file() -> PathBuf {
+pub fn list_file_path() -> PathBuf {
     let mut path = assure_root();
     path.push(LIST_FILE);
     path
