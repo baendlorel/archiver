@@ -4,6 +4,7 @@ use owo_colors::OwoColorize;
 mod cli;
 mod commands;
 mod misc;
+mod models;
 
 use cli::{ArchiverCommand, Args};
 
