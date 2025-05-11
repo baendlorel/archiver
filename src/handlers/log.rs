@@ -1,14 +1,12 @@
+use crate::misc::paths;
+use crate::models::errors::OperLogError;
+use crate::models::types::{LogEntry, OperType};
+
 use chrono::{Datelike, Local, NaiveDate};
 use owo_colors::OwoColorize;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use std::str::FromStr;
-use std::vec;
-
-use crate::misc::paths;
-use crate::models::errors::OperLogError;
-use crate::models::types::{LogEntry, OperType};
 
 pub fn handler(interval: Option<String>) {
     println!("查看日志");
@@ -29,14 +27,17 @@ fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDa
     Ok(d)
 }
 
-fn log_content(content: String) {
+fn log_content(content: String, counter: &mut u32) {
     // 解析每行JSON
     for line in content.lines() {
         if line.trim().is_empty() {
             continue; // 跳过空行
         }
         match serde_json::from_str::<LogEntry>(line) {
-            Ok(entry) => println!("{}", entry.to_str()),
+            Ok(entry) => {
+                *counter += 1;
+                println!("{}", entry.to_str())
+            }
             Err(e) => {
                 println!("{}: {}", "解析日志行失败".red(), e.to_string().yellow());
                 continue;
@@ -85,7 +86,7 @@ pub fn save(
     let log_entry = LogEntry {
         time: opered_at,
         status: if is_succ { "succ" } else { "fail" }.to_string(),
-        oper: oper.to_str().to_string(),
+        oper,
         arg,
         id, // archive id，如果有的话
     };
@@ -134,14 +135,14 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
     let log_dir = paths::logs_dir();
 
     // 下面开始规整入参的日期
-    let dates = match interval {
+    let default_start =
+        NaiveDate::from_ymd_opt(1970, 1, 1).expect("Should not fail to create 1970-01-01");
+    let default_end = Local::now().date_naive();
+    let dates: (NaiveDate, NaiveDate) = match interval {
         Some(criteria) => {
-            let iter = criteria.split_whitespace();
-            let start = parse_date(
-                iter.next(),
-                NaiveDate::from_ymd_opt(1970, 1, 1).map_err(|e| OperLogError::from(e)),
-            )?;
-            let end = parse_date(iter.next(), NaiveDate::now())?;
+            let mut iter = criteria.split_whitespace();
+            let start = parse_date(iter.next(), default_start)?;
+            let end = parse_date(iter.next(), default_end)?;
 
             if start > end {
                 return Err(OperLogError::DateParseError(
@@ -151,13 +152,14 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
 
             (start, end)
         }
-        None => (NaiveDate::from_ymd_opt(1970, 1, 1)?, NaiveDate::now()),
+        None => (default_start, default_end),
     };
 
+    let mut counter: u32 = 0;
     for year in dates.0.year()..=dates.1.year() {
         let log_file_path = log_dir.join(format!("{}.jsonl", year));
         match fs::read_to_string(log_file_path) {
-            Ok(content) => log_content(content),
+            Ok(content) => log_content(content, &mut counter),
             Err(e) => println!("{}: {}", "读取日志文件失败".red(), e.to_string().yellow()),
         }
     }

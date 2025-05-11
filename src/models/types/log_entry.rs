@@ -12,7 +12,7 @@ pub struct LogEntry {
     pub id: Option<u32>, // archive id，如果有的话
 }
 
-pub impl LogEntry {
+impl LogEntry {
     pub fn to_str(&self) -> String {
         format!(
             "{} - {} - {} - {} {}",
