@@ -1,4 +1,4 @@
-use crate::misc::paths;
+use crate::misc::{paths, write_entry};
 use crate::models::errors::OperLogError;
 use crate::models::types::{LogEntry, OperType};
 
@@ -103,21 +103,9 @@ pub fn save(
         id, // archive id，如果有的话
     };
 
-    // 序列化为JSON
-    let json_line = serde_json::to_string(&log_entry).map_err(|e| OperLogError::from(e))?;
-
-    // 以追加模式打开文件
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_file_path)?;
-
-    // 写入日志
-    file.write_all(json_line.as_bytes())?;
-    file.write_all(b"\n")?;
-
-    println!("操作日志已保存");
-    return Ok(());
+    write_entry(&log_entry, log_file_path).map_err(|e| OperLogError::IoError(e.to_string()))?;
+    println!("Operation log saved");
+    Ok(())
 }
 
 /// Loads and filters operation logs

@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-/// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct ArchiveEntry {
     pub id: u32,
@@ -13,16 +12,12 @@ pub struct ArchiveEntry {
 impl ArchiveEntry {
     pub fn to_str(&self) -> String {
         format!(
-            "{} - {} - {} - {} {}",
+            "[{}] - {} - {} - {} - {}",
             self.id,
-            self.oper.to_padded_str(),
-            self.status,
-            self.arg,
-            if let Some(id) = self.id {
-                format!("(id: {})", id)
-            } else {
-                "".to_string()
-            }
+            self.target,
+            if self.is_dir { "dir " } else { "file" },
+            self.dir,
+            self.time,
         )
     }
 }
