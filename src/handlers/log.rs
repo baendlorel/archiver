@@ -1,6 +1,6 @@
 use chrono::{Datelike, Local, NaiveDate};
 use owo_colors::OwoColorize;
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
@@ -29,6 +29,22 @@ fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDa
     Ok(d)
 }
 
+fn log_content(content: String) {
+    // 解析每行JSON
+    for line in content.lines() {
+        if line.trim().is_empty() {
+            continue; // 跳过空行
+        }
+        match serde_json::from_str::<LogEntry>(line) {
+            Ok(entry) => println!("{}", entry.to_str()),
+            Err(e) => {
+                println!("{}: {}", "解析日志行失败".red(), e.to_string().yellow());
+                continue;
+            } // 跳过解析错误的行
+        }
+    }
+}
+
 /// Saves an operation log
 ///
 /// Records operations in a year-named JSON Lines format log file.
@@ -51,7 +67,12 @@ fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDa
 /// * Unable to create log directory
 /// * JSON serialization failure
 /// * File writing failure
-pub fn save(oper: OperType, arg: String, is_succ: bool, id: u32) -> Result<(), OperLogError> {
+pub fn save(
+    oper: OperType,
+    arg: String,
+    is_succ: bool,
+    id: Option<u32>,
+) -> Result<(), OperLogError> {
     // 获取日志文件路径
     let log_dir = paths::logs_dir();
     let log_file_path = log_dir.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
@@ -116,7 +137,10 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
     let dates = match interval {
         Some(criteria) => {
             let iter = criteria.split_whitespace();
-            let start = parse_date(iter.next(), NaiveDate::from_ymd_opt(1970, 1, 1))?;
+            let start = parse_date(
+                iter.next(),
+                NaiveDate::from_ymd_opt(1970, 1, 1).map_err(|e| OperLogError::from(e)),
+            )?;
             let end = parse_date(iter.next(), NaiveDate::now())?;
 
             if start > end {
@@ -132,21 +156,11 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
 
     for year in dates.0.year()..=dates.1.year() {
         let log_file_path = log_dir.join(format!("{}.jsonl", year));
-
-        // 读取文件内容
-        let content = fs::read_to_string(log_file_path)?;
-
-        // 解析每行JSON
-        let mut entries = Vec::new();
-        for line in content.lines() {
-            if !line.trim().is_empty() {
-                match serde_json::from_str::<LogEntry>(line) {
-                    Ok(entry) => entries.push(entry),
-                    Err(e) => eprintln!("解析日志行失败: {}", e),
-                }
-            }
+        match fs::read_to_string(log_file_path) {
+            Ok(content) => log_content(content),
+            Err(e) => println!("{}: {}", "读取日志文件失败".red(), e.to_string().yellow()),
         }
     }
-    println!("加载了 {} 条操作日志", entries.len());
+
     Ok(())
 }
