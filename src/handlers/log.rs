@@ -29,33 +29,42 @@ fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDa
     Ok(d)
 }
 
-fn log_content(dates: &(NaiveDate, NaiveDate), content: &String, counter: &mut u32) {
+fn log_content(
+    dates: &(NaiveDate, NaiveDate),
+    content: &String,
+    counter: &mut u32,
+) -> Result<(), OperLogError> {
     // 解析每行JSON
     for line in content.lines() {
         if line.trim().is_empty() {
             continue; // 跳过空行
         }
-        match serde_json::from_str::<LogEntry>(line) {
-            Ok(entry) => {
-                let dt = NaiveDate::parse_from_str(&entry.time, "%Y-%m-%d %H:%M:%S");
-                match dt {
-                    Ok(dt) => {
-                        if dt < dates.0 || dt > dates.1 {
-                            continue; // 跳过不在范围内的日期
-                        }
 
-                        *counter += 1;
-                        println!("{}", entry.to_str())
+        let result = serde_json::from_str::<LogEntry>(line);
+
+        // 这里不需要报错反回去，只需要跳过报错部分，让程序运行更稳定些
+        if let Ok(entry) = &result {
+            let dt = NaiveDate::parse_from_str(&entry.time, "%Y-%m-%d %H:%M:%S");
+            match dt {
+                Ok(dt) => {
+                    if dt < dates.0 || dt > dates.1 {
+                        continue; // 跳过不在范围内的日期
                     }
-                    Err(_) => continue,
+
+                    *counter += 1;
+                    println!("{}", entry.to_str())
                 }
+                Err(_) => continue,
             }
-            Err(e) => {
-                println!("{}: {}", "解析日志行失败".red(), e.to_string().yellow());
-                continue;
-            } // 跳过解析错误的行
+        }
+
+        if let Err(e) = &result {
+            println!("{}: {}", "Parse log failed".red(), e.to_string().yellow());
+            continue;
         }
     }
+
+    Ok(())
 }
 
 /// Saves an operation log
