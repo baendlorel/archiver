@@ -10,13 +10,23 @@ use crate::misc::paths;
 use crate::models::errors::OperLogError;
 use crate::models::types::{LogEntry, OperType};
 
-pub fn handler(time_interval: Option<String>) {
-    println!("归档日志");
-    if time_interval.is_some() {
-        println!("时间区间：{}", time_interval.unwrap().green());
-    } else {
-        println!("时间区间：所有");
-    }
+pub fn handler(interval: Option<String>) {
+    println!("查看日志");
+    load(interval);
+}
+
+fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDate, OperLogError> {
+    let d = match date_str {
+        Some(s) => {
+            if s == "*" {
+                default_date
+            } else {
+                NaiveDate::parse_from_str(&format!("{}-01", s), "%Y%m-%d")?
+            }
+        }
+        None => default_date,
+    };
+    Ok(d)
 }
 
 /// Saves an operation log
@@ -98,22 +108,16 @@ pub fn save(oper: OperType, arg: String, is_succ: bool, id: u32) -> Result<(), O
 ///
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
-fn load(criteria: Option<String>) -> Result<(), OperLogError> {
+fn load(interval: Option<String>) -> Result<(), OperLogError> {
     // 获取日志文件路径
     let log_dir = paths::logs_dir();
 
     // 下面开始规整入参的日期
-    let interval = match criteria {
+    let dates = match interval {
         Some(criteria) => {
             let iter = criteria.split_whitespace();
-            let start = match iter.next() {
-                Some(s) => NaiveDate::parse_from_str(&format!("{}-01", s), "%Y%m-%d")?,
-                None => NaiveDate::from_ymd_opt(1970, 1, 1).expect("日期解析失败"),
-            };
-            let end = match iter.next() {
-                Some(s) => NaiveDate::parse_from_str(&format!("{}-01", s), "%Y%m-%d")?,
-                None => NaiveDate::now(),
-            };
+            let start = parse_date(iter.next(), NaiveDate::from_ymd_opt(1970, 1, 1))?;
+            let end = parse_date(iter.next(), NaiveDate::now())?;
 
             if start > end {
                 return Err(OperLogError::DateParseError(
@@ -126,7 +130,7 @@ fn load(criteria: Option<String>) -> Result<(), OperLogError> {
         None => (NaiveDate::from_ymd_opt(1970, 1, 1)?, NaiveDate::now()),
     };
 
-    for year in interval.0.year()..=interval.1.year() {
+    for year in dates.0.year()..=dates.1.year() {
         let log_file_path = log_dir.join(format!("{}.jsonl", year));
 
         // 读取文件内容

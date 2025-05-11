@@ -2,28 +2,20 @@ use clap::{CommandFactory, Parser};
 use owo_colors::OwoColorize;
 
 mod cli;
-mod commands;
+mod handlers;
 mod misc;
 mod models;
 
-use cli::{ArchiverCommand, Args};
+use cli::{Args, ArvCmd};
 
 fn main() {
     let args = Args::parse();
 
     match args.command {
-        Some(ArchiverCommand::List { name }) => {
-            commands::list::handler(name);
-        }
-        Some(ArchiverCommand::Log { time_interval }) => {
-            commands::log::handler(time_interval);
-        }
-        Some(ArchiverCommand::Restore { target }) => {
-            commands::restore::handler(target);
-        }
-        Some(ArchiverCommand::Archive { target }) => {
-            commands::archive::handler(target);
-        }
+        Some(ArvCmd::List) => handlers::list::handler(),
+        Some(ArvCmd::Log { interval }) => handlers::log::handler(interval),
+        Some(ArvCmd::Restore { target }) => handlers::restore::handler(target),
+        Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
         None => {
             println!("{}", "请指定一个操作命令".yellow());
             // 打印帮助信息

@@ -4,11 +4,11 @@ use clap::{Parser, Subcommand};
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     #[command(subcommand)]
-    pub command: Option<ArchiverCommand>,
+    pub command: Option<ArvCmd>,
 }
 
 #[derive(Subcommand)]
-pub enum ArchiverCommand {
+pub enum ArvCmd {
     /// Archive a file/directory by its name
     #[command(visible_alias = "a")]
     Archive {
@@ -38,6 +38,6 @@ pub enum ArchiverCommand {
     Log {
         /// Time interval like `YYYYMM YYYYMM` | `YYYYMM` or `YYYYMM *` | `* YYYYMM`
         #[arg(value_name = "time inverval")]
-        time_interval: Option<String>,
+        interval: Option<String>,
     },
 }
