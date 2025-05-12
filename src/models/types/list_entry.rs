@@ -25,7 +25,7 @@ pub struct ListEntry {
 }
 
 impl ListEntry {
-    pub fn to_str(&self) -> String {
+    pub fn to_string(&self) -> String {
         let is_restored = if self.is_restored {
             "(restored)".fg_rgb::<255, 165, 0>().to_string()
         } else {

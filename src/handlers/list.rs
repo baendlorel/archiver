@@ -29,11 +29,13 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
     Ok(())
 }
 
-pub fn find(id: u32) -> Result<ListEntry, ListError> {
+pub fn find(id: u32, line_index: &mut u32) -> Result<ListEntry, ListError> {
     let list_file_path = paths::list_file_path();
     let content = fs::read_to_string(list_file_path)?;
 
     for line in content.lines() {
+        *line_index += 1;
+
         if line.trim().is_empty() {
             continue; // 跳过空行
         }
@@ -59,7 +61,24 @@ pub fn find(id: u32) -> Result<ListEntry, ListError> {
     )))
 }
 
-pub fn mark_as_restored(id: u32) -> Result<(), ListError> {
+/// Will only be called when the file is successfully restored
+pub fn mark_as_restored(line_index: u32) -> Result<(), ListError> {
+    let list_file_path = paths::list_file_path();
+    // 读取整个文件
+    let content = fs::read_to_string(&list_file_path)?;
+
+    let mut lines: Vec<&str> = content.lines().collect();
+    let target_line = lines[line_index as usize];
+    let modified_line = {
+        let mut entry = serde_json::from_str::<ListEntry>(target_line)?;
+        entry.is_restored = true;
+        serde_json::to_string(&entry)?
+    };
+
+    lines[line_index as usize] = modified_line.as_str();
+    // 将内容写回文件
+    fs::write(&list_file_path, lines.join("\n"))?;
+
     Ok(())
 }
 
@@ -81,7 +100,7 @@ fn load() -> Result<(), ListError> {
         let result = serde_json::from_str::<ListEntry>(line);
         if let Ok(entry) = &result {
             counter += 1;
-            println!("{}", entry.to_str())
+            println!("{}", entry.to_string())
         }
 
         if let Err(e) = &result {

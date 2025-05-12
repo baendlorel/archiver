@@ -20,6 +20,9 @@ pub enum RestoreError {
     DuplicatedOrigin(String),
 
     MarkAsRestoredFail(String),
+
+    /// 归档目标已经恢复过了
+    AlreadyRestored(String),
 }
 
 impl fmt::Display for RestoreError {
@@ -32,6 +35,7 @@ impl fmt::Display for RestoreError {
             RestoreError::ArchivedFileMissing(m) => format!("Restore::ArchivedFileMissing: {}", m),
             RestoreError::DuplicatedOrigin(m) => format!("Restore::DuplicatedOrigin: {}", m),
             RestoreError::MarkAsRestoredFail(m) => format!("Restore::MarkAsRestoredFail: {}", m),
+            RestoreError::AlreadyRestored(m) => format!("Restore::AlreadyRestored: {}", m),
         };
         f.write_str(description.as_str())
     }

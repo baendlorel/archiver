@@ -4,6 +4,7 @@ use std::io;
 /// 操作日志加载错误枚举
 #[derive(PartialEq, Debug)]
 pub enum ListError {
+    /// 归档目标没有找到
     TargetNotFound(String),
 
     /// 文件读取/写入错误

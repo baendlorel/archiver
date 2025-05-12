@@ -18,8 +18,16 @@ pub fn handler(id: u32) {
 }
 
 fn restore(id: u32) -> Result<(), RestoreError> {
-    match list::find(id) {
+    let mut line_index: u32 = 0;
+    match list::find(id, &mut line_index) {
         Ok(entry) => {
+            if entry.is_restored {
+                return Err(RestoreError::AlreadyRestored(format!(
+                    "ID {} has already been restored",
+                    id
+                )));
+            }
+
             let dir = PathBuf::from(entry.dir);
             let target_path = dir.join(entry.target.clone());
             let archive_path = paths::root_dir().join(id.to_string());
@@ -39,7 +47,7 @@ fn restore(id: u32) -> Result<(), RestoreError> {
             }
 
             fs::rename(archive_path, target_path)?;
-            list::mark_as_restored(id)?;
+            list::mark_as_restored(line_index)?;
             return Ok(());
         }
         Err(e) => return Err(RestoreError::from(e)),
