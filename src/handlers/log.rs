@@ -106,7 +106,7 @@ pub fn save(
         let full_path = paths::CWD.join(arg.clone());
         full_path.to_string_lossy().to_string()
     } else {
-        remark.unwrap_or(paths::CWD.to_string_lossy().to_string())
+        remark.unwrap_or("".to_string())
     };
 
     // 准备日志内容
@@ -150,6 +150,8 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
     let default_start =
         NaiveDate::from_ymd_opt(1970, 1, 1).expect("Should not fail to create 1970-01-01");
     let default_end = Local::now().date_naive();
+
+    // TODO 这里最好改用短横线来分隔两个日期，否则会变成多余的参数
     let dates: (NaiveDate, NaiveDate) = match interval {
         Some(criteria) => {
             let mut iter = criteria.split_whitespace();

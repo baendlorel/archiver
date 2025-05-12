@@ -24,10 +24,24 @@ impl LogEntry {
             // "❌"
         };
 
-        let arg = if self.arg.is_empty() {
-            field_style::grey(&"(empty)".to_string())
+        // TODO 如果参数带有空格，那么用单引号包裹
+        let arg = if self.arg.trim().is_empty() {
+            if self.oper == OperType::Archive {
+                if self.arg.len() > 0 {
+                    return field_style::grey(&format!("'{}'", self.arg));
+                } else {
+                    return field_style::grey(&"(no arg)".to_string());
+                }
+            }
+            "".to_string()
         } else {
             self.arg.clone()
+        };
+
+        let remark = if self.remark.is_empty() {
+            field_style::grey(&"(no remark)".to_string())
+        } else {
+            field_style::grey(&self.remark)
         };
 
         let id = if let Some(id) = self.id {
@@ -46,7 +60,7 @@ impl LogEntry {
             status,
             self.oper.to_padded_str(),
             arg,
-            field_style::grey_italic(&self.remark),
+            remark,
             id,
         )
     }

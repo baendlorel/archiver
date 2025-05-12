@@ -1,11 +1,15 @@
 use owo_colors::OwoColorize;
 
+use crate::misc::paths::CURRENT_ID;
+
 pub fn id_to_str(id: u32) -> String {
+    let id_len = CURRENT_ID.to_string().len();
     format!(
-        "{}{:03}{}",
+        "{}{:0<id_len$}{}",
         "id:",
         id.magenta(),
-        "".fg_rgb::<142, 172, 142>()
+        "".fg_rgb::<142, 172, 142>(),
+        id_len = id_len,
     )
 }
 
@@ -19,9 +23,7 @@ pub fn grey_italic(str: &String) -> String {
 
 pub fn dir_color(target: &String, is_dir: bool) -> String {
     if is_dir {
-        let mut str = target.blue().to_string();
-        // str.push('/');
-        str
+        target.blue().to_string()
     } else {
         target.to_string()
     }

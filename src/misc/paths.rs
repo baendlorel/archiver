@@ -56,6 +56,20 @@ pub static CONFIGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
 /// 归档记录文件路径
 pub static LIST_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| ROOT_DIR.join(paths::LIST_FILE));
 
+pub static CURRENT_ID: Lazy<u32> = Lazy::new(|| {
+    let auto_incr_file = CONFIGS_DIR.join(paths::AUTO_INCR_FILE);
+    if !auto_incr_file.exists() {
+        fs::write(&auto_incr_file, "1").expect("Failed to create auto increment file");
+        return 1;
+    }
+
+    fs::read_to_string(&auto_incr_file)
+        .expect("Failed to read auto increment file")
+        .trim()
+        .parse::<u32>()
+        .expect("Failed to parse auto increment value")
+});
+
 /// 别名映射表
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let dir_alias_file = CONFIGS_DIR.join(paths::DIR_ALIAS_FILE);

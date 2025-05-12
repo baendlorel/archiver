@@ -130,19 +130,17 @@ fn load(all: bool) -> Result<(), ListError> {
 
     let mut max_width = 0;
     for row in list.iter().clone() {
-        max_width = max_width.max(row.target.len());
+        max_width = max_width.max(row._width);
     }
-
-    println!("maxwidth = {}", max_width);
 
     for row in list.iter().clone() {
         println!(
-            "{} {} - {:<width$} - {}",
+            "{} {} - {}{} - {}",
             row.time,
             row.id,
-            row.target, // 左对齐并补足空格
+            row.target,
+            " ".repeat(max_width - row._width),
             row.dir,
-            width = max_width // 指定宽度参数
         );
     }
 

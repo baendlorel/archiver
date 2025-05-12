@@ -20,13 +20,13 @@ pub enum ArvCmd {
     /// Restore an archived object by its file/directory name or id
     #[command(visible_alias = "r")]
     Restore {
-        /// The name or id of the object to restore
+        /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "id")]
         id: u32,
     },
 
     /// Show the list of archived objects
-    #[command(visible_alias = "ls")]
+    #[command(visible_aliases = ["l", "ls"])]
     List {
         #[arg[short,long]]
         all: bool,

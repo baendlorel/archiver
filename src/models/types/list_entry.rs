@@ -35,26 +35,11 @@ pub struct ListRow {
     pub target: String,
 
     pub dir: String,
+
+    pub _width: usize,
 }
 
 impl ListEntry {
-    pub fn to_log(&self) -> String {
-        let is_restored = if self.is_restored {
-            "(R)".fg_rgb::<255, 165, 0>().to_string()
-        } else {
-            "".to_string()
-        };
-
-        format!(
-            "{} {} - {} {} - {}",
-            field_style::grey(&self.time),
-            field_style::id_to_str(self.id),
-            field_style::dir_color(&self.target, self.is_dir),
-            is_restored,
-            field_style::grey_italic(&self.dir),
-        )
-    }
-
     pub fn to_row(&self) -> ListRow {
         let is_restored = if self.is_restored {
             "(R)".fg_rgb::<255, 165, 0>().to_string()
@@ -70,6 +55,7 @@ impl ListEntry {
             id: field_style::id_to_str(self.id),
             target: field_style::dir_color(&self.target, self.is_dir) + &is_restored,
             dir: field_style::grey(&dir),
+            _width: self.target.len() + if self.is_restored { 3 } else { 0 },
         }
     }
 }
