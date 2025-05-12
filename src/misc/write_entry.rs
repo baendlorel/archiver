@@ -2,7 +2,7 @@ use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 use serde::Serialize;
 
-pub fn write_entry<T>(entry: &T, file_path: PathBuf) -> Result<(), Box<dyn std::error::Error>>
+pub fn append_entry<T>(entry: &T, file_path: PathBuf) -> Result<(), Box<dyn std::error::Error>>
 where
     T: ?Sized + Serialize,
 {

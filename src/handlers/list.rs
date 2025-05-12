@@ -1,7 +1,7 @@
 use chrono::Local;
 use std::fs;
 
-use crate::misc::{paths, write_entry};
+use crate::misc::{append_entry, paths};
 use crate::models::{
     errors::ListError,
     types::{ListEntry, ListRow},
@@ -25,15 +25,14 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
         time,
         is_restored: false,
     };
-    let list_file_path = paths::list_file_path();
-    write_entry(&archive_entry, list_file_path).map_err(|e| ListError::IoError(e.to_string()))?;
-    println!("Archived file listed");
+
+    append_entry(&archive_entry, paths::LIST_FILE_PATH.clone())
+        .map_err(|e| ListError::IoError(e.to_string()))?;
     Ok(())
 }
 
 pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ListError> {
-    let list_file_path = paths::list_file_path();
-    let content = fs::read_to_string(list_file_path)?;
+    let content = fs::read_to_string(paths::LIST_FILE_PATH.clone())?;
 
     for line in content.lines() {
         *target_line_index += 1;
@@ -67,7 +66,7 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ListError
 
 /// Will only be called when the file is successfully restored
 pub fn mark_as_restored(target_line_index: u32) -> Result<(), ListError> {
-    let list_file_path = paths::list_file_path();
+    let list_file_path = paths::LIST_FILE_PATH.clone();
     // 读取整个文件
     let content = fs::read_to_string(&list_file_path)?;
 
@@ -88,7 +87,7 @@ pub fn mark_as_restored(target_line_index: u32) -> Result<(), ListError> {
 }
 
 fn load(all: bool) -> Result<(), ListError> {
-    let list_file_path = paths::list_file_path();
+    let list_file_path = paths::LIST_FILE_PATH.clone();
     if !list_file_path.exists() {
         println!("No archived object yet");
         return Ok(());

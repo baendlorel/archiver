@@ -38,7 +38,7 @@ fn restore(id: u32) -> Result<(), RestoreError> {
             let target_name = OsString::from(entry.target);
             let dir = PathBuf::from(OsString::from(entry.dir));
             let target_path = dir.join(target_name);
-            let archive_path = paths::root_dir().join(id.to_string());
+            let archive_path = paths::ROOT_DIR.join(id.to_string());
 
             // 要检查archive里面的文件和系统外面的路径是否都存在
             // 还要检查复制后是否会导致文件覆盖

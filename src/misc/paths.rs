@@ -24,7 +24,7 @@ lazy_static! {
         Mutex::new(m)
     };
 
-    pub static ref ROOT_DIR:PathBuf = {
+    pub static ref ROOT_DIR: PathBuf = {
         let mut path = dirs::home_dir().expect("Failed to get home directory");
         path.push(paths::ROOT);
         // 检查路径是否存在，不存在则创建
@@ -33,41 +33,35 @@ lazy_static! {
         }
         path
     };
-}
 
-pub fn root_dir() -> PathBuf {
-    let mut path = dirs::home_dir().expect("Failed to get home directory");
-    path.push(ROOT);
-    // 检查路径是否存在，不存在则创建
-    if !path.exists() {
-        fs::create_dir_all(&path).expect("Failed to create root directory");
-    }
-    path
-}
+    pub static ref LOGS_DIR: PathBuf =  {
+        let path = ROOT_DIR.join(paths::LOGS_DIR);
+        if !path.exists() {
+            fs::create_dir_all(&path).expect("Failed to create logs_dir directory");
+        }
+        path
+    };
 
-pub fn logs_dir() -> PathBuf {
-    let path = root_dir().join(paths::LOGS_DIR);
-    if !path.exists() {
-        fs::create_dir_all(&path).expect("Failed to create logs_dir directory");
-    }
-    path
-}
+    pub static ref CONFIGS_DIR: PathBuf =  {
+        let path = ROOT_DIR.join(paths::CONFIGS_DIR);
+        if !path.exists() {
+            fs::create_dir_all(&path).expect("Failed to create configs_dir directory");
+        }
+        path
+    };
 
-pub fn configs_dir() -> PathBuf {
-    let path = root_dir().join(CONFIGS_DIR);
-    if !path.exists() {
-        fs::create_dir_all(&path).expect("Failed to create configs_dir directory");
-    }
-    path
-}
+    pub static ref LIST_FILE_PATH: PathBuf = {
+        ROOT_DIR.join(paths::LIST_FILE)
+    };
 
-pub fn list_file_path() -> PathBuf {
-    let path = root_dir();
-    path.join(LIST_FILE)
+    pub static ref CWD: PathBuf = {
+        std::env::current_dir().expect("Failed to get current directory")
+    };
+
 }
 
 pub fn auto_incr_id() -> u32 {
-    let auto_incr_file = configs_dir().join(AUTO_INCR_FILE);
+    let auto_incr_file = CONFIGS_DIR.join(paths::AUTO_INCR_FILE);
     if !auto_incr_file.exists() {
         fs::write(&auto_incr_file, "1").expect("Failed to create auto increment file");
         return 1;
@@ -80,14 +74,6 @@ pub fn auto_incr_id() -> u32 {
     fs::write(&auto_incr_file, new_id.to_string()).expect("Failed to create auto increment file");
 
     new_id
-}
-
-pub fn cwd() -> PathBuf {
-    std::env::current_dir().expect("Failed to get current directory")
-}
-
-pub fn self_check() {
-    cwd();
 }
 
 pub fn alias_path(path_str: String, alias: String) -> String {

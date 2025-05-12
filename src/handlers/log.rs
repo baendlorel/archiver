@@ -1,4 +1,4 @@
-use crate::misc::{paths, write_entry};
+use crate::misc::{append_entry, paths};
 use crate::models::errors::OperLogError;
 use crate::models::types::{LogEntry, OperType};
 
@@ -95,18 +95,18 @@ pub fn save(
     remark: Option<String>,
 ) -> Result<(), OperLogError> {
     // 获取日志文件路径
-    let log_dir = paths::logs_dir();
-    let log_file_path = log_dir.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
+    let log_file_path =
+        paths::LOGS_DIR.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
 
     // 确保日志目录存在
     // 获取当前时间
     let opered_at = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
     let normalized_remark = if oper == OperType::Archive {
-        let full_path = paths::cwd().join(arg.clone());
+        let full_path = paths::CWD.join(arg.clone());
         full_path.to_string_lossy().to_string()
     } else {
-        remark.unwrap_or(paths::cwd().to_string_lossy().to_string())
+        remark.unwrap_or(paths::CWD.to_string_lossy().to_string())
     };
 
     // 准备日志内容
@@ -119,8 +119,7 @@ pub fn save(
         id, // archive id，如果有的话
     };
 
-    write_entry(&log_entry, log_file_path).map_err(|e| OperLogError::IoError(e.to_string()))?;
-    println!("Operation log saved");
+    append_entry(&log_entry, log_file_path).map_err(|e| OperLogError::IoError(e.to_string()))?;
     Ok(())
 }
 
@@ -147,8 +146,6 @@ pub fn save(
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
 fn load(interval: Option<String>) -> Result<(), OperLogError> {
-    let log_dir = paths::logs_dir();
-
     // 下面开始规整入参的日期
     let default_start =
         NaiveDate::from_ymd_opt(1970, 1, 1).expect("Should not fail to create 1970-01-01");
@@ -172,7 +169,7 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
 
     let mut counter: u32 = 0;
     for year in dates.0.year()..=dates.1.year() {
-        let log_file_path = log_dir.join(format!("{}.jsonl", year));
+        let log_file_path = paths::LOGS_DIR.join(format!("{}.jsonl", year));
         if !log_file_path.exists() {
             continue;
         }

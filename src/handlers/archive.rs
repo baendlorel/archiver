@@ -29,7 +29,7 @@ pub fn handler(target: String) {
 
 fn archive(target: &String) -> Result<u32, ArchiveError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
-    let cwd = paths::cwd();
+    let cwd = paths::CWD.clone();
     let target_path = cwd.join(target);
 
     // 目标不存在则报错
@@ -66,7 +66,7 @@ fn archive(target: &String) -> Result<u32, ArchiveError> {
 
     // 都没有异常，那么开始归档
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
-    let root = paths::root_dir();
+    let root = paths::ROOT_DIR.clone();
     let next_id = paths::auto_incr_id();
 
     fs::rename(&target_path, root.join(next_id.to_string()))?;
