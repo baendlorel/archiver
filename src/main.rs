@@ -17,12 +17,14 @@ fn main() {
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
         None => {
-            println!("{}", "请指定一个操作命令".yellow());
+            println!("{}", "Please enter your command".yellow());
             // 打印帮助信息
             // 一定要顶部写use clap::{CommandFactory, Parser};
             // 下边的Args::command()才能成立，否则会说：
             // * items from traits can only be used if the trait is in scoperustcClick for full compiler diagnostic
-            Args::command().print_help().expect("无法打印帮助信息");
+            Args::command()
+                .print_help()
+                .expect("Cannot print help text");
             println!(); // 添加一个空行
         }
     }

@@ -13,7 +13,7 @@ pub fn handler() {
     }
 }
 
-pub fn save(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ListError> {
+pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ListError> {
     let time = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
     let archive_entry = ListEntry {
         id,
@@ -21,10 +21,45 @@ pub fn save(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), Li
         is_dir,
         dir,
         time,
+        is_restored: false,
     };
     let list_file_path = paths::list_file_path();
     write_entry(&archive_entry, list_file_path).map_err(|e| ListError::IoError(e.to_string()))?;
     println!("Archived file listed");
+    Ok(())
+}
+
+pub fn find(id: u32) -> Result<ListEntry, ListError> {
+    let list_file_path = paths::list_file_path();
+    let content = fs::read_to_string(list_file_path)?;
+
+    for line in content.lines() {
+        if line.trim().is_empty() {
+            continue; // 跳过空行
+        }
+
+        let result = serde_json::from_str::<ListEntry>(line);
+        if let Ok(entry) = &result {
+            if entry.id == id {
+                return Ok(ListEntry {
+                    id: entry.id,
+                    target: entry.target.clone(),
+                    is_dir: entry.is_dir,
+                    dir: entry.dir.clone(),
+                    time: entry.time.clone(),
+                    is_restored: entry.is_restored,
+                });
+            }
+        }
+    }
+
+    Err(ListError::TargetNotFound(format!(
+        "ID {} not found in the list",
+        id
+    )))
+}
+
+pub fn mark_as_restored(id: u32) -> Result<(), ListError> {
     Ok(())
 }
 

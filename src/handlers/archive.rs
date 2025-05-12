@@ -10,7 +10,10 @@ use crate::{
 pub fn handler(target: String) {
     println!("Archiving {}", target.green());
     match archive(&target) {
-        Ok(_) => println!("'{}' is successfully archived", target),
+        Ok(id) => {
+            let _ = log::save(OperType::Archive, target.clone(), true, Some(id));
+            println!("'{}' is successfully archived", target)
+        }
         Err(e) => {
             let _ = log::save(OperType::Archive, target.clone(), false, None);
             println!("{}", e.to_string());
@@ -18,7 +21,7 @@ pub fn handler(target: String) {
     };
 }
 
-fn archive(target: &String) -> Result<(), ArchiveError> {
+fn archive(target: &String) -> Result<u32, ArchiveError> {
     let target = &target.trim().to_string();
     let cwd = paths::cwd();
     let target_path = cwd.join(target);
@@ -50,14 +53,12 @@ fn archive(target: &String) -> Result<(), ArchiveError> {
         }
     };
     // TODO 好多clone，能消除吗？
-    list::save(
+    list::insert(
         next_id,
         target.clone(),
         target_path.is_dir(),
         cwd_str.clone(),
     )?;
 
-    log::save(OperType::Archive, target.clone(), true, Some(next_id))?;
-
-    Ok(())
+    Ok(next_id)
 }

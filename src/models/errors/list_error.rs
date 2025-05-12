@@ -4,6 +4,8 @@ use std::io;
 /// 操作日志加载错误枚举
 #[derive(PartialEq, Debug)]
 pub enum ListError {
+    TargetNotFound(String),
+
     /// 文件读取/写入错误
     IoError(String),
 
@@ -14,6 +16,7 @@ pub enum ListError {
 impl fmt::Display for ListError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
+            ListError::TargetNotFound(m) => format!("List::TargetNotFound: {}", m),
             ListError::IoError(m) => format!("List::IoError: {}", m),
             ListError::JsonParseError(m) => {
                 format!("List::JsonParseError: {}", m)
