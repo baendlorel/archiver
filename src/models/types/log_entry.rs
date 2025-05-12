@@ -46,7 +46,7 @@ impl LogEntry {
             status,
             self.oper.to_padded_str(),
             arg,
-            field_style::cwd(&self.remark),
+            field_style::grey_italic(&self.remark),
             id,
         )
     }

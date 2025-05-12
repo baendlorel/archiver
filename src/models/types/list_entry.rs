@@ -1,6 +1,8 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
+use crate::misc::paths::apply_alias;
+
 use super::field_style;
 
 #[derive(Serialize, Deserialize)]
@@ -49,7 +51,7 @@ impl ListEntry {
             field_style::id_to_str(self.id),
             field_style::dir_color(&self.target, self.is_dir),
             is_restored,
-            field_style::cwd(&self.dir),
+            field_style::grey_italic(&self.dir),
         )
     }
 
@@ -60,11 +62,14 @@ impl ListEntry {
             "".to_string()
         };
 
+        let dir = apply_alias(self.dir.clone());
+
         ListRow {
             time: field_style::grey(&self.time),
-            id: self.id.magenta().to_string(),
+            // id: self.id.magenta().to_string(),
+            id: field_style::id_to_str(self.id),
             target: field_style::dir_color(&self.target, self.is_dir) + &is_restored,
-            dir: field_style::cwd(&self.dir),
+            dir: field_style::grey(&dir),
         }
     }
 }

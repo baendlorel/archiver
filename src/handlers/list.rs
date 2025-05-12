@@ -108,7 +108,9 @@ fn load(all: bool) -> Result<(), ListError> {
             if all || !entry.is_restored {
                 counter += 1;
                 // println!("{}", entry.to_log());
-                list.push(entry.to_row());
+                // list.push(entry.to_row());
+                let row = entry.to_row();
+                list.push(row);
             }
         }
 
@@ -124,6 +126,24 @@ fn load(all: bool) -> Result<(), ListError> {
 
     if counter == 0 {
         println!("No archived object found");
+    }
+
+    let mut max_width = 0;
+    for row in list.iter().clone() {
+        max_width = max_width.max(row.target.len());
+    }
+
+    println!("maxwidth = {}", max_width);
+
+    for row in list.iter().clone() {
+        println!(
+            "{} {} - {:<width$} - {}",
+            row.time,
+            row.id,
+            row.target, // 左对齐并补足空格
+            row.dir,
+            width = max_width // 指定宽度参数
+        );
     }
 
     Ok(())

@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{MAIN_SEPARATOR, PathBuf};
 
 use super::force_no_loss;
 
@@ -84,7 +84,7 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
             }
 
             // 期望的格式是 ~=/home/xxx , @projects=/home/xxx/projects 这样风格的
-            m.insert(right.to_string(), left.to_string());
+            m.insert(left.to_string(), right.to_string());
         }
     }
 
@@ -107,20 +107,20 @@ pub fn auto_incr_id() -> u32 {
     new_id
 }
 
-pub fn alias_path(path_str: String) -> String {
-    ALIAS_MAP.iter().for_each(|(origin, alias)| {
-        let path_str = path_str.trim();
-        // 检查路径是否以 home 目录开头
+pub fn apply_alias(path_str: String) -> String {
+    // 使用普通循环，可以在找到匹配时提前返回
+    for (alias, origin) in ALIAS_MAP.iter() {
+        // println!("origin:{} alias:{} path_str:{}", origin, alias, path_str);
         if path_str.starts_with(origin) {
-            // 替换 home 目录为波浪线
+            // 替换原始路径前缀为别名
             let relative_path = &path_str[origin.len()..];
             // 处理可能的路径分隔符
-            let relative_path = relative_path.trim_start_matches('/');
-            let path_buf = PathBuf::from(alias);
-            path_buf.join(relative_path).to_string_lossy().to_string()
-        } else {
-            // 不是 home 目录下的路径，保持不变
-            path_str.to_string()
+            let relative_path = relative_path.trim_start_matches(MAIN_SEPARATOR);
+
+            // 构建新路径
+            return format!("{}{}{}", alias, MAIN_SEPARATOR, relative_path);
         }
-    });
+    }
+
+    path_str
 }
