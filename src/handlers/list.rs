@@ -1,9 +1,12 @@
 use chrono::Local;
 use std::fs;
+use tabled::Table;
 
 use crate::misc::{paths, write_entry};
-use crate::models::errors::ListError;
-use crate::models::types::ListEntry;
+use crate::models::{
+    errors::ListError,
+    types::{ListEntry, ListRow},
+};
 use owo_colors::OwoColorize;
 
 pub fn handler(all: bool) {
@@ -94,6 +97,7 @@ fn load(all: bool) -> Result<(), ListError> {
 
     let content = fs::read_to_string(list_file_path)?;
 
+    let mut list: Vec<ListRow> = vec![];
     let mut counter = 0;
     for line in content.lines() {
         if line.trim().is_empty() {
@@ -105,7 +109,8 @@ fn load(all: bool) -> Result<(), ListError> {
             // 设置了all的话，展示全部，否则只展示未恢复的对象
             if all || !entry.is_restored {
                 counter += 1;
-                println!("{}", entry.to_log());
+                // println!("{}", entry.to_log());
+                list.push(entry.to_row());
             }
         }
 
@@ -121,6 +126,8 @@ fn load(all: bool) -> Result<(), ListError> {
 
     if counter == 0 {
         println!("No archived object found");
+    } else {
+        println!("{}", Table::new(list));
     }
 
     Ok(())
