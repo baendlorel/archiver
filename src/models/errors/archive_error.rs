@@ -1,28 +1,62 @@
 use std::fmt;
 use std::io;
 
+use super::ListError;
+use super::OperLogError;
+
 /// 操作日志加载错误枚举
 #[derive(PartialEq, Debug)]
 pub enum ArchiveError {
-    /// 外部错误，可能来自list或log模块
-    ExternalError(String),
-
     /// 当前目录无效
     InvalidCwd(String),
-
     /// 归档目标不存在
     TargetNotFound(String),
+    InvalidTarget(String),
+    IoError(String),
+
+    ListSaveError {
+        source: ListError,
+    },
+    LogSaveError {
+        source: OperLogError,
+    },
 }
 
 impl fmt::Display for ArchiveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
-            ArchiveError::ExternalError(m) => m.clone(),
+            ArchiveError::IoError(m) => format!("Archive::IoError: {}", m),
             ArchiveError::InvalidCwd(m) => format!("Archive::InvalidCwd: {}", m),
             ArchiveError::TargetNotFound(m) => format!("Archive::TargetNotFound: {}", m),
+            ArchiveError::InvalidTarget(m) => format!("Archive::InvalidTarget: {}", m),
+            // 外部错误
+            ArchiveError::ListSaveError { source } => {
+                format!("Archive::ListSaveError: {}", source)
+            }
+            ArchiveError::LogSaveError { source } => {
+                format!("Archive::LogSaveError: {}", source)
+            }
         };
         f.write_str(description.as_str())
     }
 }
 
 impl std::error::Error for ArchiveError {}
+
+impl From<std::io::Error> for ArchiveError {
+    fn from(error: std::io::Error) -> Self {
+        ArchiveError::IoError(error.to_string())
+    }
+}
+
+impl From<ListError> for ArchiveError {
+    fn from(error: ListError) -> Self {
+        ArchiveError::ListSaveError { source: error }
+    }
+}
+
+impl From<OperLogError> for ArchiveError {
+    fn from(error: OperLogError) -> Self {
+        ArchiveError::LogSaveError { source: error }
+    }
+}

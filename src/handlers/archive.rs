@@ -1,4 +1,4 @@
-use std::fs;
+use std::{f32::consts::E, fs};
 
 use owo_colors::OwoColorize;
 
@@ -20,8 +20,15 @@ pub fn handler(target: String) {
 }
 
 fn archive(target: &String) -> Result<(), ArchiveError> {
+    let target = &target.trim().to_string();
     let cwd = paths::cwd();
     let target_path = cwd.join(target);
+
+    if target.is_empty() {
+        return Err(ArchiveError::InvalidTarget(
+            "Target path cannot be empty".to_string(),
+        ));
+    }
 
     if !target_path.exists() {
         return Err(ArchiveError::TargetNotFound(
@@ -44,12 +51,8 @@ fn archive(target: &String) -> Result<(), ArchiveError> {
         }
     };
 
-    // ? 这里有可能将来会层叠报错，会出现类似于ArchiveError::IoError::ListError::IoError这样的message
-    list::save(next_id, target.clone(), target_path.is_dir(), cwd_str)
-        .map_err(|e| ArchiveError::ExternalError(e.to_string()))?;
-
-    log::save(OperType::Archive, target.clone(), true, Some(next_id))
-        .map_err(|e| ArchiveError::ExternalError(e.to_string()))?;
+    list::save(next_id, target.clone(), target_path.is_dir(), cwd_str)?;
+    log::save(OperType::Archive, target.clone(), true, Some(next_id))?;
 
     Ok(())
 }
