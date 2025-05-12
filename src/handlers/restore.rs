@@ -1,5 +1,5 @@
 use owo_colors::OwoColorize;
 
-pub fn handler(target: String) {
-    println!("反归档 {}", target.green());
+pub fn handler(id: u32) {
+    println!("反归档 {}", id.green());
 }

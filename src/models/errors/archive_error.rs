@@ -1,5 +1,4 @@
 use std::fmt;
-use std::io;
 
 use super::ListError;
 use super::OperLogError;

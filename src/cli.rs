@@ -21,8 +21,8 @@ pub enum ArvCmd {
     #[command(visible_alias = "r")]
     Restore {
         /// The name or id of the object to restore
-        #[arg(value_name = "name|id")]
-        target: String,
+        #[arg(value_name = "id")]
+        id: u32,
     },
 
     /// Show the list of archived objects

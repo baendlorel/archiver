@@ -4,8 +4,7 @@ use crate::models::types::{LogEntry, OperType};
 
 use chrono::{Datelike, Local, NaiveDate};
 use owo_colors::OwoColorize;
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs;
 use std::path::Path;
 
 pub fn handler(interval: Option<String>) {
@@ -98,6 +97,7 @@ pub fn save(
     // 获取日志文件路径
     let log_dir = paths::logs_dir();
     let log_file_path = log_dir.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
+    let cwd = paths::cwd().to_string_lossy().to_string();
 
     // 确保日志目录存在
     // 获取当前时间
@@ -109,6 +109,7 @@ pub fn save(
         status: if is_succ { "succ" } else { "fail" }.to_string(),
         oper,
         arg,
+        cwd,
         id, // archive id，如果有的话
     };
 
@@ -171,7 +172,7 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
         }
 
         let content = fs::read_to_string(log_file_path)?;
-        log_content(&dates, &content, &mut counter);
+        log_content(&dates, &content, &mut counter)?;
     }
 
     if counter == 0 {

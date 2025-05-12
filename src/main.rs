@@ -14,7 +14,7 @@ fn main() {
     match args.command {
         Some(ArvCmd::List) => handlers::list::handler(),
         Some(ArvCmd::Log { interval }) => handlers::log::handler(interval),
-        Some(ArvCmd::Restore { target }) => handlers::restore::handler(target),
+        Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
         None => {
             println!("{}", "请指定一个操作命令".yellow());

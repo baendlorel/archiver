@@ -1,6 +1,5 @@
-use std::{f32::consts::E, fs};
-
 use owo_colors::OwoColorize;
+use std::fs;
 
 use super::{list, log};
 use crate::{
@@ -9,9 +8,9 @@ use crate::{
 };
 
 pub fn handler(target: String) {
-    println!("归档目录 {}", target.green());
+    println!("Archiving {}", target.green());
     match archive(&target) {
-        Ok(_) => println!("{} is successfully archived", target),
+        Ok(_) => println!("'{}' is successfully archived", target),
         Err(e) => {
             let _ = log::save(OperType::Archive, target.clone(), false, None);
             println!("{}", e.to_string());
@@ -50,8 +49,14 @@ fn archive(target: &String) -> Result<(), ArchiveError> {
             ));
         }
     };
+    // TODO 好多clone，能消除吗？
+    list::save(
+        next_id,
+        target.clone(),
+        target_path.is_dir(),
+        cwd_str.clone(),
+    )?;
 
-    list::save(next_id, target.clone(), target_path.is_dir(), cwd_str)?;
     log::save(OperType::Archive, target.clone(), true, Some(next_id))?;
 
     Ok(())

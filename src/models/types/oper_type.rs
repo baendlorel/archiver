@@ -1,3 +1,4 @@
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 /// 操作类型枚举
@@ -11,12 +12,12 @@ pub enum OperType {
 
 /// 为OperationType实现转换为字符串的方法
 impl OperType {
-    pub fn to_padded_str(&self) -> &'static str {
+    pub fn to_padded_str(&self) -> String {
         match self {
-            OperType::Archive => "Archive",
-            OperType::Restore => "Restore",
-            OperType::List => "List   ",
-            OperType::Log => "Log    ",
+            OperType::Archive => "archive".yellow().to_string(),
+            OperType::Restore => "restore".cyan().to_string(),
+            OperType::List => "list   ".bright_blue().to_string(),
+            OperType::Log => "log    ".bright_magenta().to_string(),
         }
     }
 }

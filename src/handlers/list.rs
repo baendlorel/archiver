@@ -3,7 +3,7 @@ use std::fs;
 
 use crate::misc::{paths, write_entry};
 use crate::models::errors::ListError;
-use crate::models::types::ArchiveEntry;
+use crate::models::types::ListEntry;
 use owo_colors::OwoColorize;
 
 pub fn handler() {
@@ -15,7 +15,7 @@ pub fn handler() {
 
 pub fn save(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ListError> {
     let time = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
-    let archive_entry = ArchiveEntry {
+    let archive_entry = ListEntry {
         id,
         target,
         is_dir,
@@ -24,7 +24,7 @@ pub fn save(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), Li
     };
     let list_file_path = paths::list_file_path();
     write_entry(&archive_entry, list_file_path).map_err(|e| ListError::IoError(e.to_string()))?;
-    println!("Operation log saved");
+    println!("Archived file listed");
     Ok(())
 }
 
@@ -43,7 +43,7 @@ fn load() -> Result<(), ListError> {
             continue; // 跳过空行
         }
 
-        let result = serde_json::from_str::<ArchiveEntry>(line);
+        let result = serde_json::from_str::<ListEntry>(line);
         if let Ok(entry) = &result {
             counter += 1;
             println!("{}", entry.to_str())
