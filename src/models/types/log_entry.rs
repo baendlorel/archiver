@@ -10,12 +10,12 @@ pub struct LogEntry {
     pub status: String,  // 是否成功
     pub oper: OperType,  // 操作类型
     pub arg: String,     // 操作参数
-    pub cwd: String,     // 是否成功
+    pub remark: String,  // 备注
     pub id: Option<u32>, // archive id，如果有的话
 }
 
 impl LogEntry {
-    pub fn to_str(&self) -> String {
+    pub fn to_log(&self) -> String {
         let status = if self.status == "succ" {
             "succ".green().to_string()
             // "✅"
@@ -31,19 +31,23 @@ impl LogEntry {
         };
 
         let id = if let Some(id) = self.id {
-            field_style::id_to_str(id)
+            if self.oper == OperType::Archive {
+                String::from("-> ") + &field_style::id_to_str(id)
+            } else {
+                "".to_string()
+            }
         } else {
             "".to_string()
         };
 
         format!(
-            "{} {} - {} {} {} - {}",
+            "{} {} - {} {} - {} {}",
             field_style::grey(&self.time),
             status,
             self.oper.to_padded_str(),
             arg,
+            field_style::cwd(&self.remark),
             id,
-            field_style::cwd(&self.cwd),
         )
     }
 }

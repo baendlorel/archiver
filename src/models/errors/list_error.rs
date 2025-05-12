@@ -17,10 +17,10 @@ pub enum ListError {
 impl fmt::Display for ListError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
-            ListError::TargetNotFound(m) => format!("List::TargetNotFound: {}", m),
-            ListError::IoError(m) => format!("List::IoError: {}", m),
+            ListError::TargetNotFound(m) => format!("TargetNotFound: {}", m),
+            ListError::IoError(m) => format!("IoError: {}", m),
             ListError::JsonParseError(m) => {
-                format!("List::JsonParseError: {}", m)
+                format!("JsonParseError: {}", m)
             }
         };
         f.write_str(description.as_str())

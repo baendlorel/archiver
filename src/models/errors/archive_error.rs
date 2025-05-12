@@ -24,16 +24,16 @@ pub enum ArchiveError {
 impl fmt::Display for ArchiveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
-            ArchiveError::IoError(m) => format!("Archive::IoError: {}", m),
-            ArchiveError::InvalidCwd(m) => format!("Archive::InvalidCwd: {}", m),
-            ArchiveError::TargetNotFound(m) => format!("Archive::TargetNotFound: {}", m),
-            ArchiveError::InvalidTarget(m) => format!("Archive::InvalidTarget: {}", m),
+            ArchiveError::IoError(m) => format!("IoError: {}", m),
+            ArchiveError::InvalidCwd(m) => format!("InvalidCwd: {}", m),
+            ArchiveError::TargetNotFound(m) => format!("TargetNotFound: {}", m),
+            ArchiveError::InvalidTarget(m) => format!("InvalidTarget: {}", m),
             // 外部错误
             ArchiveError::ListSaveError { source } => {
-                format!("Archive::ListSaveError: {}", source)
+                format!("ListSaveError: {}", source)
             }
             ArchiveError::LogSaveError { source } => {
-                format!("Archive::LogSaveError: {}", source)
+                format!("LogSaveError: {}", source)
             }
         };
         f.write_str(description.as_str())

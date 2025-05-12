@@ -22,11 +22,11 @@ pub enum RestoreError {
 impl fmt::Display for RestoreError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
-            RestoreError::IoError(m) => format!("Restore::IoError: {}", m),
-            RestoreError::ArchivedFileMissing(m) => format!("Restore::ArchivedFileMissing: {}", m),
-            RestoreError::DuplicatedOrigin(m) => format!("Restore::DuplicatedOrigin: {}", m),
-            RestoreError::MarkAsRestoredFail(m) => format!("Restore::MarkAsRestoredFail: {}", m),
-            RestoreError::AlreadyRestored(m) => format!("Restore::AlreadyRestored: {}", m),
+            RestoreError::IoError(m) => format!("IoError: {}", m),
+            RestoreError::ArchivedFileMissing(m) => format!("ArchivedFileMissing: {}", m),
+            RestoreError::DuplicatedOrigin(m) => format!("DuplicatedOrigin: {}", m),
+            RestoreError::MarkAsRestoredFail(m) => format!("MarkAsRestoredFail: {}", m),
+            RestoreError::AlreadyRestored(m) => format!("AlreadyRestored: {}", m),
         };
         f.write_str(description.as_str())
     }

@@ -10,11 +10,17 @@ pub fn handler(id: u32) {
     println!("Restoring id:{}", id.green());
     match restore(id) {
         Ok(_) => {
-            let _ = log::save(OperType::Restore, id.to_string(), true, Some(id));
+            let _ = log::save(OperType::Restore, id.to_string(), true, Some(id), None);
             println!("{} is successfully restored", id)
         }
         Err(e) => {
-            let _ = log::save(OperType::Restore, id.to_string(), false, Some(id));
+            let _ = log::save(
+                OperType::Restore,
+                id.to_string(),
+                false,
+                Some(id),
+                Some(e.to_string()),
+            );
             println!("{}", e.to_string());
         }
     }
@@ -25,10 +31,7 @@ fn restore(id: u32) -> Result<(), RestoreError> {
     match list::find(id, &mut target_line_index) {
         Ok(entry) => {
             if entry.is_restored {
-                return Err(RestoreError::AlreadyRestored(format!(
-                    "ID {} has already been restored",
-                    id
-                )));
+                return Err(RestoreError::AlreadyRestored(format!("id:{}", id)));
             }
 
             let dir = PathBuf::from(entry.dir);
@@ -38,15 +41,17 @@ fn restore(id: u32) -> Result<(), RestoreError> {
             // 要检查archive里面的文件和系统外面的路径是否都存在
             // 还要检查复制后是否会导致文件覆盖？
             if target_path.exists() {
-                return Err(RestoreError::DuplicatedOrigin(
-                    target_path.to_string_lossy().to_string(),
-                ));
+                return Err(RestoreError::DuplicatedOrigin(format!(
+                    "{} already exists, please remove or rename it first",
+                    target_path.to_string_lossy()
+                )));
             }
 
             if !archive_path.exists() {
-                return Err(RestoreError::ArchivedFileMissing(
-                    archive_path.to_string_lossy().to_string(),
-                ));
+                return Err(RestoreError::ArchivedFileMissing(format!(
+                    "The archive file id:{} does not exist",
+                    archive_path.to_string_lossy()
+                )));
             }
 
             fs::rename(archive_path, target_path)?;

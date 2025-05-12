@@ -8,10 +8,9 @@ use std::fs;
 use std::path::Path;
 
 pub fn handler(interval: Option<String>) {
-    match load(interval) {
-        Ok(_) => {}
-        Err(e) => println!("{}", e.to_string()),
-    };
+    if let Err(e) = load(interval) {
+        println!("{}", e.to_string())
+    }
 }
 
 fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDate, OperLogError> {
@@ -51,7 +50,7 @@ fn log_content(
                     }
 
                     *counter += 1;
-                    println!("{}", entry.to_str())
+                    println!("{}", entry.to_log())
                 }
                 Err(_) => continue,
             }
@@ -93,15 +92,22 @@ pub fn save(
     arg: String,
     is_succ: bool,
     id: Option<u32>,
+    remark: Option<String>,
 ) -> Result<(), OperLogError> {
     // 获取日志文件路径
     let log_dir = paths::logs_dir();
     let log_file_path = log_dir.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
-    let cwd = paths::cwd().to_string_lossy().to_string();
 
     // 确保日志目录存在
     // 获取当前时间
     let opered_at = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let normalized_remark = if oper == OperType::Archive {
+        let full_path = paths::cwd().join(arg.clone());
+        full_path.to_string_lossy().to_string()
+    } else {
+        remark.unwrap_or(paths::cwd().to_string_lossy().to_string())
+    };
 
     // 准备日志内容
     let log_entry = LogEntry {
@@ -109,7 +115,7 @@ pub fn save(
         status: if is_succ { "succ" } else { "fail" }.to_string(),
         oper,
         arg,
-        cwd,
+        remark: normalized_remark,
         id, // archive id，如果有的话
     };
 

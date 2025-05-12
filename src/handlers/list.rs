@@ -102,10 +102,10 @@ fn load(all: bool) -> Result<(), ListError> {
 
         let result = serde_json::from_str::<ListEntry>(line);
         if let Ok(entry) = &result {
-            counter += 1;
             // 设置了all的话，展示全部，否则只展示未恢复的对象
             if all || !entry.is_restored {
-                println!("{}", entry.to_string());
+                counter += 1;
+                println!("{}", entry.to_log());
             }
         }
 

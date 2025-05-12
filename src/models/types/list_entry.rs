@@ -25,7 +25,7 @@ pub struct ListEntry {
 }
 
 impl ListEntry {
-    pub fn to_string(&self) -> String {
+    pub fn to_log(&self) -> String {
         let is_restored = if self.is_restored {
             "(restored)".fg_rgb::<255, 165, 0>().to_string()
         } else {
@@ -33,15 +33,10 @@ impl ListEntry {
         };
 
         format!(
-            "{} {} - {} - {}{} - {}",
+            "{} {} - {} {} - {}",
             field_style::grey(&self.time),
             field_style::id_to_str(self.id),
-            if self.is_dir {
-                "dir ".cyan().to_string()
-            } else {
-                "file".yellow().to_string()
-            },
-            self.target,
+            field_style::dir_color(&self.target, self.is_dir),
             is_restored,
             field_style::cwd(&self.dir),
         )

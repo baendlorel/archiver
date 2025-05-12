@@ -18,11 +18,11 @@ impl fmt::Display for OperLogError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
             OperLogError::DateParseError(m) => {
-                format!("OperLog::DateParseError: {}", m)
+                format!("DateParseError: {}", m)
             }
-            OperLogError::IoError(m) => format!("OperLog::IoError: {}", m),
+            OperLogError::IoError(m) => format!("IoError: {}", m),
             OperLogError::JsonParseError(m) => {
-                format!("OperLog::JsonParseError: {}", m)
+                format!("JsonParseError: {}", m)
             }
         };
         f.write_str(description.as_str())

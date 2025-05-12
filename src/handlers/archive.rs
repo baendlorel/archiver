@@ -11,11 +11,17 @@ pub fn handler(target: String) {
     println!("Archiving {}", target.green());
     match archive(&target) {
         Ok(id) => {
-            let _ = log::save(OperType::Archive, target.clone(), true, Some(id));
+            let _ = log::save(OperType::Archive, target.clone(), true, Some(id), None);
             println!("'{}' is successfully archived", target)
         }
         Err(e) => {
-            let _ = log::save(OperType::Archive, target.clone(), false, None);
+            let _ = log::save(
+                OperType::Archive,
+                target.clone(),
+                false,
+                None,
+                Some(e.to_string()),
+            );
             println!("{}", e.to_string());
         }
     };

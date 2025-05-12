@@ -2,7 +2,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 /// 操作类型枚举
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum OperType {
     Archive,
     Restore,
