@@ -1,4 +1,5 @@
 use owo_colors::OwoColorize;
+use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
 
@@ -34,12 +35,13 @@ fn restore(id: u32) -> Result<(), RestoreError> {
                 return Err(RestoreError::AlreadyRestored(format!("id:{}", id)));
             }
 
-            let dir = PathBuf::from(entry.dir);
-            let target_path = dir.join(entry.target.clone());
+            let target_name = OsString::from(entry.target);
+            let dir = PathBuf::from(OsString::from(entry.dir));
+            let target_path = dir.join(target_name);
             let archive_path = paths::root_dir().join(id.to_string());
 
             // 要检查archive里面的文件和系统外面的路径是否都存在
-            // 还要检查复制后是否会导致文件覆盖？
+            // 还要检查复制后是否会导致文件覆盖
             if target_path.exists() {
                 return Err(RestoreError::DuplicatedOrigin(format!(
                     "{} already exists, please remove or rename it first",
@@ -52,6 +54,12 @@ fn restore(id: u32) -> Result<(), RestoreError> {
                     "The archive file id:{} does not exist",
                     archive_path.to_string_lossy()
                 )));
+            }
+
+            // 先确保上面两个不异常
+            // 再确保原目录存在
+            if !dir.exists() {
+                fs::create_dir_all(&dir)?;
             }
 
             fs::rename(archive_path, target_path)?;

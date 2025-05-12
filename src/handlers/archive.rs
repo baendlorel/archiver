@@ -3,7 +3,7 @@ use std::fs;
 
 use super::{list, log};
 use crate::{
-    misc::paths,
+    misc::{force_no_loss, paths},
     models::{errors::ArchiveError, types::OperType},
 };
 
@@ -28,43 +28,50 @@ pub fn handler(target: String) {
 }
 
 fn archive(target: &String) -> Result<u32, ArchiveError> {
-    let target = &target.trim().to_string();
+    // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd = paths::cwd();
     let target_path = cwd.join(target);
 
-    if target.is_empty() {
-        return Err(ArchiveError::InvalidTarget(
-            "Target path cannot be empty".to_string(),
-        ));
-    }
-
+    // 目标不存在则报错
     if !target_path.exists() {
         return Err(ArchiveError::TargetNotFound(
             target_path.to_string_lossy().to_string(),
         ));
     }
 
-    // 目标存在，那么开始归档
-    let root = paths::root_dir();
-    let next_id = paths::auto_incr_id();
-
-    fs::rename(&target_path, root.join(next_id.to_string()))?;
-
-    let cwd_str = match cwd.to_str() {
-        Some(str) => str.to_string(),
-        None => {
+    // 必须无损转换OsString
+    let cwd_str = match force_no_loss(cwd.as_os_str()) {
+        Ok(str) => str,
+        Err(_) => {
             return Err(ArchiveError::InvalidCwd(
                 "Failed to convert current directory to string".to_string(),
             ));
         }
     };
-    // TODO 好多clone，能消除吗？
-    list::insert(
-        next_id,
-        target.clone(),
-        target_path.is_dir(),
-        cwd_str.clone(),
-    )?;
+
+    let target_name = target_path.file_name().ok_or(ArchiveError::InvalidTarget(
+        "Failed to get target name".to_string(),
+    ))?;
+
+    // 必须无损转换OsString
+    let target_name_str = match force_no_loss(target_name) {
+        Ok(str) => str,
+        Err(_) => {
+            return Err(ArchiveError::InvalidTarget(
+                "Failed to convert target name to string. Please use utf8 chars to name the target"
+                    .to_string(),
+            ));
+        }
+    };
+
+    // 都没有异常，那么开始归档
+    let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
+    let root = paths::root_dir();
+    let next_id = paths::auto_incr_id();
+
+    fs::rename(&target_path, root.join(next_id.to_string()))?;
+
+    list::insert(next_id, target_name_str, is_dir, cwd_str)?;
 
     Ok(next_id)
 }

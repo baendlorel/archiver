@@ -48,3 +48,7 @@ pub fn auto_incr_id() -> u32 {
 pub fn cwd() -> PathBuf {
     std::env::current_dir().expect("Failed to get current directory")
 }
+
+pub fn self_check() {
+    cwd();
+}

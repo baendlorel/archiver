@@ -15,7 +15,7 @@ where
         .append(true)
         .open(file_path)?;
 
-    // 写入日志
+    // 写入
     file.write_all(json_line.as_bytes())?;
     file.write_all(b"\n")?;
 
