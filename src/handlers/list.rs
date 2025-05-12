@@ -13,7 +13,7 @@ pub fn handler() {
     }
 }
 
-fn save(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ListError> {
+pub fn save(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ListError> {
     let time = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
     let archive_entry = ArchiveEntry {
         id,
