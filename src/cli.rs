@@ -39,4 +39,12 @@ pub enum ArvCmd {
         #[arg(value_name = "time inverval")]
         interval: Option<String>,
     },
+
+    /// Configurations
+    #[command()]
+    Config {
+        /// Directory alias. Can shorten the paths showed in console
+        #[arg(short, long)]
+        alias: Option<String>,
+    },
 }

@@ -1,10 +1,9 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use tabled::Tabled;
 
 use super::field_style;
 
-#[derive(Serialize, Deserialize, Tabled)]
+#[derive(Serialize, Deserialize)]
 pub struct ListEntry {
     /// 归档ID，后续使用这个来restore
     pub id: u32,
@@ -26,18 +25,13 @@ pub struct ListEntry {
 }
 
 /// 专门输出表格用的
-#[derive(Tabled)]
 pub struct ListRow {
-    #[tabled(rename = "Archived at")]
     pub time: String,
 
-    #[tabled(rename = "ID")]
     pub id: String,
 
-    #[tabled(rename = "Target")]
     pub target: String,
 
-    #[tabled(rename = "Origin Dir")]
     pub dir: String,
 }
 

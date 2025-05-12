@@ -16,6 +16,7 @@ fn main() {
         Some(ArvCmd::Log { interval }) => handlers::log::handler(interval),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
+        Some(ArvCmd::Config { alias }) => {}
         None => {
             println!("{}", "Please enter your command".yellow());
             // 打印帮助信息

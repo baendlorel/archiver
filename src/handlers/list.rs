@@ -1,6 +1,5 @@
 use chrono::Local;
 use std::fs;
-use tabled::Table;
 
 use crate::misc::{paths, write_entry};
 use crate::models::{
@@ -126,8 +125,6 @@ fn load(all: bool) -> Result<(), ListError> {
 
     if counter == 0 {
         println!("No archived object found");
-    } else {
-        println!("{}", Table::new(list));
     }
 
     Ok(())
