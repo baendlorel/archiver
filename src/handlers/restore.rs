@@ -7,9 +7,12 @@ use crate::misc::paths;
 use crate::models::{errors::RestoreError, types::OperType};
 
 pub fn handler(id: u32) {
-    println!("反归档 {}", id.green());
+    println!("Restoring id:{}", id.green());
     match restore(id) {
-        Ok(_) => println!("{} is successfully restored", id),
+        Ok(_) => {
+            let _ = log::save(OperType::Restore, id.to_string(), true, Some(id));
+            println!("{} is successfully restored", id)
+        }
         Err(e) => {
             let _ = log::save(OperType::Restore, id.to_string(), false, Some(id));
             println!("{}", e.to_string());
@@ -18,8 +21,8 @@ pub fn handler(id: u32) {
 }
 
 fn restore(id: u32) -> Result<(), RestoreError> {
-    let mut line_index: u32 = 0;
-    match list::find(id, &mut line_index) {
+    let mut target_line_index: u32 = 0;
+    match list::find(id, &mut target_line_index) {
         Ok(entry) => {
             if entry.is_restored {
                 return Err(RestoreError::AlreadyRestored(format!(
@@ -47,7 +50,7 @@ fn restore(id: u32) -> Result<(), RestoreError> {
             }
 
             fs::rename(archive_path, target_path)?;
-            list::mark_as_restored(line_index)?;
+            list::mark_as_restored(target_line_index)?;
             return Ok(());
         }
         Err(e) => return Err(RestoreError::from(e)),
