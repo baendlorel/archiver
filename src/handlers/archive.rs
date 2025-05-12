@@ -40,29 +40,14 @@ fn archive(target: &String) -> Result<u32, ArchiveError> {
     }
 
     // 必须无损转换OsString
-    let cwd_str = match force_no_loss(cwd.as_os_str()) {
-        Ok(str) => str,
-        Err(_) => {
-            return Err(ArchiveError::InvalidCwd(
-                "Failed to convert current directory to string".to_string(),
-            ));
-        }
-    };
+    let cwd_str = force_no_loss(cwd.as_os_str());
 
     let target_name = target_path.file_name().ok_or(ArchiveError::InvalidTarget(
         "Failed to get target name".to_string(),
     ))?;
 
     // 必须无损转换OsString
-    let target_name_str = match force_no_loss(target_name) {
-        Ok(str) => str,
-        Err(_) => {
-            return Err(ArchiveError::InvalidTarget(
-                "Failed to convert target name to string. Please use utf8 chars to name the target"
-                    .to_string(),
-            ));
-        }
-    };
+    let target_name_str = force_no_loss(target_name);
 
     // 都没有异常，那么开始归档
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是

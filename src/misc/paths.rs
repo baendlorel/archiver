@@ -1,9 +1,9 @@
-use lazy_static::lazy_static;
-
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use std::sync::Mutex;
+
+use super::force_no_loss;
 
 mod paths {
     // 目录
@@ -17,48 +17,79 @@ mod paths {
     pub const DIR_ALIAS_FILE: &str = "dir-alias";
 }
 
-lazy_static! {
-    pub static ref ALIAS_MAP: Mutex<HashMap<String, u32>> = {
-        let mut m = HashMap::new();
-        m.insert("init".to_string(), 1);
-        Mutex::new(m)
-    };
+/// 用户文件夹
+static HOME_DIR: Lazy<PathBuf> =
+    Lazy::new(|| dirs::home_dir().expect("Failed to get home directory"));
 
-    pub static ref ROOT_DIR: PathBuf = {
-        let mut path = dirs::home_dir().expect("Failed to get home directory");
-        path.push(paths::ROOT);
-        // 检查路径是否存在，不存在则创建
-        if !path.exists() {
-            fs::create_dir_all(&path).expect("Failed to create root directory");
+/// 当前工作目录
+pub static CWD: Lazy<PathBuf> =
+    Lazy::new(|| std::env::current_dir().expect("Failed to get current directory"));
+
+/// 程序主目录
+pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let path = HOME_DIR.join(paths::ROOT);
+    // 检查路径是否存在，不存在则创建
+    if !path.exists() {
+        fs::create_dir_all(&path).expect("Failed to create root directory");
+    }
+    path
+});
+
+/// 日志目录
+pub static LOGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let path = ROOT_DIR.join(paths::LOGS_DIR);
+    if !path.exists() {
+        fs::create_dir_all(&path).expect("Failed to create logs_dir directory");
+    }
+    path
+});
+
+/// 配置目录
+pub static CONFIGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let path = ROOT_DIR.join(paths::CONFIGS_DIR);
+    if !path.exists() {
+        fs::create_dir_all(&path).expect("Failed to create configs_dir directory");
+    }
+    path
+});
+
+/// 归档记录文件路径
+pub static LIST_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| ROOT_DIR.join(paths::LIST_FILE));
+
+/// 别名映射表
+static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
+    let dir_alias_file = CONFIGS_DIR.join(paths::DIR_ALIAS_FILE);
+    let mut m = HashMap::new();
+
+    m.insert("~".to_string(), force_no_loss(HOME_DIR.as_os_str()));
+
+    if !dir_alias_file.exists() {
+        return m;
+    }
+
+    let content = fs::read_to_string(dir_alias_file).expect("Cannot read dir_alias_file ");
+
+    for line in content.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue; // 跳过空行
         }
-        path
-    };
 
-    pub static ref LOGS_DIR: PathBuf =  {
-        let path = ROOT_DIR.join(paths::LOGS_DIR);
-        if !path.exists() {
-            fs::create_dir_all(&path).expect("Failed to create logs_dir directory");
+        // 只看能分出结果的
+        if let Some(tuple) = line.split_once("=") {
+            let left = tuple.0.trim();
+            let right = tuple.1.trim();
+            if left.is_empty() || right.is_empty() {
+                continue; // 跳过空行
+            }
+
+            // 期望的格式是 ~=/home/xxx , @projects=/home/xxx/projects 这样风格的
+            m.insert(right.to_string(), left.to_string());
         }
-        path
-    };
+    }
 
-    pub static ref CONFIGS_DIR: PathBuf =  {
-        let path = ROOT_DIR.join(paths::CONFIGS_DIR);
-        if !path.exists() {
-            fs::create_dir_all(&path).expect("Failed to create configs_dir directory");
-        }
-        path
-    };
-
-    pub static ref LIST_FILE_PATH: PathBuf = {
-        ROOT_DIR.join(paths::LIST_FILE)
-    };
-
-    pub static ref CWD: PathBuf = {
-        std::env::current_dir().expect("Failed to get current directory")
-    };
-
-}
+    m
+});
 
 pub fn auto_incr_id() -> u32 {
     let auto_incr_file = CONFIGS_DIR.join(paths::AUTO_INCR_FILE);
@@ -76,17 +107,20 @@ pub fn auto_incr_id() -> u32 {
     new_id
 }
 
-pub fn alias_path(path_str: String, alias: String) -> String {
-    // 检查路径是否以 home 目录开头
-    if path_str.starts_with(&alias) {
-        // 替换 home 目录为波浪线
-        let relative_path = &path_str[alias.len()..];
-        // 处理可能的路径分隔符
-        let relative_path = relative_path.trim_start_matches('/');
-        let path_buf = PathBuf::from(alias);
-        path_buf.join(relative_path).to_string_lossy().to_string()
-    } else {
-        // 不是 home 目录下的路径，保持不变
-        path_str.to_string()
-    }
+pub fn alias_path(path_str: String) -> String {
+    ALIAS_MAP.iter().for_each(|(origin, alias)| {
+        let path_str = path_str.trim();
+        // 检查路径是否以 home 目录开头
+        if path_str.starts_with(origin) {
+            // 替换 home 目录为波浪线
+            let relative_path = &path_str[origin.len()..];
+            // 处理可能的路径分隔符
+            let relative_path = relative_path.trim_start_matches('/');
+            let path_buf = PathBuf::from(alias);
+            path_buf.join(relative_path).to_string_lossy().to_string()
+        } else {
+            // 不是 home 目录下的路径，保持不变
+            path_str.to_string()
+        }
+    });
 }
