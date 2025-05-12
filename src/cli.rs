@@ -27,7 +27,10 @@ pub enum ArvCmd {
 
     /// Show the list of archived objects
     #[command(visible_alias = "ls")]
-    List,
+    List {
+        #[arg[short,long]]
+        all: bool,
+    },
 
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]

@@ -12,7 +12,7 @@ fn main() {
     let args = Args::parse();
 
     match args.command {
-        Some(ArvCmd::List) => handlers::list::handler(),
+        Some(ArvCmd::List { all }) => handlers::list::handler(all),
         Some(ArvCmd::Log { interval }) => handlers::log::handler(interval),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),

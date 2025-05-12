@@ -6,8 +6,8 @@ use crate::models::errors::ListError;
 use crate::models::types::ListEntry;
 use owo_colors::OwoColorize;
 
-pub fn handler() {
-    match load() {
+pub fn handler(all: bool) {
+    match load(all) {
         Ok(_) => {}
         Err(e) => println!("{}", e.to_string()),
     }
@@ -85,7 +85,7 @@ pub fn mark_as_restored(target_line_index: u32) -> Result<(), ListError> {
     Ok(())
 }
 
-fn load() -> Result<(), ListError> {
+fn load(all: bool) -> Result<(), ListError> {
     let list_file_path = paths::list_file_path();
     if !list_file_path.exists() {
         println!("No archived object yet");
@@ -103,7 +103,10 @@ fn load() -> Result<(), ListError> {
         let result = serde_json::from_str::<ListEntry>(line);
         if let Ok(entry) = &result {
             counter += 1;
-            println!("{}", entry.to_string())
+            // 设置了all的话，展示全部，否则只展示未恢复的对象
+            if all || !entry.is_restored {
+                println!("{}", entry.to_string());
+            }
         }
 
         if let Err(e) = &result {
