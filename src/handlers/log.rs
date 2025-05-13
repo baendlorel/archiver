@@ -2,7 +2,7 @@ use crate::misc::{append_entry, paths};
 use crate::models::errors::OperLogError;
 use crate::models::types::{LogEntry, OperType};
 
-use chrono::{Datelike, Local, NaiveDate};
+use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
 use std::path::Path;
 use std::{fs, u32};
@@ -11,20 +11,6 @@ pub fn handler(range: Option<String>) {
     if let Err(e) = load(range) {
         println!("{}", e.to_string())
     }
-}
-
-fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDate, OperLogError> {
-    let d = match date_str {
-        Some(s) => {
-            if s == "*" {
-                default_date
-            } else {
-                NaiveDate::parse_from_str(&format!("{}-01", s), "%Y%m-%d")?
-            }
-        }
-        None => default_date,
-    };
-    Ok(d)
 }
 
 fn log_content(
@@ -167,14 +153,7 @@ pub fn save(
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
 fn load(range: Option<String>) -> Result<(), OperLogError> {
-    // 下面开始规整入参的日期
-    let default_start =
-        NaiveDate::from_ymd_opt(1970, 1, 1).expect("Should not fail to create 1970-01-01");
-    let default_end = Local::now().date_naive();
-
-    // TODO 这里最好改用短横线来分隔两个日期，否则会变成多余的参数
     // 考虑到日期本质上是一个不定型进制数，可以考虑直接转为数字来对比大小
-
     let range = parse_range(range)?;
     let year_range = (range.0 / 100, range.1 / 100);
 
@@ -239,6 +218,7 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
         }
     };
 
+    // TODO 入参为202039，月份越界，报错需要精确化，现为DateParseError: Must give args like 202501, 202501-202506,*-202501。
     if is_valid_ym(range)? {
         return Ok((range.parse::<u32>()?, default_b));
     }

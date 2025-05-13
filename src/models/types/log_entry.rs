@@ -1,6 +1,8 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
+use crate::misc::paths;
+
 use super::{OperType, field_style};
 
 /// 定义用于序列化到JSON的日志条目结构
@@ -22,16 +24,9 @@ impl LogEntry {
             "F".red().to_string()
         };
 
-        // TODO 如果参数带有空格，那么用单引号包裹
-        let arg = if self.arg.starts_with(" ") || self.arg.ends_with(" ") {
-            if self.oper == OperType::Archive {
-                if self.arg.len() > 0 {
-                    return field_style::grey(&format!("'{}'", self.arg));
-                } else {
-                    return field_style::grey(&"(no arg)".to_string());
-                }
-            }
-            "".to_string()
+        // 带空格的，要包裹单引号
+        let arg = if self.arg.find(" ").is_some() {
+            field_style::grey(&format!("'{}'", self.arg))
         } else {
             self.arg.clone()
         };
@@ -39,7 +34,7 @@ impl LogEntry {
         let remark = if self.remark.is_empty() {
             field_style::grey(&"(no remark)".to_string())
         } else {
-            field_style::grey(&self.remark)
+            field_style::grey(&paths::apply_alias(&self.remark))
         };
 
         let id = if let Some(id) = self.id {

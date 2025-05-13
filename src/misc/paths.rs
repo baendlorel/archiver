@@ -121,7 +121,7 @@ pub fn auto_incr_id() -> u32 {
     new_id
 }
 
-pub fn apply_alias(path_str: String) -> String {
+pub fn apply_alias(path_str: &String) -> String {
     // 使用普通循环，可以在找到匹配时提前返回
     for (alias, origin) in ALIAS_MAP.iter() {
         // println!("origin:{} alias:{} path_str:{}", origin, alias, path_str);
@@ -136,7 +136,7 @@ pub fn apply_alias(path_str: String) -> String {
         }
     }
 
-    path_str
+    path_str.clone()
 }
 
 pub fn get_log_path(year: u32) -> PathBuf {

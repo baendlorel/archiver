@@ -1,9 +1,8 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::misc::paths::apply_alias;
-
 use super::field_style;
+use crate::misc::paths;
 
 #[derive(Serialize, Deserialize)]
 pub struct ListEntry {
@@ -47,7 +46,7 @@ impl ListEntry {
             "".to_string()
         };
 
-        let dir = apply_alias(self.dir.clone());
+        let dir = paths::apply_alias(&self.dir);
 
         ListRow {
             time: field_style::grey(&self.time),
