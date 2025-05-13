@@ -14,10 +14,10 @@ pub enum OperType {
 impl OperType {
     pub fn to_padded_str(&self) -> String {
         match self {
-            OperType::Archive => "archive".yellow().to_string(),
-            OperType::Restore => "restore".cyan().to_string(),
-            OperType::List => "list   ".bright_blue().to_string(),
-            OperType::Log => "log    ".bright_magenta().to_string(),
+            OperType::Archive => "arv".yellow().to_string(),
+            OperType::Restore => "rst".cyan().to_string(),
+            OperType::List => "ls ".bright_blue().to_string(),
+            OperType::Log => "lg ".bright_magenta().to_string(),
         }
     }
 }

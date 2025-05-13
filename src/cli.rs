@@ -18,7 +18,7 @@ pub enum ArvCmd {
     },
 
     /// Restore an archived object by its file/directory name or id
-    #[command(visible_alias = "r")]
+    #[command(visible_aliases = ["r", "res", "rst"])]
     Restore {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "id")]
@@ -35,7 +35,7 @@ pub enum ArvCmd {
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]
     Log {
-        /// Time interval like `YYYYMM YYYYMM` | `YYYYMM` or `YYYYMM *` | `* YYYYMM`
+        /// `YYYYMM` means yyyy-mm-01 to now; likely `YYYYMM-YYYYMM`, `*-YYYYMM`
         #[arg(value_name = "time inverval")]
         interval: Option<String>,
     },

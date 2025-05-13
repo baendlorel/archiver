@@ -17,10 +17,6 @@ pub fn grey(str: &String) -> String {
     str.fg_rgb::<142, 142, 142>().to_string()
 }
 
-pub fn grey_italic(str: &String) -> String {
-    str.italic().fg_rgb::<142, 142, 142>().to_string()
-}
-
 pub fn dir_color(target: &String, is_dir: bool) -> String {
     if is_dir {
         target.blue().to_string()

@@ -17,15 +17,13 @@ pub struct LogEntry {
 impl LogEntry {
     pub fn to_log(&self) -> String {
         let status = if self.status == "succ" {
-            "succ".green().to_string()
-            // "✅"
+            "S".green().to_string()
         } else {
-            "fail".red().to_string()
-            // "❌"
+            "F".red().to_string()
         };
 
         // TODO 如果参数带有空格，那么用单引号包裹
-        let arg = if self.arg.trim().is_empty() {
+        let arg = if self.arg.starts_with(" ") || self.arg.ends_with(" ") {
             if self.oper == OperType::Archive {
                 if self.arg.len() > 0 {
                     return field_style::grey(&format!("'{}'", self.arg));

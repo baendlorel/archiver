@@ -138,3 +138,27 @@ pub fn apply_alias(path_str: String) -> String {
 
     path_str
 }
+
+pub fn get_log_path(year: i32) -> PathBuf {
+    LOGS_DIR.join(format!("{}.jsonl", year))
+}
+
+pub fn get_all_logs_year() -> Vec<i32> {
+    let mut logs = Vec::new();
+    if let Ok(entries) = fs::read_dir(&*LOGS_DIR) {
+        for entry in entries.flatten() {
+            if let Some(file_name) = entry.path().file_name() {
+                // logs下的文件一定是年份为名字，直接转换
+                if let Ok(year) = file_name
+                    .to_string_lossy()
+                    .to_string()
+                    .trim_end_matches(".jsonl")
+                    .parse::<i32>()
+                {
+                    logs.push(year);
+                }
+            }
+        }
+    }
+    logs
+}
