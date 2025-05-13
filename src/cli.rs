@@ -35,9 +35,9 @@ pub enum ArvCmd {
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]
     Log {
-        /// `YYYYMM` means yyyy-mm-01 to now; likely `YYYYMM-YYYYMM`, `*-YYYYMM`
-        #[arg(value_name = "time inverval")]
-        interval: Option<String>,
+        /// YYYYMM=to now, YYYYMM-YYYYMM=date range, *-YYYYMM= to ym.
+        #[arg(value_name = "time range")]
+        range: Option<String>,
     },
 
     /// Configurations

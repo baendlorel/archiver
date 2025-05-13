@@ -13,7 +13,7 @@ fn main() {
 
     match args.command {
         Some(ArvCmd::List { all }) => handlers::list::handler(all),
-        Some(ArvCmd::Log { interval }) => handlers::log::handler(interval),
+        Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
         Some(ArvCmd::Config { alias }) => {}

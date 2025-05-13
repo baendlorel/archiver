@@ -4,11 +4,11 @@ use crate::models::types::{LogEntry, OperType};
 
 use chrono::{Datelike, Local, NaiveDate};
 use owo_colors::OwoColorize;
-use std::fs;
 use std::path::Path;
+use std::{fs, u32};
 
-pub fn handler(interval: Option<String>) {
-    if let Err(e) = load(interval) {
+pub fn handler(range: Option<String>) {
+    if let Err(e) = load(range) {
         println!("{}", e.to_string())
     }
 }
@@ -28,10 +28,36 @@ fn parse_date(date_str: Option<&str>, default_date: NaiveDate) -> Result<NaiveDa
 }
 
 fn log_content(
-    dates: &(NaiveDate, NaiveDate),
+    range: &(u32, u32),
     content: &String,
     counter: &mut u32,
 ) -> Result<(), OperLogError> {
+    // 把年月取出来组成一个整数用于比较
+    let parse_ym = |s: &String| -> Result<u32, OperLogError> {
+        // 现在s基本认为一定是一个时间字符串
+        let mut iter = s.split("-");
+        let raw_year = iter.next().ok_or(OperLogError::DateParseError(format!(
+            "Year parse failed for '{}'",
+            s
+        )))?;
+        let raw_month = iter.next().ok_or(OperLogError::DateParseError(format!(
+            "Month parse failed for '{}'",
+            s
+        )))?;
+
+        let year = raw_year.parse::<u32>()?;
+        let month = raw_month.parse::<u32>()?;
+
+        if month > 12 || month < 1 {
+            return Err(OperLogError::DateParseError(format!(
+                "Month > 12, parse failed for '{}'",
+                s
+            )));
+        }
+
+        Ok(year * 100 + month)
+    };
+
     // 解析每行JSON
     for line in content.lines() {
         if line.trim().is_empty() {
@@ -42,18 +68,13 @@ fn log_content(
 
         // 这里不需要报错反回去，只需要跳过报错部分，让程序运行更稳定些
         if let Ok(entry) = &result {
-            let dt = NaiveDate::parse_from_str(&entry.time, "%Y-%m-%d %H:%M:%S");
-            match dt {
-                Ok(dt) => {
-                    if dt < dates.0 || dt > dates.1 {
-                        continue; // 跳过不在范围内的日期
-                    }
-
-                    *counter += 1;
-                    println!("{}", entry.to_log())
-                }
-                Err(_) => continue,
+            let ym = parse_ym(&entry.time)?;
+            if ym < range.0 || ym > range.1 {
+                continue; // 跳过不在范围内的日期
             }
+
+            *counter += 1;
+            println!("{}", entry.to_log())
         }
 
         if let Err(e) = &result {
@@ -112,11 +133,11 @@ pub fn save(
     // 准备日志内容
     let log_entry = LogEntry {
         time: opered_at,
-        status: if is_succ { "succ" } else { "fail" }.to_string(),
+        is_succ,
         oper,
         arg,
         remark: normalized_remark,
-        id, // archive id，如果有的话
+        id,
     };
 
     append_entry(&log_entry, log_file_path).map_err(|e| OperLogError::IoError(e.to_string()))?;
@@ -129,7 +150,7 @@ pub fn save(
 ///
 /// # Parameters
 ///
-/// * `criteria` - Optional filtering criteria. Can pass time interval like `YYYYMM YYYYMM` | `YYYYMM` or `YYYYMM *` | `* YYYYMM`. Will use current year as default
+/// * `criteria` - Optional filtering criteria. Can pass time range like `YYYYMM-YYYYMM` | `YYYYMM` | `*-YYYYMM`.
 ///
 /// # Returns
 ///
@@ -145,39 +166,33 @@ pub fn save(
 ///
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
-fn load(interval: Option<String>) -> Result<(), OperLogError> {
+fn load(range: Option<String>) -> Result<(), OperLogError> {
     // 下面开始规整入参的日期
     let default_start =
         NaiveDate::from_ymd_opt(1970, 1, 1).expect("Should not fail to create 1970-01-01");
     let default_end = Local::now().date_naive();
 
     // TODO 这里最好改用短横线来分隔两个日期，否则会变成多余的参数
-    let dates: (NaiveDate, NaiveDate) = match interval {
-        Some(criteria) => {
-            let mut iter = criteria.split_whitespace();
-            let start = parse_date(iter.next(), default_start)?;
-            let end = parse_date(iter.next(), default_end)?;
+    // 考虑到日期本质上是一个不定型进制数，可以考虑直接转为数字来对比大小
 
-            if start > end {
-                return Err(OperLogError::DateParseError(
-                    "Start date cannot be greater than end date".to_string(),
-                ));
-            }
+    let range = parse_range(range)?;
+    let year_range = (range.0 / 100, range.1 / 100);
 
-            (start, end)
-        }
-        None => (default_start, default_end),
-    };
-
+    let years = paths::get_all_logs_year();
     let mut counter: u32 = 0;
-    for year in dates.0.year()..=dates.1.year() {
-        let log_file_path = paths::LOGS_DIR.join(format!("{}.jsonl", year));
+    for year in years {
+        // 跳过不在范围内的年份
+        if year < year_range.0 || year > year_range.1 {
+            continue;
+        }
+
+        let log_file_path = paths::get_log_path(year);
         if !log_file_path.exists() {
             continue;
         }
 
         let content = fs::read_to_string(log_file_path)?;
-        log_content(&dates, &content, &mut counter)?;
+        log_content(&range, &content, &mut counter)?;
     }
 
     if counter == 0 {
@@ -185,4 +200,62 @@ fn load(interval: Option<String>) -> Result<(), OperLogError> {
     }
 
     Ok(())
+}
+
+fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
+    let default_a = u32::MIN;
+    let default_b = u32::MAX;
+
+    if range.is_none() {
+        return Ok((default_a, default_b));
+    }
+
+    let range = &range.unwrap();
+
+    let is_valid_ym = |s: &String| -> Result<bool, OperLogError> {
+        let is_numeric = s.chars().all(|c| c.is_numeric());
+        let is_valid_len = s.len() > 2;
+        if !is_numeric || !is_valid_len {
+            return Ok(false);
+        }
+
+        let raw_month = s[(s.len() - 2)..s.len()].parse::<u32>()?;
+        let valid_month = raw_month <= 12 && raw_month >= 1;
+
+        Ok(valid_month)
+    };
+
+    let parse = |s: &String, default_value: u32| -> Result<u32, OperLogError> {
+        if s == "*" {
+            return Ok(default_value);
+        }
+
+        if is_valid_ym(s)? {
+            return Ok(s.parse::<u32>()?);
+        } else {
+            return Err(OperLogError::DateParseError(
+                "Date must be like `YYYYMM`".to_string(),
+            ));
+        }
+    };
+
+    if is_valid_ym(range)? {
+        return Ok((range.parse::<u32>()?, default_b));
+    }
+
+    if let Some((a_str, b_str)) = range.split_once('-') {
+        let a = parse(&a_str.to_string(), default_a)?;
+        let b = parse(&b_str.to_string(), default_b)?;
+
+        if a > b {
+            return Err(OperLogError::DateParseError(
+                "Start date > end date".to_string(),
+            ));
+        }
+        return Ok((a, b));
+    }
+
+    Err(OperLogError::DateParseError(
+        "Must give args like 202501, 202501-202506,*-202501".to_string(),
+    ))
 }

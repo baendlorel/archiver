@@ -7,7 +7,7 @@ use super::{OperType, field_style};
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
     pub time: String,    // 操作时间
-    pub status: String,  // 是否成功
+    pub is_succ: bool,   // 是否成功
     pub oper: OperType,  // 操作类型
     pub arg: String,     // 操作参数
     pub remark: String,  // 备注
@@ -16,7 +16,7 @@ pub struct LogEntry {
 
 impl LogEntry {
     pub fn to_log(&self) -> String {
-        let status = if self.status == "succ" {
+        let status = if self.is_succ {
             "S".green().to_string()
         } else {
             "F".red().to_string()
