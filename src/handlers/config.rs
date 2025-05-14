@@ -1,4 +1,6 @@
-use std::{fs, io::Write};
+use std::{fs, io::Write, path};
+
+use owo_colors::OwoColorize;
 
 use crate::{
     handlers::log,
@@ -6,14 +8,13 @@ use crate::{
     models::{errors::ConfigError, types::OperType},
 };
 
+// TODO 增加删除alias的功能
 pub fn handler_alias(alias: Option<String>) {
     if alias.is_none() {
         return;
     }
 
     let alias_config = alias.unwrap();
-
-    // TODO 要判定是否有重复的配置，重复就不配置了
 
     match set_alias(&alias_config) {
         Ok(_) => {
@@ -33,17 +34,16 @@ pub fn handler_alias(alias: Option<String>) {
     }
 }
 
-pub fn handler_show_alias(show_alias: bool) {
-    if !show_alias {
-        return;
-    }
-
+pub fn handler_alias_list() {
     match fs::read_to_string(paths::DIR_ALIAS_FILE_PATH.clone()) {
-        Ok(content) => println!(
-            "~={}\n{}",
-            paths::HOME_DIR.to_string_lossy().to_string(),
-            content
-        ),
+        Ok(content) => {
+            let home_alias = format!(
+                "~={} {}",
+                paths::HOME_DIR.to_string_lossy().to_string(),
+                "(default)".cyan()
+            );
+            println!("{}\n{}", home_alias, content)
+        }
         Err(e) => println!("Show aliases failed. {}", e.to_string()),
     }
 }
@@ -51,25 +51,46 @@ pub fn handler_show_alias(show_alias: bool) {
 fn set_alias(alias_config: &String) -> Result<(), ConfigError> {
     // 格式必须是 xxx=/sdf/sdf 的样子
     if let Some((alias, origin)) = alias_config.split_once("=") {
-        // paths::DIR_ALIAS_FILE_PATH;
         if alias.is_empty() {
             return Err(ConfigError::EmptyName(format!(
-                "alias is empty. Got {}",
+                "alias is empty. Got '{}'",
                 alias_config
             )));
         }
 
         if origin.is_empty() {
             return Err(ConfigError::EmptyName(format!(
-                "origin is empty. Got {}",
+                "origin is empty. Got '{}'",
                 alias_config
             )));
+        }
+
+        // 去掉origin后面的斜杠
+        let origin = origin.trim_end_matches(path::MAIN_SEPARATOR);
+
+        if origin == paths::HOME_DIR.to_string_lossy() {
+            return Err(ConfigError::AliasAlreadyExists(
+                "HOME_DIR has a default alias '~', there is no need to set it again.".to_string(),
+            ));
+        }
+
+        let file_path = paths::DIR_ALIAS_FILE_PATH.clone();
+
+        let content = fs::read_to_string(&file_path)?;
+
+        for line in content.lines() {
+            if line == alias_config {
+                return Err(ConfigError::AliasAlreadyExists(format!(
+                    "Got '{}'",
+                    alias_config
+                )));
+            }
         }
 
         let mut file = fs::OpenOptions::new()
             .create(true)
             .append(true)
-            .open(paths::DIR_ALIAS_FILE_PATH.clone())?;
+            .open(&file_path)?;
 
         // 写入
         file.write_all(alias_config.as_bytes())?;

@@ -4,6 +4,8 @@ pub enum ConfigError {
     /// 文件读取/写入错误
     IoError(String),
 
+    AliasAlreadyExists(String),
+
     EmptyName(String),
 
     InvalidAliasEntryForm(String),
@@ -13,6 +15,7 @@ impl std::fmt::Display for ConfigError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let description = match self {
             ConfigError::IoError(m) => format!("IoError: {}", m),
+            ConfigError::AliasAlreadyExists(m) => format!("AliasAlreadyExists: {}", m),
             ConfigError::EmptyName(m) => format!("EmptyName: {}", m),
             ConfigError::InvalidAliasEntryForm(m) => format!("InvalidAliasEntryForm: {}", m),
         };

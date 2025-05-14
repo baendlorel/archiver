@@ -16,9 +16,11 @@ fn main() {
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
-        Some(ArvCmd::Config { alias, show_alias }) => {
+        Some(ArvCmd::Config { alias, alias_list }) => {
             handlers::config::handler_alias(alias);
-            handlers::config::handler_show_alias(show_alias);
+            if alias_list {
+                handlers::config::handler_alias_list();
+            }
         }
         Some(ArvCmd::Clear) => {
             println!(

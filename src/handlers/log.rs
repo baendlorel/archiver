@@ -216,7 +216,6 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
         Ok(s.parse::<u32>()?)
     };
 
-    // TODO 入参为202039，月份越界，报错需要精确化，现为DateParseError: Must give args like 202501, 202501-202506,*-202501。
     if is_parsable(range) {
         return Ok((parse(range, default_a)?, default_b));
     }

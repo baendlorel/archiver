@@ -48,7 +48,7 @@ pub enum ArvCmd {
         alias: Option<String>,
 
         #[arg(long, group = "config_options")]
-        show_alias: bool,
+        alias_list: bool,
     },
 
     /// It is a dangerous operation and we will not implement it. If you really want to clear the archive, just remove the '.archive' folder in your home dir.
