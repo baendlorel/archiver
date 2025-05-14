@@ -19,9 +19,10 @@ pub struct LogEntry {
 impl LogEntry {
     pub fn to_log(&self) -> String {
         let status = if self.is_succ {
-            "S".green().to_string()
+            //  ✓ 和 ✗
+            "✓".green().to_string()
         } else {
-            "F".red().to_string()
+            "✗".red().to_string()
         };
 
         // 带空格的，要包裹单引号

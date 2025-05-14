@@ -191,39 +191,50 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
 
     let range = &range.unwrap();
 
-    let is_valid_ym = |s: &String| -> Result<bool, OperLogError> {
-        let is_numeric = s.chars().all(|c| c.is_numeric());
-        let is_valid_len = s.len() > 2;
-        if !is_numeric || !is_valid_len {
-            return Ok(false);
-        }
-
-        let raw_month = s[(s.len() - 2)..s.len()].parse::<u32>()?;
-        let valid_month = raw_month <= 12 && raw_month >= 1;
-
-        Ok(valid_month)
-    };
+    let is_parsable = |s: &String| -> bool { s == "*" || s.chars().all(|c| c.is_numeric()) };
 
     let parse = |s: &String, default_value: u32| -> Result<u32, OperLogError> {
         if s == "*" {
             return Ok(default_value);
         }
 
-        if is_valid_ym(s)? {
-            return Ok(s.parse::<u32>()?);
-        } else {
+        let is_valid_len = s.len() > 2;
+        if !is_valid_len {
             return Err(OperLogError::DateParseError(
-                "Date must be like `YYYYMM`".to_string(),
+                "Length of date string must > 2".to_string(),
             ));
         }
+
+        let raw_month = s[(s.len() - 2)..s.len()].parse::<u32>()?;
+        if raw_month > 12 || raw_month < 1 {
+            return Err(OperLogError::DateParseError(format!(
+                "Month must be 1~12. Got '{}'",
+                raw_month
+            )));
+        }
+
+        Ok(s.parse::<u32>()?)
     };
 
     // TODO 入参为202039，月份越界，报错需要精确化，现为DateParseError: Must give args like 202501, 202501-202506,*-202501。
-    if is_valid_ym(range)? {
-        return Ok((range.parse::<u32>()?, default_b));
+    if is_parsable(range) {
+        return Ok((parse(range, default_a)?, default_b));
     }
 
     if let Some((a_str, b_str)) = range.split_once('-') {
+        if !is_parsable(&a_str.to_string()) {
+            return Err(OperLogError::DateParseError(format!(
+                "Start date is not * or contains letters other than digits. Got '{}'",
+                a_str
+            )));
+        }
+        if !is_parsable(&b_str.to_string()) {
+            return Err(OperLogError::DateParseError(format!(
+                "End date is not * or contains letters other than digits. Got '{}'",
+                b_str
+            )));
+        }
+
         let a = parse(&a_str.to_string(), default_a)?;
         let b = parse(&b_str.to_string(), default_b)?;
 

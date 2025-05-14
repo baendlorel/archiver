@@ -16,7 +16,15 @@ fn main() {
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
-        Some(ArvCmd::Config { alias }) => {}
+        Some(ArvCmd::Config { alias, show_alias }) => {
+            handlers::config::handler_alias(alias);
+            handlers::config::handler_show_alias(show_alias);
+        }
+        Some(ArvCmd::Clear) => {
+            println!(
+                "This is dangerous and we will not implement it. If you really want to clear the archive, just remove the '.archive' folder in your home dir."
+            );
+        }
         None => {
             println!("{}", "Please enter your command".yellow());
             // 打印帮助信息

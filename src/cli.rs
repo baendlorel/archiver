@@ -43,8 +43,15 @@ pub enum ArvCmd {
     /// Configurations
     #[command()]
     Config {
-        /// Directory alias. Can shorten the paths showed in console
-        #[arg(short, long)]
+        /// Example: `--alias /usr/bin=@bin`. Can shorten the paths showed in console, but full paths are still preserved on records.
+        #[arg(long, group = "config_options")]
         alias: Option<String>,
+
+        #[arg(long, group = "config_options")]
+        show_alias: bool,
     },
+
+    /// It is a dangerous operation and we will not implement it. If you really want to clear the archive, just remove the '.archive' folder in your home dir.
+    #[command()]
+    Clear,
 }

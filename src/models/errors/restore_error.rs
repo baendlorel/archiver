@@ -1,5 +1,3 @@
-use std::fmt;
-
 use super::ListError;
 
 /// 操作日志加载错误枚举
@@ -19,8 +17,8 @@ pub enum RestoreError {
     AlreadyRestored(String),
 }
 
-impl fmt::Display for RestoreError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for RestoreError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let description = match self {
             RestoreError::IoError(m) => format!("IoError: {}", m),
             RestoreError::ArchivedFileMissing(m) => format!("ArchivedFileMissing: {}", m),

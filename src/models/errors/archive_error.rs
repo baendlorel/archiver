@@ -1,5 +1,3 @@
-use std::fmt;
-
 use super::ListError;
 use super::OperLogError;
 
@@ -19,8 +17,8 @@ pub enum ArchiveError {
     },
 }
 
-impl fmt::Display for ArchiveError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for ArchiveError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let description = match self {
             ArchiveError::IoError(m) => format!("IoError: {}", m),
             ArchiveError::TargetNotFound(m) => format!("TargetNotFound: {}", m),

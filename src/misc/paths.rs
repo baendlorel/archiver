@@ -18,7 +18,7 @@ mod paths {
 }
 
 /// 用户文件夹
-static HOME_DIR: Lazy<PathBuf> =
+pub static HOME_DIR: Lazy<PathBuf> =
     Lazy::new(|| dirs::home_dir().expect("Failed to get home directory"));
 
 /// 当前工作目录
@@ -55,6 +55,10 @@ pub static CONFIGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
 
 /// 归档记录文件路径
 pub static LIST_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| ROOT_DIR.join(paths::LIST_FILE));
+
+/// 目录别名配置文件路径
+pub static DIR_ALIAS_FILE_PATH: Lazy<PathBuf> =
+    Lazy::new(|| CONFIGS_DIR.join(paths::DIR_ALIAS_FILE));
 
 pub static CURRENT_ID: Lazy<u32> = Lazy::new(|| {
     let auto_incr_file = CONFIGS_DIR.join(paths::AUTO_INCR_FILE);
