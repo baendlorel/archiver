@@ -1,45 +1,25 @@
-use super::ListError;
+use super::with_backtrace::WithBacktrace;
+use crate::impl_from_with_backtrace;
 
-/// 操作日志加载错误枚举
-#[derive(PartialEq, Debug)]
+impl_from_with_backtrace!(std::io::Error, RestoreError::IoError);
+
+#[derive(thiserror::Error, Debug)]
 pub enum RestoreError {
-    IoError(String),
+    #[error("IoError: {0}")]
+    IoError(WithBacktrace<std::io::Error>),
 
     // 归档文件未找到
-    ArchivedFileMissing(String),
+    #[error("ArchivedFileMissing: {0}")]
+    ArchivedFileMissing(WithBacktrace<String>),
 
     // 原目录下有了另一个同名文件/文件夹
-    DuplicatedOrigin(String),
+    #[error("DuplicatedOrigin: {0}")]
+    DuplicatedOrigin(WithBacktrace<String>),
 
-    MarkAsRestoredFail(String),
+    #[error("MarkAsRestoredFail: {0}")]
+    MarkAsRestoredFail(WithBacktrace<String>),
 
     /// 归档目标已经恢复过了
-    AlreadyRestored(String),
-}
-
-impl std::fmt::Display for RestoreError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let description = match self {
-            RestoreError::IoError(m) => format!("IoError: {}", m),
-            RestoreError::ArchivedFileMissing(m) => format!("ArchivedFileMissing: {}", m),
-            RestoreError::DuplicatedOrigin(m) => format!("DuplicatedOrigin: {}", m),
-            RestoreError::MarkAsRestoredFail(m) => format!("MarkAsRestoredFail: {}", m),
-            RestoreError::AlreadyRestored(m) => format!("AlreadyRestored: {}", m),
-        };
-        f.write_str(description.as_str())
-    }
-}
-
-impl std::error::Error for RestoreError {}
-
-impl From<std::io::Error> for RestoreError {
-    fn from(error: std::io::Error) -> Self {
-        RestoreError::IoError(error.to_string())
-    }
-}
-
-impl From<ListError> for RestoreError {
-    fn from(error: ListError) -> Self {
-        RestoreError::MarkAsRestoredFail(error.to_string())
-    }
+    #[error("AlreadyRestored: {0}")]
+    AlreadyRestored(WithBacktrace<String>),
 }

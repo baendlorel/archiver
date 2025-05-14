@@ -1,56 +1,25 @@
 use super::ListError;
 use super::OperLogError;
+use super::with_backtrace::WithBacktrace;
 
-/// 操作日志加载错误枚举
-#[derive(PartialEq, Debug)]
+use crate::impl_from_with_backtrace;
+
+impl_from_with_backtrace!(std::io::Error, ArchiveError::IoError);
+
+#[derive(thiserror::Error, Debug)]
 pub enum ArchiveError {
-    /// 归档目标不存在
-    TargetNotFound(String),
-    InvalidTarget(String),
-    IoError(String),
+    #[error("IoError: {0}")]
+    IoError(WithBacktrace<std::io::Error>),
 
-    ListSaveError {
-        source: ListError,
-    },
-    LogSaveError {
-        source: OperLogError,
-    },
-}
+    #[error("TargetNotFound: {0}")]
+    TargetNotFound(WithBacktrace<String>),
 
-impl std::fmt::Display for ArchiveError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let description = match self {
-            ArchiveError::IoError(m) => format!("IoError: {}", m),
-            ArchiveError::TargetNotFound(m) => format!("TargetNotFound: {}", m),
-            ArchiveError::InvalidTarget(m) => format!("InvalidTarget: {}", m),
-            // 外部错误
-            ArchiveError::ListSaveError { source } => {
-                format!("ListSaveError: {}", source)
-            }
-            ArchiveError::LogSaveError { source } => {
-                format!("LogSaveError: {}", source)
-            }
-        };
-        f.write_str(description.as_str())
-    }
-}
+    #[error("InvalidTarget: {0}")]
+    InvalidTarget(WithBacktrace<String>),
 
-impl std::error::Error for ArchiveError {}
+    #[error("ListSaveError: {0}")]
+    ListSaveError(WithBacktrace<ListError>),
 
-impl From<std::io::Error> for ArchiveError {
-    fn from(error: std::io::Error) -> Self {
-        ArchiveError::IoError(error.to_string())
-    }
-}
-
-impl From<ListError> for ArchiveError {
-    fn from(error: ListError) -> Self {
-        ArchiveError::ListSaveError { source: error }
-    }
-}
-
-impl From<OperLogError> for ArchiveError {
-    fn from(error: OperLogError) -> Self {
-        ArchiveError::LogSaveError { source: error }
-    }
+    #[error("LogSaveError: {0}")]
+    LogSaveError(WithBacktrace<OperLogError>),
 }

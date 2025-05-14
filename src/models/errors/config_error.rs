@@ -1,36 +1,24 @@
-/// 操作日志加载错误枚举
-#[derive(PartialEq, Debug)]
+use super::with_backtrace::WithBacktrace;
+use crate::impl_from_with_backtrace;
+
+impl_from_with_backtrace!(std::io::Error, ConfigError::IoError);
+
+#[derive(thiserror::Error, Debug)]
 pub enum ConfigError {
-    /// 文件读取/写入错误
-    IoError(String),
+    #[error("IoError: {0}")]
+    IoError(WithBacktrace<std::io::Error>),
 
     // 设置alias时涉及的错误
-    AliasAlreadyExists(String),
-    EmptyName(String),
-    InvalidAliasEntryForm(String),
+    #[error("AliasAlreadyExists: {0}")]
+    AliasAlreadyExists(WithBacktrace<String>),
+
+    #[error("EmptyName: {0}")]
+    EmptyName(WithBacktrace<String>),
+
+    #[error("InvalidAliasEntryForm: {0}")]
+    InvalidAliasEntryForm(WithBacktrace<String>),
 
     // 删除alias时涉及的错误
-    AliasNotFound(String),
-}
-
-impl std::fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let description = match self {
-            ConfigError::IoError(m) => format!("IoError: {}", m),
-            ConfigError::AliasAlreadyExists(m) => format!("AliasAlreadyExists: {}", m),
-            ConfigError::EmptyName(m) => format!("EmptyName: {}", m),
-            ConfigError::InvalidAliasEntryForm(m) => format!("InvalidAliasEntryForm: {}", m),
-            ConfigError::AliasNotFound(m) => format!("AliasNotFound: {}", m),
-        };
-        f.write_str(description.as_str())
-    }
-}
-
-impl std::error::Error for ConfigError {}
-
-/// 转换标准 IO 错误到自定义错误
-impl From<std::io::Error> for ConfigError {
-    fn from(error: std::io::Error) -> Self {
-        ConfigError::IoError(error.to_string())
-    }
+    #[error("AliasNotFound: {0}")]
+    AliasNotFound(WithBacktrace<String>),
 }
