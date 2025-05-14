@@ -4,11 +4,13 @@ pub enum ConfigError {
     /// 文件读取/写入错误
     IoError(String),
 
+    // 设置alias时涉及的错误
     AliasAlreadyExists(String),
-
     EmptyName(String),
-
     InvalidAliasEntryForm(String),
+
+    // 删除alias时涉及的错误
+    AliasNotFound(String),
 }
 
 impl std::fmt::Display for ConfigError {
@@ -18,6 +20,7 @@ impl std::fmt::Display for ConfigError {
             ConfigError::AliasAlreadyExists(m) => format!("AliasAlreadyExists: {}", m),
             ConfigError::EmptyName(m) => format!("EmptyName: {}", m),
             ConfigError::InvalidAliasEntryForm(m) => format!("InvalidAliasEntryForm: {}", m),
+            ConfigError::AliasNotFound(m) => format!("AliasNotFound: {}", m),
         };
         f.write_str(description.as_str())
     }

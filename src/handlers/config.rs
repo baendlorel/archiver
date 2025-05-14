@@ -8,28 +8,18 @@ use crate::{
     models::{errors::ConfigError, types::OperType},
 };
 
-// TODO 增加删除alias的功能
-pub fn handler_alias(alias: Option<String>) {
-    if alias.is_none() {
-        return;
-    }
-
-    let alias_config = alias.unwrap();
-
-    match set_alias(&alias_config) {
+pub fn handler_alias(arg: String) {
+    let oper = OperType::Config {
+        option: "--alias".to_string(),
+    };
+    match set_alias(&arg) {
         Ok(_) => {
-            println!("Alias '{}' is set successfully.", alias_config);
-            let _ = log::save(OperType::Config, alias_config, true, None, None);
+            println!("Alias '{}' is set successfully.", arg);
+            let _ = log::save(oper, arg, true, None, None);
         }
         Err(e) => {
             println!("{}", e.to_string());
-            let _ = log::save(
-                OperType::Config,
-                alias_config,
-                false,
-                None,
-                Some(e.to_string()),
-            );
+            let _ = log::save(oper, arg, false, None, Some(e.to_string()));
         }
     }
 }
@@ -48,20 +38,67 @@ pub fn handler_alias_list() {
     }
 }
 
-fn set_alias(alias_config: &String) -> Result<(), ConfigError> {
+pub fn handler_alias_remove(arg: String) {
+    let oper = OperType::Config {
+        option: "--alias-remove".to_string(),
+    };
+    match alias_remove(&arg) {
+        Ok(_) => {
+            println!("Alias '{}' is removed successfully.", arg);
+            let _ = log::save(oper, arg, true, None, None);
+        }
+        Err(e) => {
+            println!("{}", e.to_string());
+            let _ = log::save(oper, arg, false, None, Some(e.to_string()));
+        }
+    }
+}
+fn alias_remove(alias_entry: &String) -> Result<(), ConfigError> {
+    let file_path = paths::DIR_ALIAS_FILE_PATH.clone();
+    let content = fs::read_to_string(&file_path)?;
+
+    let mut removed_content = String::from("");
+    let mut found = false;
+    for line in content.lines() {
+        if line == alias_entry {
+            found = true;
+        } else {
+            removed_content.push_str(format!("{}\n", line).as_str());
+        }
+    }
+    if !found {
+        return Err(ConfigError::AliasNotFound(format!(
+            "There is no alias entry = '{}'",
+            alias_entry
+        )));
+    }
+
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(false)
+        .open(&file_path)?;
+
+    // 写入
+    file.write_all(removed_content.as_bytes())?;
+    file.write_all(b"\n")?;
+
+    Ok(())
+}
+
+fn set_alias(alias_entry: &String) -> Result<(), ConfigError> {
     // 格式必须是 xxx=/sdf/sdf 的样子
-    if let Some((alias, origin)) = alias_config.split_once("=") {
+    if let Some((alias, origin)) = alias_entry.split_once("=") {
         if alias.is_empty() {
             return Err(ConfigError::EmptyName(format!(
                 "alias is empty. Got '{}'",
-                alias_config
+                alias_entry
             )));
         }
 
         if origin.is_empty() {
             return Err(ConfigError::EmptyName(format!(
                 "origin is empty. Got '{}'",
-                alias_config
+                alias_entry
             )));
         }
 
@@ -70,19 +107,17 @@ fn set_alias(alias_config: &String) -> Result<(), ConfigError> {
 
         if origin == paths::HOME_DIR.to_string_lossy() {
             return Err(ConfigError::AliasAlreadyExists(
-                "HOME_DIR has a default alias '~', there is no need to set it again.".to_string(),
+                "HOME_DIR already has a default alias '~', no need to set it again.".to_string(),
             ));
         }
 
         let file_path = paths::DIR_ALIAS_FILE_PATH.clone();
-
         let content = fs::read_to_string(&file_path)?;
-
         for line in content.lines() {
-            if line == alias_config {
+            if line == alias_entry {
                 return Err(ConfigError::AliasAlreadyExists(format!(
                     "Got '{}'",
-                    alias_config
+                    alias_entry
                 )));
             }
         }
@@ -93,7 +128,7 @@ fn set_alias(alias_config: &String) -> Result<(), ConfigError> {
             .open(&file_path)?;
 
         // 写入
-        file.write_all(alias_config.as_bytes())?;
+        file.write_all(alias_entry.as_bytes())?;
         file.write_all(b"\n")?;
 
         return Ok(());
@@ -101,6 +136,6 @@ fn set_alias(alias_config: &String) -> Result<(), ConfigError> {
 
     return Err(ConfigError::InvalidAliasEntryForm(format!(
         "Alias config string must take the form of 'xxx=/a/b'. Got '{}'",
-        alias_config
+        alias_entry
     )));
 }

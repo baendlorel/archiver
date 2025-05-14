@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub enum OperType {
     Archive,
     Restore,
-    Config,
+    Config { option: String },
 }
 
 /// 为OperationType实现转换为字符串的方法
@@ -15,7 +15,7 @@ impl OperType {
         match self {
             OperType::Archive => "arv".yellow().to_string(),
             OperType::Restore => "rst".cyan().to_string(),
-            OperType::Config => "cfg".purple().to_string(),
+            OperType::Config { option } => format!("{} {}", "cfg".bright_purple(), option),
         }
     }
 }

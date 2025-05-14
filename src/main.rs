@@ -9,6 +9,7 @@ mod models;
 use cli::{Args, ArvCmd};
 
 fn main() {
+    // 启用堆栈跟踪
     let args = Args::parse();
 
     match args.command {
@@ -16,10 +17,22 @@ fn main() {
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
-        Some(ArvCmd::Config { alias, alias_list }) => {
-            handlers::config::handler_alias(alias);
+        Some(ArvCmd::Config {
+            alias,
+            alias_list,
+            alias_remove,
+        }) => {
+            // 和上面range不一样，这里的选项参数是必须要写的，所以先判定后调用handler
+            if let Some(alias_entry) = alias {
+                handlers::config::handler_alias(alias_entry);
+                return;
+            }
             if alias_list {
                 handlers::config::handler_alias_list();
+                return;
+            }
+            if let Some(alias_entry) = alias_remove {
+                handlers::config::handler_alias_remove(alias_entry);
             }
         }
         Some(ArvCmd::Clear) => {
