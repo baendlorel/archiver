@@ -28,11 +28,11 @@ arv put <target> # e.g. `arv put my.txt`
 
 Move archived file/directory back to where it came from.
 
-- Would faill if there is an object with the same name.
+- Will fail if there is an object with the same name
 
-- `<id>` can be obtained from the `list` command.
+- `<id>` can be obtained from the `list` command
 
-- Restored target will be hidden in the `list`, unless you use `list --all`
+- The restored targets will be hidden when executing `list` command, unless you use `list --all`.
 
 ```bash
 arv restore <id> # also `arv rst <id>` or `arv r <id>`
@@ -43,8 +43,8 @@ arv restore <id> # also `arv rst <id>` or `arv r <id>`
 List all entries in the archive.
 
 - The list will contain archived time, id, target name and original directory
-- If the target is a directory, the color of its name will be blue
-- The color of `<id>` is magenta.
+- If the target is a directory, its name will be shown in blue
+- The `<id>` will be shown in magenta.
 
 ```bash
 arv list # also `arv ls`
@@ -56,7 +56,7 @@ arv list # also `arv ls`
 
 #### option: all
 
-Show all archived records including restored entries.
+Show all archived records, including the restored ones.
 
 ```bash
 arv list --all # also `arv ls -a`
@@ -70,15 +70,15 @@ arv list --all # also `arv ls -a`
 
 ### log
 
-Show the logs of `put`, `restore`, `config`.
+Show the logs of `put`, `restore`, and `config` operations.
 
-`[range]` means show logs with in this period of time. It can be in the forms below.
+`[range]` means showing logs within a specific period of time. It can take the following forms:
 
 1. normal ranges : `YYYYMM-YYYYMM`
 2. left side only : `YYYYMM`
 3. right side only : `*-YYYYMM`
-4. CE only
-5. Archiver will always consider last 2 digits of the number as month, and the rest as year
+4. Common Era only
+5. Archiver will always consider the last 2 digits of the number as the month, and the rest as the year.
 
 ```bash
 arv log [range] # also `arv lg [range]`
@@ -86,11 +86,11 @@ arv log [range] # also `arv lg [range]`
 
 ### config
 
-Do some configuration about Archiver.
+Configure some properties of Archiver.
 
 #### option: alias
 
-Aliases will shorten the path shown in command `list` and `log`. But data files would still keep the full version. It is just for display.
+Aliases will shorten the paths shown in command `list` and `log`. However, Archiver will still keep the full version. This is just for display purposes.
 
 ```bash
 arv config --alias a=/b/c # path `/b/c/xxx` displays as `a/xxx`
@@ -100,7 +100,7 @@ arv config --alias-remove a=/b/c  # remove alias config `a=/b/c`
 
 ### help
 
-Show help information.
+Show help information for all commands.
 
 ```bash
 arv help
