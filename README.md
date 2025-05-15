@@ -1,27 +1,38 @@
 # Archiver
 
-Put your unused files and folders into `/home/user/.archive`. Supported for logging, listing and restoring
+Troubled with too many projects? Cannot focus on your current work?
+
+**Archiver helps you now!**
 
 ## Commands
 
-Archived files are stored in `/home/user/.archive`. You can use the following commands to manage your archived files.
-Archived files/directories are meant to be readonly.
+Archived files are stored in `~/.archive` where `~` means home directory. You can use following commands to manage your archived files.
 
 ### put
 
-Put a file/directory into the archive. The target file will be moved to `~/.archive` where `~` means home directory.
+Put a file/directory into the archive.
+
+Just get into a directory, run this command and you can move your target into `.archive`.
+
+- Archived target will be given an unique id. The id is auto incremental.
 
 ```bash
-arv put <target> # e.g. arv put my.txt
+arv put <target> # e.g. `arv put my.txt`
+
+# Might show
+# Archiving my.txt
+# 'my.txt' is successfully archived, id:1
 ```
 
 ### restore
 
 Move archived file/directory back to where it came from.
 
-If there is an object with the same name, the restoration will fail.
+- Would faill if there is an object with the same name.
 
-`<id>` can be obtained from the `list` command.
+- `<id>` can be obtained from the `list` command.
+
+- Restored target will be hidden in the `list`, unless you use `list --all`
 
 ```bash
 arv restore <id> # also `arv rst <id>` or `arv r <id>`
@@ -31,7 +42,7 @@ arv restore <id> # also `arv rst <id>` or `arv r <id>`
 
 List all entries in the archive.
 
-- The list will contain time, id, target name and original directory
+- The list will contain archived time, id, target name and original directory
 - If the target is a directory, the color of its name will be blue
 - The color of `<id>` is magenta.
 
@@ -39,8 +50,22 @@ List all entries in the archive.
 arv list # also `arv ls`
 
 # It should show a table like this
-# 2025-05-12 17:00:05 id:4 - temp1.a   - ~/projects/personal/archiver
-# 2025-05-12 19:35:07 id:6 - temp2.b.f - ~/projects/personal/archiver
+# 2025-05-12 17:00:05 id:4 - temp1.a   - ~/projects
+# 2025-05-12 19:35:07 id:6 - temp2.b.f - ~/projects
+```
+
+#### option: all
+
+Show all archived records including restored entries.
+
+```bash
+arv list --all # also `arv ls -a`
+
+# It should show a table like this
+# 2025-05-12 17:00:05 id:4 - temp1.a   - ~/projects
+# 2025-05-12 19:35:07 id:5 - temp3(R)  - ~/projects
+# 2025-05-12 19:35:07 id:6 - temp2.b.f - ~/projects
+# 2025-05-12 19:35:07 id:7 - temp4(R)  - ~/projects
 ```
 
 ### log
@@ -52,6 +77,8 @@ Show the logs of `put`, `restore`, `config`.
 1. normal ranges : `YYYYMM-YYYYMM`
 2. left side only : `YYYYMM`
 3. right side only : `*-YYYYMM`
+4. CE only
+5. Archiver will always consider last 2 digits of the number as month, and the rest as year
 
 ```bash
 arv log [range] # also `arv lg [range]`
@@ -66,9 +93,9 @@ Do some configuration about Archiver.
 Aliases will shorten the path shown in command `list` and `log`. But data files would still keep the full version. It is just for display.
 
 ```bash
-arv config --alias a=/b/c # path `/b/c/xxx` will now display as `a/xxx`
+arv config --alias a=/b/c # path `/b/c/xxx` displays as `a/xxx`
 arv config --alias-list  # show all aliases
-arv config --alias-remove a=/b/c  # remove alias entry `a=/b/c`
+arv config --alias-remove a=/b/c  # remove alias config `a=/b/c`
 ```
 
 ### help
