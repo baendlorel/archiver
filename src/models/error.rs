@@ -1,7 +1,9 @@
+#[derive(Clone)]
 pub struct StackFrame {
     pub file: &'static str,
     pub line: u32,
     pub col: u32,
+    pub module_path: &'static str,
 }
 
 pub struct ArchiverError {
@@ -18,8 +20,13 @@ impl ArchiverError {
 impl std::fmt::Display for ArchiverError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut stack_info = String::new();
+        let mut counter: u32 = 0;
         for frame in &self.stack {
-            stack_info.push_str(&format!("at {}:{}:{}\n", frame.file, frame.line, frame.col));
+            counter += 1;
+            stack_info.push_str(&format!(
+                " {}. at {}:{}:{} ({})\n",
+                counter, frame.file, frame.line, frame.col, frame.module_path
+            ));
         }
         write!(f, "{}\n{}", self.message, stack_info)
     }
@@ -34,44 +41,34 @@ macro_rules! err {
                 file: file!(),
                 line: line!(),
                 col: column!(),
+                module_path: module_path!(),
             }],
         )
     };
 }
 
 #[macro_export]
-macro_rules! werr {
-    ($r:expr) => {
-        r.map_err(|e| $crate::err!(e))
+macro_rules! wrap_err {
+    ($o:expr) => {
+        match $o {
+            Ok(val) => Ok(val),
+            Err(e) => Err($crate::err!(e)),
+        }
     };
 }
 
-// #[macro_export]
-// macro_rules! update_error {
-//     ($e:expr) => {{
-//         let mut stack = $e.stack.clone();
-//         stack.push(StackFrame {
-//             file: file!(),
-//             line: line!(),
-//             col: column!(),
-//             func: std::intrinsics::function_name!(),
-//         });
-//         ArchiverError::new($e.message, stack)
-//     }};
-// }
-
 #[macro_export]
-macro_rules! w {
-    ($expr:expr) => {
-        match $expr {
-            Ok(val) => val,
+macro_rules! wrap_result {
+    ($o:expr) => {
+        match $o {
+            Ok(val) => Ok(val),
             Err(e) => {
                 let mut stack = e.stack.clone();
                 stack.push($crate::models::error::StackFrame {
                     file: file!(),
                     line: line!(),
                     col: column!(),
-                    func: std::intrinsics::function_name!(),
+                    module_path: module_path!(),
                 });
                 return Err($crate::models::error::ArchiverError {
                     message: e.message,

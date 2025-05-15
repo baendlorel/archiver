@@ -4,9 +4,9 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::{list, log};
-use crate::err;
 use crate::misc::paths;
 use crate::models::{error::ArchiverError, types::OperType};
+use crate::{err, wrap_err, wrap_result};
 
 pub fn handler(id: u32) {
     println!("Restoring id:{}", id.green());
@@ -60,11 +60,11 @@ fn restore(id: u32) -> Result<(), ArchiverError> {
             // 先确保上面两个不异常
             // 再确保原目录存在
             if !dir.exists() {
-                fs::create_dir_all(&dir).map_err(|e| err!(e))?;
+                wrap_err!(fs::create_dir_all(&dir))?;
             }
 
-            fs::rename(archive_path, target_path).map_err(|e| err!(e))?;
-            list::mark_as_restored(target_line_index)?;
+            wrap_err!(fs::rename(archive_path, target_path))?;
+            wrap_result!(list::mark_as_restored(target_line_index))?;
             return Ok(());
         }
         Err(e) => return Err(err!(e)),

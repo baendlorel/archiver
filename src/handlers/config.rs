@@ -2,8 +2,8 @@ use std::{fs, io::Write, path};
 
 use owo_colors::OwoColorize;
 
+use crate::{err, wrap_err};
 use crate::{
-    err,
     handlers::log,
     misc::paths,
     models::{error::ArchiverError, types::OperType},
@@ -56,7 +56,7 @@ pub fn handler_alias_remove(arg: String) {
 }
 fn alias_remove(alias_entry: &String) -> Result<(), ArchiverError> {
     let file_path = paths::DIR_ALIAS_FILE_PATH.clone();
-    let content = fs::read_to_string(&file_path).map_err(|e| err!(e))?;
+    let content = wrap_err!(fs::read_to_string(&file_path))?;
 
     let mut removed_content = String::from("");
     let mut found = false;
@@ -71,17 +71,7 @@ fn alias_remove(alias_entry: &String) -> Result<(), ArchiverError> {
         return Err(err!(format!("There is no alias entry = '{}'", alias_entry)));
     }
 
-    let mut file = fs::OpenOptions::new()
-        .create(true)
-        .append(false)
-        .open(&file_path)
-        .map_err(|e| err!(e))?;
-
-    // 写入
-    file.write_all(removed_content.as_bytes())
-        .map_err(|e| err!(e))?;
-    file.write_all(b"\n").map_err(|e| err!(e))?;
-
+    wrap_err!(fs::write(&file_path, removed_content + "\n"))?;
     Ok(())
 }
 
@@ -106,23 +96,23 @@ fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
         }
 
         let file_path = paths::DIR_ALIAS_FILE_PATH.clone();
-        let content = fs::read_to_string(&file_path).map_err(|e| err!(e))?;
+        let content = wrap_err!(fs::read_to_string(&file_path))?;
         for line in content.lines() {
             if line == alias_entry {
                 return Err(err!(format!("Got '{}'", alias_entry)));
             }
         }
 
-        let mut file = fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&file_path)
-            .map_err(|e| err!(e))?;
+        let mut file = wrap_err!(
+            fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&file_path)
+        )?;
 
         // 写入
-        file.write_all(alias_entry.as_bytes())
-            .map_err(|e| err!(e))?;
-        file.write_all(b"\n").map_err(|e| err!(e))?;
+        wrap_err!(file.write_all(alias_entry.as_bytes()))?;
+        wrap_err!(file.write_all(b"\n"))?;
 
         return Ok(());
     }

@@ -1,7 +1,7 @@
-use crate::err;
 use crate::misc::{append_entry, paths};
 use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
+use crate::{err, wrap_err, wrap_result};
 
 use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
@@ -30,8 +30,8 @@ fn log_content(
             .next()
             .ok_or(err!(format!("Month parse failed for '{}'", s)))?;
 
-        let year = raw_year.parse::<u32>().map_err(|e| err!(e))?;
-        let month = raw_month.parse::<u32>().map_err(|e| err!(e))?;
+        let year = wrap_err!(raw_year.parse::<u32>())?;
+        let month = wrap_err!(raw_month.parse::<u32>())?;
 
         if month > 12 || month < 1 {
             return Err(err!(format!("Month > 12, parse failed for '{}'", s)));
@@ -122,7 +122,7 @@ pub fn save(
         id,
     };
 
-    append_entry(&log_entry, log_file_path).map_err(|e| err!(e))?;
+    wrap_result!(append_entry(&log_entry, log_file_path))?;
     Ok(())
 }
 
@@ -166,8 +166,8 @@ fn load(range: Option<String>) -> Result<(), ArchiverError> {
             continue;
         }
 
-        let content = fs::read_to_string(log_file_path).map_err(|e| err!(e))?;
-        log_content(&range, &content, &mut counter)?;
+        let content = wrap_err!(fs::read_to_string(log_file_path))?;
+        wrap_result!(log_content(&range, &content, &mut counter))?;
     }
 
     if counter == 0 {
@@ -199,14 +199,12 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
             return Err(err!("Length of date string must > 2"));
         }
 
-        let raw_month = s[(s.len() - 2)..s.len()]
-            .parse::<u32>()
-            .map_err(|e| err!(e))?;
+        let raw_month = wrap_err!(s[(s.len() - 2)..s.len()].parse::<u32>())?;
         if raw_month > 12 || raw_month < 1 {
             return Err(err!(format!("Month must be 1~12. Got '{}'", raw_month)));
         }
 
-        Ok(s.parse::<u32>().map_err(|e| err!(e))?)
+        Ok(wrap_err!(s.parse::<u32>())?)
     };
 
     if is_parsable(range) {

@@ -2,11 +2,10 @@ use owo_colors::OwoColorize;
 use std::fs;
 
 use super::{list, log};
+use crate::{err, wrap_err, wrap_result};
 use crate::{
-    err,
     misc::{ForceToString, force_no_loss_string, paths},
     models::{error::ArchiverError, types::OperType},
-    w,
 };
 
 pub fn handler(target: String) {
@@ -57,9 +56,9 @@ fn archive(target: &String) -> Result<u32, ArchiverError> {
     let root = paths::ROOT_DIR.clone();
     let next_id = paths::auto_incr_id();
 
-    fs::rename(&target_path, root.join(next_id.to_string()));
+    wrap_err!(fs::rename(&target_path, root.join(next_id.to_string())))?;
 
-    list::insert(next_id, target_name_str, is_dir, cwd_str)?;
+    wrap_result!(list::insert(next_id, target_name_str, is_dir, cwd_str))?;
 
     Ok(next_id)
 }
