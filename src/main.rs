@@ -13,10 +13,10 @@ fn main() {
     let args = Args::parse();
 
     match args.command {
+        Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
+        Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
         Some(ArvCmd::List { all }) => handlers::list::handler(all),
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
-        Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
-        Some(ArvCmd::Archive { target }) => handlers::archive::handler(target),
         Some(ArvCmd::Config {
             alias,
             alias_list,

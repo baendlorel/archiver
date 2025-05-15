@@ -13,7 +13,7 @@ pub fn handler(target: String) {
     match archive(&target) {
         Ok(id) => {
             let _ = log::save(OperType::Archive, target.clone(), true, Some(id), None);
-            println!("'{}' is successfully archived", target)
+            println!("'{}' is successfully archived, id:{}", target, id)
         }
         Err(e) => {
             let _ = log::save(
