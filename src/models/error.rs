@@ -28,7 +28,7 @@ impl std::fmt::Display for ArchiverError {
                 counter, frame.file, frame.line, frame.col, frame.module_path
             ));
         }
-        write!(f, "{}\n{}", self.message, stack_info)
+        write!(f, "{}\n{}", self.message, stack_info.trim_end_matches("\n"))
     }
 }
 

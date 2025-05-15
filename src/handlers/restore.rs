@@ -4,7 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::{list, log};
-use crate::misc::paths;
+use crate::misc::{ForceToString, paths};
 use crate::models::{error::ArchiverError, types::OperType};
 use crate::{err, wrap_err, wrap_result};
 
@@ -33,7 +33,10 @@ fn restore(id: u32) -> Result<(), ArchiverError> {
     match list::find(id, &mut target_line_index) {
         Ok(entry) => {
             if entry.is_restored {
-                return Err(err!(format!("id:{}", id)));
+                return Err(err!(format!(
+                    "id:{} has already been restored. Cannot restore it again.",
+                    id
+                )));
             }
 
             let target_name = OsString::from(entry.target);
@@ -45,15 +48,15 @@ fn restore(id: u32) -> Result<(), ArchiverError> {
             // 还要检查复制后是否会导致文件覆盖
             if target_path.exists() {
                 return Err(err!(format!(
-                    "{} already exists, please remove or rename it first",
-                    target_path.to_string_lossy()
+                    "Path '{}' already exists, please remove or rename it first",
+                    target_path.force_to_string()
                 )));
             }
 
             if !archive_path.exists() {
                 return Err(err!(format!(
                     "The archive file id:{} does not exist",
-                    archive_path.to_string_lossy()
+                    archive_path.force_to_string()
                 )));
             }
 

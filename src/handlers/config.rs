@@ -99,7 +99,10 @@ fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
         let content = wrap_err!(fs::read_to_string(&file_path))?;
         for line in content.lines() {
             if line == alias_entry {
-                return Err(err!(format!("Got '{}'", alias_entry)));
+                return Err(err!(format!(
+                    "Alias entry '{}' already exists",
+                    alias_entry
+                )));
             }
         }
 
