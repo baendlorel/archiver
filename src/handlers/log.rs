@@ -67,9 +67,16 @@ fn log_content(
     Ok(())
 }
 
-pub fn write(oper: OperType, arg: String, is_succ: bool, id: Option<u32>, remark: Option<String>) {
-    if let Err(e) = save(oper, arg, is_succ, id, remark) {
-        panic!("{}", e.to_string())
+pub fn succ(oper: OperType, arg: String, id: Option<u32>, remark: Option<String>) {
+    if let Err(e) = save(oper, arg, true, id, remark) {
+        println!("{}", e.to_string())
+    }
+}
+
+pub fn err(oper: OperType, arg: String, id: Option<u32>, err_msg: String) {
+    println!("{}", err_msg);
+    if let Err(e) = save(oper, arg, false, id, Some(err_msg)) {
+        println!("{}", e.to_string())
     }
 }
 

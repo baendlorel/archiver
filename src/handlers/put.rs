@@ -12,18 +12,9 @@ pub fn handler(target: String) {
     match archive(&target) {
         Ok(id) => {
             println!("'{}' is successfully archived, id:{}", target, id);
-            log::write(OperType::Put, target.clone(), true, Some(id), None);
+            log::succ(OperType::Put, target.clone(), Some(id), None);
         }
-        Err(e) => {
-            println!("{}", e.to_string());
-            log::write(
-                OperType::Put,
-                target.clone(),
-                false,
-                None,
-                Some(e.to_string()),
-            );
-        }
+        Err(e) => log::err(OperType::Put, target.clone(), None, e.to_string()),
     };
 }
 

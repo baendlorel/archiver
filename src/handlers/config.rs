@@ -15,12 +15,9 @@ pub fn handler_alias(arg: String) {
     match set_alias(&arg) {
         Ok(_) => {
             println!("Alias '{}' is set successfully.", arg);
-            log::write(oper, arg, true, None, None);
+            log::succ(oper, arg, None, None);
         }
-        Err(e) => {
-            println!("{}", e.to_string());
-            log::write(oper, arg, false, None, Some(e.to_string()));
-        }
+        Err(e) => log::err(oper, arg, None, e.to_string()),
     }
 }
 
@@ -45,12 +42,9 @@ pub fn handler_alias_remove(arg: String) {
     match alias_remove(&arg) {
         Ok(_) => {
             println!("Alias '{}' is removed successfully.", arg);
-            log::write(oper, arg, true, None, None);
+            log::succ(oper, arg, None, None);
         }
-        Err(e) => {
-            println!("{}", e.to_string());
-            log::write(oper, arg, false, None, Some(e.to_string()));
-        }
+        Err(e) => log::err(oper, arg, None, e.to_string()),
     }
 }
 fn alias_remove(alias_entry: &String) -> Result<(), ArchiverError> {
