@@ -1,5 +1,6 @@
+use crate::err;
 use crate::misc::{append_entry, paths};
-use crate::models::errors::OperLogError;
+use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
 
 use chrono::{Datelike, Local};
@@ -17,28 +18,23 @@ fn log_content(
     range: &(u32, u32),
     content: &String,
     counter: &mut u32,
-) -> Result<(), OperLogError> {
+) -> Result<(), ArchiverError> {
     // 把年月取出来组成一个整数用于比较
-    let parse_ym = |s: &String| -> Result<u32, OperLogError> {
+    let parse_ym = |s: &String| -> Result<u32, ArchiverError> {
         // 现在s基本认为一定是一个时间字符串
         let mut iter = s.split("-");
-        let raw_year = iter.next().ok_or(OperLogError::DateParseError(format!(
-            "Year parse failed for '{}'",
-            s
-        )))?;
-        let raw_month = iter.next().ok_or(OperLogError::DateParseError(format!(
-            "Month parse failed for '{}'",
-            s
-        )))?;
+        let raw_year = iter
+            .next()
+            .ok_or(err!(format!("Year parse failed for '{}'", s)))?;
+        let raw_month = iter
+            .next()
+            .ok_or(err!(format!("Month parse failed for '{}'", s)))?;
 
-        let year = raw_year.parse::<u32>()?;
-        let month = raw_month.parse::<u32>()?;
+        let year = raw_year.parse::<u32>().map_err(|e| err!(e))?;
+        let month = raw_month.parse::<u32>().map_err(|e| err!(e))?;
 
         if month > 12 || month < 1 {
-            return Err(OperLogError::DateParseError(format!(
-                "Month > 12, parse failed for '{}'",
-                s
-            )));
+            return Err(err!(format!("Month > 12, parse failed for '{}'", s)));
         }
 
         Ok(year * 100 + month)
@@ -100,7 +96,7 @@ pub fn save(
     is_succ: bool,
     id: Option<u32>,
     remark: Option<String>,
-) -> Result<(), OperLogError> {
+) -> Result<(), ArchiverError> {
     // 获取日志文件路径
     let log_file_path =
         paths::LOGS_DIR.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
@@ -126,7 +122,7 @@ pub fn save(
         id,
     };
 
-    append_entry(&log_entry, log_file_path).map_err(|e| OperLogError::IoError(e.to_string()))?;
+    append_entry(&log_entry, log_file_path).map_err(|e| err!(e))?;
     Ok(())
 }
 
@@ -152,7 +148,7 @@ pub fn save(
 ///
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
-fn load(range: Option<String>) -> Result<(), OperLogError> {
+fn load(range: Option<String>) -> Result<(), ArchiverError> {
     // 考虑到日期本质上是一个不定型进制数，可以考虑直接转为数字来对比大小
     let range = parse_range(range)?;
     let year_range = (range.0 / 100, range.1 / 100);
@@ -170,7 +166,7 @@ fn load(range: Option<String>) -> Result<(), OperLogError> {
             continue;
         }
 
-        let content = fs::read_to_string(log_file_path)?;
+        let content = fs::read_to_string(log_file_path).map_err(|e| err!(e))?;
         log_content(&range, &content, &mut counter)?;
     }
 
@@ -181,7 +177,7 @@ fn load(range: Option<String>) -> Result<(), OperLogError> {
     Ok(())
 }
 
-fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
+fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
     let default_a = u32::MIN;
     let default_b = u32::MAX;
 
@@ -193,27 +189,24 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
 
     let is_parsable = |s: &String| -> bool { s == "*" || s.chars().all(|c| c.is_numeric()) };
 
-    let parse = |s: &String, default_value: u32| -> Result<u32, OperLogError> {
+    let parse = |s: &String, default_value: u32| -> Result<u32, ArchiverError> {
         if s == "*" {
             return Ok(default_value);
         }
 
         let is_valid_len = s.len() > 2;
         if !is_valid_len {
-            return Err(OperLogError::DateParseError(
-                "Length of date string must > 2".to_string(),
-            ));
+            return Err(err!("Length of date string must > 2"));
         }
 
-        let raw_month = s[(s.len() - 2)..s.len()].parse::<u32>()?;
+        let raw_month = s[(s.len() - 2)..s.len()]
+            .parse::<u32>()
+            .map_err(|e| err!(e))?;
         if raw_month > 12 || raw_month < 1 {
-            return Err(OperLogError::DateParseError(format!(
-                "Month must be 1~12. Got '{}'",
-                raw_month
-            )));
+            return Err(err!(format!("Month must be 1~12. Got '{}'", raw_month)));
         }
 
-        Ok(s.parse::<u32>()?)
+        Ok(s.parse::<u32>().map_err(|e| err!(e))?)
     };
 
     if is_parsable(range) {
@@ -222,13 +215,13 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
 
     if let Some((a_str, b_str)) = range.split_once('-') {
         if !is_parsable(&a_str.to_string()) {
-            return Err(OperLogError::DateParseError(format!(
+            return Err(err!(format!(
                 "Start date is not * or contains letters other than digits. Got '{}'",
                 a_str
             )));
         }
         if !is_parsable(&b_str.to_string()) {
-            return Err(OperLogError::DateParseError(format!(
+            return Err(err!(format!(
                 "End date is not * or contains letters other than digits. Got '{}'",
                 b_str
             )));
@@ -238,14 +231,10 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), OperLogError> {
         let b = parse(&b_str.to_string(), default_b)?;
 
         if a > b {
-            return Err(OperLogError::DateParseError(
-                "Start date > end date".to_string(),
-            ));
+            return Err(err!("Start date > end date"));
         }
         return Ok((a, b));
     }
 
-    Err(OperLogError::DateParseError(
-        "Must give args like 202501, 202501-202506,*-202501".to_string(),
-    ))
+    Err(err!("Must give args like 202501, 202501-202506,*-202501"))
 }

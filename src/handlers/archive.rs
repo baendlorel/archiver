@@ -3,11 +3,10 @@ use std::fs;
 
 use super::{list, log};
 use crate::{
+    err,
     misc::{ForceToString, force_no_loss_string, paths},
-    models::{
-        errors::{ArchiveError, WithBacktrace},
-        types::OperType,
-    },
+    models::{error::ArchiverError, types::OperType},
+    w,
 };
 
 pub fn handler(target: String) {
@@ -30,28 +29,25 @@ pub fn handler(target: String) {
     };
 }
 
-fn archive(target: &String) -> Result<u32, ArchiveError> {
+fn archive(target: &String) -> Result<u32, ArchiverError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd = paths::CWD.clone();
     let target_path = cwd.join(target);
 
     // 目标不存在则报错
     if !target_path.exists() {
-        return Err(ArchiveError::TargetNotFound(WithBacktrace::new(format!(
-            "Target not found: {}",
-            target_path.force_to_string()
-        ))));
+        return Err(err!(format!(
+            "Target '{}' does not exist in current directory.",
+            target
+        )));
     }
 
     // 必须无损转换OsString
     let cwd_str = cwd.force_to_string();
 
-    let target_name: &std::ffi::OsStr =
-        target_path
-            .file_name()
-            .ok_or(ArchiveError::InvalidTarget(WithBacktrace::new(
-                "Failed to get target name".to_string(),
-            )))?;
+    let target_name: &std::ffi::OsStr = target_path
+        .file_name()
+        .ok_or(err!("Fail to get target name".to_string()))?;
 
     // 必须无损转换OsString
     let target_name_str = force_no_loss_string(target_name);
@@ -61,7 +57,7 @@ fn archive(target: &String) -> Result<u32, ArchiveError> {
     let root = paths::ROOT_DIR.clone();
     let next_id = paths::auto_incr_id();
 
-    fs::rename(&target_path, root.join(next_id.to_string()))?;
+    fs::rename(&target_path, root.join(next_id.to_string()));
 
     list::insert(next_id, target_name_str, is_dir, cwd_str)?;
 
