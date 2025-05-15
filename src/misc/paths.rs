@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{MAIN_SEPARATOR, PathBuf};
 
-use super::force_no_loss;
+use super::ForceToString;
 
 mod paths {
     // 目录
@@ -77,9 +77,9 @@ pub static CURRENT_ID: Lazy<u32> = Lazy::new(|| {
 /// 别名映射表
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let dir_alias_file = CONFIGS_DIR.join(paths::DIR_ALIAS_FILE);
-    let mut m = HashMap::new();
+    let mut m: HashMap<String, String> = HashMap::new();
 
-    m.insert("~".to_string(), force_no_loss(HOME_DIR.as_os_str()));
+    m.insert("~".to_string(), HOME_DIR.force_to_string());
 
     if !dir_alias_file.exists() {
         return m;

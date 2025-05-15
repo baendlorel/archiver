@@ -3,8 +3,11 @@ use std::fs;
 
 use super::{list, log};
 use crate::{
-    misc::{force_no_loss, paths},
-    models::{errors::ArchiveError, types::OperType},
+    misc::{ForceToString, force_no_loss_string, paths},
+    models::{
+        errors::{ArchiveError, WithBacktrace},
+        types::OperType,
+    },
 };
 
 pub fn handler(target: String) {
@@ -34,20 +37,24 @@ fn archive(target: &String) -> Result<u32, ArchiveError> {
 
     // 目标不存在则报错
     if !target_path.exists() {
-        return Err(ArchiveError::TargetNotFound(
-            target_path.to_string_lossy().to_string(),
-        ));
+        return Err(ArchiveError::TargetNotFound(WithBacktrace::new(format!(
+            "Target not found: {}",
+            target_path.force_to_string()
+        ))));
     }
 
     // 必须无损转换OsString
-    let cwd_str = force_no_loss(cwd.as_os_str());
+    let cwd_str = cwd.force_to_string();
 
-    let target_name = target_path.file_name().ok_or(ArchiveError::InvalidTarget(
-        "Failed to get target name".to_string(),
-    ))?;
+    let target_name: &std::ffi::OsStr =
+        target_path
+            .file_name()
+            .ok_or(ArchiveError::InvalidTarget(WithBacktrace::new(
+                "Failed to get target name".to_string(),
+            )))?;
 
     // 必须无损转换OsString
-    let target_name_str = force_no_loss(target_name);
+    let target_name_str = force_no_loss_string(target_name);
 
     // 都没有异常，那么开始归档
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是

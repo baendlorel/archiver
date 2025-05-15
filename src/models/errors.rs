@@ -11,4 +11,4 @@ pub use config_error::ConfigError;
 pub use list_error::ListError;
 pub use oper_log_error::OperLogError;
 pub use restore_error::RestoreError;
-use with_backtrace::WithBacktrace;
+pub use with_backtrace::WithBacktrace;

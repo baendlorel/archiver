@@ -5,6 +5,8 @@ use super::with_backtrace::WithBacktrace;
 use crate::impl_from_with_backtrace;
 
 impl_from_with_backtrace!(std::io::Error, ArchiveError::IoError);
+impl_from_with_backtrace!(ListError, ArchiveError::IoError);
+impl_from_with_backtrace!(OperLogError, ArchiveError::IoError);
 
 #[derive(thiserror::Error, Debug)]
 pub enum ArchiveError {

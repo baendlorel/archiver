@@ -1,6 +1,6 @@
 pub mod paths;
 
-mod os_str_lossy;
+mod no_loss_path;
 mod write_entry;
-pub use os_str_lossy::force_no_loss;
+pub use no_loss_path::{ForceToString, force_no_loss_string};
 pub use write_entry::append_entry;
