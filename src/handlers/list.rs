@@ -1,4 +1,5 @@
 use chrono::Local;
+use owo_colors::OwoColorize;
 use std::fs;
 
 use crate::misc::{append_entry, paths};
@@ -7,12 +8,10 @@ use crate::models::{
     types::{ListEntry, ListRow},
 };
 use crate::{err, wrap_err, wrap_result};
-use owo_colors::OwoColorize;
 
 pub fn handler(all: bool) {
-    match load(all) {
-        Ok(_) => {}
-        Err(e) => println!("{}", e.to_string()),
+    if let Err(e) = load(all) {
+        println!("{}", e.to_string());
     }
 }
 

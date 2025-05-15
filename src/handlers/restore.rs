@@ -9,21 +9,21 @@ use crate::models::{error::ArchiverError, types::OperType};
 use crate::{err, wrap_err, wrap_result};
 
 pub fn handler(id: u32) {
-    println!("Restoring id:{}", id.green());
+    println!("Restoring id:{}", id.magenta());
     match restore(id) {
         Ok(_) => {
-            let _ = log::save(OperType::Restore, id.to_string(), true, Some(id), None);
-            println!("{} is successfully restored", id)
+            println!("{} is successfully restored", id);
+            log::write(OperType::Restore, id.to_string(), true, Some(id), None);
         }
         Err(e) => {
-            let _ = log::save(
+            println!("{}", e.to_string());
+            log::write(
                 OperType::Restore,
                 id.to_string(),
                 false,
                 Some(id),
                 Some(e.to_string()),
             );
-            println!("{}", e.to_string());
         }
     }
 }

@@ -10,7 +10,7 @@ fn test_archive_and_restore() {
 
     // 归档
     let output = Command::new("cargo")
-        .args(["run", "--", "archive", test_file])
+        .args(["run", "--", "put", test_file])
         .output()
         .expect("failed to execute process");
     assert!(output.status.success());

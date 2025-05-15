@@ -1,6 +1,5 @@
-use std::{fs, io::Write, path};
-
 use owo_colors::OwoColorize;
+use std::{fs, io::Write, path};
 
 use crate::{err, wrap_err};
 use crate::{
@@ -16,11 +15,11 @@ pub fn handler_alias(arg: String) {
     match set_alias(&arg) {
         Ok(_) => {
             println!("Alias '{}' is set successfully.", arg);
-            let _ = log::save(oper, arg, true, None, None);
+            log::write(oper, arg, true, None, None);
         }
         Err(e) => {
             println!("{}", e.to_string());
-            let _ = log::save(oper, arg, false, None, Some(e.to_string()));
+            log::write(oper, arg, false, None, Some(e.to_string()));
         }
     }
 }
@@ -46,11 +45,11 @@ pub fn handler_alias_remove(arg: String) {
     match alias_remove(&arg) {
         Ok(_) => {
             println!("Alias '{}' is removed successfully.", arg);
-            let _ = log::save(oper, arg, true, None, None);
+            log::write(oper, arg, true, None, None);
         }
         Err(e) => {
             println!("{}", e.to_string());
-            let _ = log::save(oper, arg, false, None, Some(e.to_string()));
+            log::write(oper, arg, false, None, Some(e.to_string()));
         }
     }
 }

@@ -1,4 +1,3 @@
-use owo_colors::OwoColorize;
 use std::fs;
 
 use super::{list, log};
@@ -9,21 +8,21 @@ use crate::{
 };
 
 pub fn handler(target: String) {
-    println!("Archiving {}", target.green());
+    println!("Putting '{}' into archive", target);
     match archive(&target) {
         Ok(id) => {
-            let _ = log::save(OperType::Archive, target.clone(), true, Some(id), None);
-            println!("'{}' is successfully archived, id:{}", target, id)
+            println!("'{}' is successfully archived, id:{}", target, id);
+            log::write(OperType::Put, target.clone(), true, Some(id), None);
         }
         Err(e) => {
-            let _ = log::save(
-                OperType::Archive,
+            println!("{}", e.to_string());
+            log::write(
+                OperType::Put,
                 target.clone(),
                 false,
                 None,
                 Some(e.to_string()),
             );
-            println!("{}", e.to_string());
         }
     };
 }

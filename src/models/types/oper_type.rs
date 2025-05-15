@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 /// 操作类型枚举
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum OperType {
-    Archive,
+    Put,
     Restore,
     Config { option: String },
 }
@@ -13,7 +13,7 @@ pub enum OperType {
 impl OperType {
     pub fn to_padded_str(&self) -> String {
         match self {
-            OperType::Archive => "arv".yellow().to_string(),
+            OperType::Put => "put".yellow().to_string(),
             OperType::Restore => "rst".cyan().to_string(),
             OperType::Config { option } => format!("{} {}", "cfg".bright_purple(), option),
         }

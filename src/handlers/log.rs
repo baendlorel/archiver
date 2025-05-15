@@ -1,12 +1,11 @@
-use crate::misc::{append_entry, paths};
+use chrono::{Datelike, Local};
+use owo_colors::OwoColorize;
+use std::{fs, u32};
+
+use crate::misc::{ForceToString, append_entry, paths};
 use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
 use crate::{err, wrap_err, wrap_result};
-
-use chrono::{Datelike, Local};
-use owo_colors::OwoColorize;
-use std::path::Path;
-use std::{fs, u32};
 
 pub fn handler(range: Option<String>) {
     if let Err(e) = load(range) {
@@ -68,29 +67,13 @@ fn log_content(
     Ok(())
 }
 
-/// Saves an operation log
-///
-/// Records operations in a year-named JSON Lines format log file.
-///
-/// # Parameters
-///
-/// * `oper` - Operation type
-/// * `arg` - Operation parameter, such as file path
-/// * `is_succ` - Whether the operation was successful
-/// * `id` - Archive ID (if oper is `Archive` or `Restore`)
-///
-/// # Returns
-///
-/// Returns `Ok(())` on success, or an `Err` containing error information on failure
-///
-/// # Errors
-///
-/// May return errors in the following cases:
-/// * Unable to get user home directory
-/// * Unable to create log directory
-/// * JSON serialization failure
-/// * File writing failure
-pub fn save(
+pub fn write(oper: OperType, arg: String, is_succ: bool, id: Option<u32>, remark: Option<String>) {
+    if let Err(e) = save(oper, arg, is_succ, id, remark) {
+        panic!("{}", e.to_string())
+    }
+}
+
+fn save(
     oper: OperType,
     arg: String,
     is_succ: bool,
@@ -98,16 +81,15 @@ pub fn save(
     remark: Option<String>,
 ) -> Result<(), ArchiverError> {
     // 获取日志文件路径
-    let log_file_path =
-        paths::LOGS_DIR.join(Path::new(format!("{}.jsonl", Local::now().year()).as_str()));
+    let log_file_path = paths::get_log_path(Local::now().year() as u32);
 
     // 确保日志目录存在
     // 获取当前时间
     let opered_at = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-    let normalized_remark = if oper == OperType::Archive {
+    let normalized_remark = if oper == OperType::Put {
         let full_path = paths::CWD.join(arg.clone());
-        full_path.to_string_lossy().to_string()
+        full_path.force_to_string()
     } else {
         remark.unwrap_or("".to_string())
     };
