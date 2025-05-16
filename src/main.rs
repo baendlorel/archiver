@@ -9,9 +9,14 @@ mod models;
 use cli::{Args, ArvCmd};
 
 fn main() {
-    // 启用堆栈跟踪
-    let args = Args::parse();
+    apply_command();
 
+    // todo check for updates
+    println!("checking for updates");
+}
+
+fn apply_command() {
+    let args = Args::parse();
     match args.command {
         Some(ArvCmd::Put { target }) => handlers::put::handler(target),
         Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
@@ -33,11 +38,12 @@ fn main() {
             }
             if let Some(alias_entry) = alias_remove {
                 handlers::config::handler_alias_remove(alias_entry);
+                return;
             }
         }
         Some(ArvCmd::Clear) => {
             println!(
-                "This is dangerous and we will not implement it. If you really want to clear the archive, just remove the '.archive' folder in your home dir."
+                "This is dangerous and we will not implement it. If you really want to clear the archive, just remove '.archive' in your home directory."
             );
         }
         None => {

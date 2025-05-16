@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{MAIN_SEPARATOR, PathBuf};
 
+use crate::models::types::ArchiverConfig;
+
 use super::ForceToString;
 
 mod paths {
@@ -15,6 +17,7 @@ mod paths {
     pub const LIST_FILE: &str = "archive-list.jsonl";
     pub const AUTO_INCR_FILE: &str = "auto-incr";
     pub const DIR_ALIAS_FILE: &str = "dir-alias";
+    pub const ARV_CONFIG_FILE: &str = "archiver.config.json";
 }
 
 /// 用户文件夹
@@ -53,12 +56,19 @@ pub static CONFIGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
     path
 });
 
+pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let path = CONFIGS_DIR.join(paths::ARV_CONFIG_FILE);
+    if !path.exists() {
+        // let configs = r#"{"alias_list": []}"#;
+        let configs = ArchiverConfig { alias_list: vec![] };
+        let content = serde_json::to_string_pretty(&configs).expect("Failed to serialize config");
+        fs::write(&path, content).expect("Failed to create config file");
+    }
+    path
+});
+
 /// 归档记录文件路径
 pub static LIST_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| ROOT_DIR.join(paths::LIST_FILE));
-
-/// 目录别名配置文件路径
-pub static DIR_ALIAS_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| CONFIGS_DIR.join(paths::DIR_ALIAS_FILE));
 
 pub static CURRENT_ID: Lazy<u32> = Lazy::new(|| {
     let auto_incr_file = CONFIGS_DIR.join(paths::AUTO_INCR_FILE);
