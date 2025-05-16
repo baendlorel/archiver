@@ -10,7 +10,7 @@ use crate::models::{
 use crate::{err, wrap_err, wrap_result};
 
 pub fn handler(all: bool) {
-    if let Err(e) = load(all) {
+    if let Err(e) = print_list(all) {
         println!("{}", e.to_string());
     }
 }
@@ -82,7 +82,7 @@ pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
     Ok(())
 }
 
-fn load(all: bool) -> Result<(), ArchiverError> {
+fn print_list(all: bool) -> Result<(), ArchiverError> {
     let list_file_path = paths::LIST_FILE_PATH.clone();
     if !list_file_path.exists() {
         println!("No archived object yet");

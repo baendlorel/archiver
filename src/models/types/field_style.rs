@@ -5,7 +5,7 @@ use crate::misc::paths::CURRENT_ID;
 pub fn id_to_str(id: u32) -> String {
     let id_len = CURRENT_ID.to_string().len();
     format!(
-        "{}{:0<id_len$}{}",
+        "{}{:0>id_len$}{}",
         "id:",
         id.magenta(),
         "".fg_rgb::<142, 172, 142>(),

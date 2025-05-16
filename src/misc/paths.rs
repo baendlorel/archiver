@@ -139,6 +139,7 @@ pub fn auto_incr_id() -> u32 {
         "Failed to read auto increment file"
     );
 
+    // todo 这样使用貌似是有异常的，运行后查看详情
     let current_id = wrap_expect!(
         content.trim().parse::<u32>(),
         "Failed to parse auto increment value"
