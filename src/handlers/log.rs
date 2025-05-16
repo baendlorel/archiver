@@ -88,7 +88,7 @@ fn save(
     remark: Option<String>,
 ) -> Result<(), ArchiverError> {
     // 获取日志文件路径
-    let log_file_path = paths::get_log_path(Local::now().year() as u32);
+    let log_file_path = paths::get_log_file_path(Local::now().year() as u32);
 
     // 确保日志目录存在
     // 获取当前时间
@@ -150,7 +150,7 @@ fn load(range: Option<String>) -> Result<(), ArchiverError> {
             continue;
         }
 
-        let log_file_path = paths::get_log_path(year);
+        let log_file_path = paths::get_log_file_path(year);
         if !log_file_path.exists() {
             continue;
         }

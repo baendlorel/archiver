@@ -47,6 +47,27 @@ macro_rules! err {
     };
 }
 
+// wrap_expect!(
+//     Err(2) as Result<(), i32>,
+//     "Failed to create auto increment file"
+// );
+#[macro_export]
+macro_rules! wrap_expect {
+    ($e:expr, $s:expr) => {
+        $e.expect(
+            format!(
+                "{}\n  at {} {}:{} ({})",
+                $s,
+                file!(),
+                line!(),
+                column!(),
+                module_path!()
+            )
+            .as_str(),
+        );
+    };
+}
+
 #[macro_export]
 macro_rules! wrap_err {
     ($o:expr) => {
