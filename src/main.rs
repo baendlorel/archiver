@@ -23,29 +23,31 @@ fn apply_command() {
         Some(ArvCmd::List { all }) => handlers::list::handler(all),
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Config {
+            list: config_item,
             alias,
-            alias_list,
             alias_remove,
+            auto_check_update,
         }) => {
+            handlers::config::handler(&config_item, &alias, &alias_remove, &auto_check_update);
             // 和上面range不一样，这里的选项参数是必须要写的，所以先判定后调用handler
-            if let Some(alias_entry) = alias {
-                handlers::config::handler_alias(&alias_entry);
-                return;
-            }
-            if alias_list {
-                handlers::config::handler_alias_list();
-                return;
-            }
-            if let Some(alias_entry) = alias_remove {
-                handlers::config::handler_alias_remove(&alias_entry);
-                return;
-            }
+            // if let Some(alias_entry) = alias {
+            //     handlers::config::handler_alias(&alias_entry);
+            //     return;
+            // }
+            // if alias_list {
+            //     handlers::config::handler_alias_list();
+            //     return;
+            // }
+            // if let Some(alias_entry) = alias_remove {
+            //     handlers::config::handler_alias_remove(&alias_entry);
+            //     return;
+            // }
+            // if let Some(auto_check_update) = auto_check_update {
+            //     handlers::config::handler_alias_remove(&auto_check_update);
+            //     return;
+            // }
         }
-        Some(ArvCmd::Clear) => {
-            println!(
-                "This is dangerous and we will not implement it. If you really want to clear the archive, just remove '.archive' in your home directory."
-            );
-        }
+        Some(ArvCmd::Update) => handlers::update::handler(),
         None => {
             println!("{}", "Please enter your command".yellow());
             // 打印帮助信息

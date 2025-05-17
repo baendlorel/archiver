@@ -65,10 +65,12 @@ pub static CORE_DIR: Lazy<PathBuf> = Lazy::new(|| {
 pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let path = CORE_DIR.join(paths::CONFIG_FILE);
     if !path.exists() {
-        // let configs = r#"{"alias_list": []}"#;
-        let configs = ArchiverConfig { alias_list: vec![] };
+        let config = ArchiverConfig {
+            auto_check_update: "on".to_string(),
+            alias_list: vec![],
+        };
         let content = wrap_expect!(
-            serde_json::to_string_pretty(&configs),
+            serde_json::to_string_pretty(&config),
             "Failed to serialize config"
         );
         wrap_expect!(fs::write(&path, content), "Failed to create config file");
@@ -87,7 +89,7 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
         "Cannot read config file"
     );
 
-    let configs = wrap_expect!(
+    let config = wrap_expect!(
         serde_json::from_str::<ArchiverConfig>(&content),
         "Cannot parse config file"
     );
@@ -95,7 +97,7 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let mut map: HashMap<String, String> = HashMap::new();
 
     map.insert("~".to_string(), HOME_DIR.force_to_string());
-    for line in configs.alias_list {
+    for line in config.alias_list {
         map.insert(line.alias, line.origin);
     }
 

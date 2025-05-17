@@ -1,20 +1,36 @@
-use crate::{err_info, err_warn, wrap_err, wrap_result};
-
 use owo_colors::OwoColorize;
-use std::{fs, path};
 
-use crate::misc::ForceToString;
-use crate::models::types::{AliasEntry, ArchiverConfig};
-use crate::{
-    handlers::log,
-    misc::paths,
-    models::{error::ArchiverError, types::OperType},
-};
+use crate::{handlers::log, misc::paths, models::types::OperType};
 
-// # handlers
-pub fn handler_alias(arg: &str) {
-    let oper = OperType::Config { option: "--alias" };
-    match set_alias(&arg) {
+mod alias;
+mod auto_check_update;
+mod config_data;
+mod list;
+
+pub fn handler(
+    config_item: &Option<String>,
+    alias: &Option<String>,
+    alias_remove: &Option<String>,
+    auto_check_update: &Option<String>,
+) {
+    // todo copilot 貌似说的不对：
+    // 用户输入 arv config --list 或 arv config --list alias，config_item 是 Some(...)。用户没有输入 --list，config_item 就是 None。
+    if let Some(config_item) = config_item {
+        handle_show(config_item);
+    } else if let Some(alias) = alias {
+        handle_alias(alias);
+    } else if let Some(alias_remove) = alias_remove {
+        handle_alias_remove(alias_remove);
+    } else if let Some(auto_check_update) = auto_check_update {
+        handle_auto_check_update(auto_check_update);
+    }
+}
+
+fn handle_alias(arg: &str) {
+    let oper = OperType::Config {
+        option: "--alias".to_string(),
+    };
+    match alias::set_alias(&arg) {
         Ok(_) => {
             println!("Alias '{}' is set successfully.", arg);
             log::succ(&oper, arg, None, None);
@@ -23,15 +39,15 @@ pub fn handler_alias(arg: &str) {
     }
 }
 
-pub fn handler_alias_list() {
-    match load() {
-        Ok(configs) => {
+fn handle_show(config_item: &str) {
+    match config_data::load() {
+        Ok(config) => {
             println!(
                 "Alias entries:\n  ~={} {}",
                 paths::HOME_DIR.to_string_lossy().to_string(),
                 "(default)".cyan()
             );
-            for entry in configs.alias_list {
+            for entry in config.alias_list {
                 let content = format!("{}={}", entry.alias, entry.origin,);
                 println!("  {}", content);
             }
@@ -40,12 +56,12 @@ pub fn handler_alias_list() {
     }
 }
 
-pub fn handler_alias_remove(arg: &str) {
+fn handle_alias_remove(arg: &str) {
     let oper = OperType::Config {
-        option: "--alias-remove",
+        option: "--alias-remove".to_string(),
     };
 
-    match remove_alias(&arg) {
+    match alias::remove_alias(&arg) {
         Ok(_) => {
             println!("Alias '{}' is removed successfully.", arg);
             log::succ(&oper, arg, None, None);
@@ -54,96 +70,16 @@ pub fn handler_alias_remove(arg: &str) {
     }
 }
 
-// # 业务函数
-fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
-    let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
-    let mut configs = load()?;
+fn handle_auto_check_update(arg: &str) {
+    let oper = OperType::Config {
+        option: "--auto-check-update".to_string(),
+    };
 
-    let mut index = 0;
-    for entry in &configs.alias_list {
-        if entry.alias == alias && entry.origin == origin {
-            break;
+    match auto_check_update::toggle(&arg) {
+        Ok(_) => {
+            println!("Alias '{}' is removed successfully.", arg);
+            log::succ(&oper, arg, None, None);
         }
-        index += 1;
+        Err(e) => log::err(&oper, arg, None, e),
     }
-
-    configs.alias_list.splice(index..index, []);
-    wrap_result!(save(&configs))?;
-
-    Ok(())
-}
-
-fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
-    let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
-    let mut configs = wrap_result!(load())?;
-
-    for entry in &configs.alias_list {
-        if entry.alias == alias {
-            return Err(err_info!(format!(
-                "Alias '{}' is already bound with origin '{}'",
-                entry.alias, entry.origin
-            )));
-        }
-        if entry.origin == origin {
-            return Err(err_info!(format!(
-                "Origin '{}' is already bound with alias '{}'",
-                entry.origin, entry.alias
-            )));
-        }
-    }
-
-    configs.alias_list.push(AliasEntry {
-        alias: alias.to_string(),
-        origin: origin.to_string(),
-    });
-    wrap_result!(save(&configs))?;
-
-    Ok(())
-}
-
-// # 辅助函数
-fn parse_alias_entry_string(alias_entry: &str) -> Result<(String, String), ArchiverError> {
-    if let Some((alias, origin)) = alias_entry.split_once("=") {
-        if alias.is_empty() {
-            return Err(err_warn!(format!("alias is empty. Got '{}'", alias_entry)));
-        }
-
-        if origin.is_empty() {
-            return Err(err_warn!(format!("origin is empty. Got '{}'", alias_entry)));
-        }
-
-        // 去掉origin后面的斜杠
-        let alias = alias.trim_end_matches(path::MAIN_SEPARATOR);
-        let origin = origin.trim_end_matches(path::MAIN_SEPARATOR);
-
-        if alias == origin {
-            return Err(err_warn!(format!(
-                "Alias and origin cannot be the same. Got '{}'",
-                alias_entry
-            )));
-        }
-
-        if origin == paths::HOME_DIR.force_to_string() || alias == "~" {
-            return Err(err_info!(
-                "HOME_DIR already has a default alias '~', no need to set it again."
-            ));
-        }
-        return Ok((alias.to_string(), origin.to_string()));
-    } else {
-        Err(err_warn!(format!(
-            "Alias config string must take the form of 'xxx=/a/b'. Got '{}'",
-            alias_entry
-        )))
-    }
-}
-
-fn load() -> Result<ArchiverConfig, ArchiverError> {
-    let content = wrap_err!(fs::read_to_string(paths::CONFIG_FILE_PATH.clone()))?;
-    Ok(wrap_err!(serde_json::from_str::<ArchiverConfig>(&content))?)
-}
-
-fn save(configs: &ArchiverConfig) -> Result<(), ArchiverError> {
-    let json_str = wrap_err!(serde_json::to_string_pretty(configs))?;
-    wrap_err!(fs::write(paths::CONFIG_FILE_PATH.clone(), json_str))?;
-    Ok(())
 }
