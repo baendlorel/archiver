@@ -1,4 +1,4 @@
-use crate::{err, err_info, wrap_err, wrap_result};
+use crate::{err_info, wrap_err, wrap_result};
 
 use chrono::Local;
 use owo_colors::OwoColorize;

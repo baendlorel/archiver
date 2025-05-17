@@ -1,4 +1,4 @@
-use crate::{err, err_info, err_warn, wrap_err, wrap_result};
+use crate::{err_info, err_warn, wrap_err, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::{fs, path};
@@ -12,16 +12,14 @@ use crate::{
 };
 
 // # handlers
-pub fn handler_alias(arg: String) {
-    let oper = OperType::Config {
-        option: "--alias".to_string(),
-    };
+pub fn handler_alias(arg: &str) {
+    let oper = OperType::Config { option: "--alias" };
     match set_alias(&arg) {
         Ok(_) => {
             println!("Alias '{}' is set successfully.", arg);
-            log::succ(oper, arg, None, None);
+            log::succ(&oper, arg, None, None);
         }
-        Err(e) => log::err(oper, arg, None, e),
+        Err(e) => log::err(&oper, arg, None, e),
     }
 }
 
@@ -42,21 +40,22 @@ pub fn handler_alias_list() {
     }
 }
 
-pub fn handler_alias_remove(arg: String) {
+pub fn handler_alias_remove(arg: &str) {
     let oper = OperType::Config {
-        option: "--alias-remove".to_string(),
+        option: "--alias-remove",
     };
+
     match remove_alias(&arg) {
         Ok(_) => {
             println!("Alias '{}' is removed successfully.", arg);
-            log::succ(oper, arg, None, None);
+            log::succ(&oper, arg, None, None);
         }
-        Err(e) => log::err(oper, arg, None, e),
+        Err(e) => log::err(&oper, arg, None, e),
     }
 }
 
 // # 业务函数
-fn remove_alias(alias_entry: &String) -> Result<(), ArchiverError> {
+fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut configs = load()?;
 

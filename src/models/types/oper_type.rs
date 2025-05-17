@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub enum OperType {
     Put,
     Restore,
-    Config { option: String },
+    Config { option: &'static str },
 }
 
 /// 为OperationType实现转换为字符串的方法

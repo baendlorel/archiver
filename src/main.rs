@@ -29,7 +29,7 @@ fn apply_command() {
         }) => {
             // 和上面range不一样，这里的选项参数是必须要写的，所以先判定后调用handler
             if let Some(alias_entry) = alias {
-                handlers::config::handler_alias(alias_entry);
+                handlers::config::handler_alias(&alias_entry);
                 return;
             }
             if alias_list {
@@ -37,7 +37,7 @@ fn apply_command() {
                 return;
             }
             if let Some(alias_entry) = alias_remove {
-                handlers::config::handler_alias_remove(alias_entry);
+                handlers::config::handler_alias_remove(&alias_entry);
                 return;
             }
         }

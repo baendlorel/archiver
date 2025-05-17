@@ -1,4 +1,4 @@
-use crate::{err, err_warn, wrap_err, wrap_result};
+use crate::{err_warn, wrap_err, wrap_result};
 
 use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
@@ -64,13 +64,13 @@ fn log_content(range: &(u32, u32), content: &str, counter: &mut u32) -> Result<(
     Ok(())
 }
 
-pub fn succ(oper: OperType, arg: String, id: Option<u32>, remark: Option<String>) {
+pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, remark: Option<String>) {
     if let Err(e) = save(oper, arg, true, id, remark) {
         println!("{}", e.to_string())
     }
 }
 
-pub fn err(oper: OperType, arg: String, id: Option<u32>, e: ArchiverError) {
+pub fn err(oper: &OperType, arg: &str, id: Option<u32>, e: ArchiverError) {
     let err_msg = e.to_string();
     println!("{} {}", status_mark::fail(), err_msg);
     if let Err(e) = save(oper, arg, false, id, Some(err_msg)) {
@@ -79,8 +79,8 @@ pub fn err(oper: OperType, arg: String, id: Option<u32>, e: ArchiverError) {
 }
 
 fn save(
-    oper: OperType,
-    arg: String,
+    oper: &OperType,
+    arg: &str,
     is_succ: bool,
     id: Option<u32>,
     remark: Option<String>,
@@ -92,19 +92,20 @@ fn save(
     // 获取当前时间
     let opered_at = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-    let normalized_remark = if oper == OperType::Put {
-        let full_path = paths::CWD.join(arg.clone());
-        full_path.force_to_string()
-    } else {
-        remark.unwrap_or("".to_string())
+    let normalized_remark = match oper {
+        OperType::Put => {
+            let full_path = paths::CWD.join(arg);
+            full_path.force_to_string()
+        }
+        _ => remark.unwrap_or("".to_string()),
     };
 
     // 准备日志内容
     let log_entry = LogEntry {
         time: opered_at,
         is_succ,
-        oper,
-        arg,
+        oper: oper.clone(),
+        arg: arg.to_string(),
         remark: normalized_remark,
         id,
     };

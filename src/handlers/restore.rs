@@ -14,6 +14,7 @@ use crate::models::{
 };
 
 pub fn handler(ids: &[u32]) {
+    let oper = OperType::Restore;
     for id in ids {
         println!("Restoring id: {}", id.magenta());
         match restore(*id) {
@@ -24,9 +25,9 @@ pub fn handler(ids: &[u32]) {
                     id.magenta(),
                     entry.get_target_path()
                 );
-                log::succ(OperType::Restore, id.to_string(), Some(*id), None);
+                log::succ(&oper, &id.to_string(), Some(*id), None);
             }
-            Err(e) => log::err(OperType::Restore, id.to_string(), Some(*id), e),
+            Err(e) => log::err(&oper, &id.to_string(), Some(*id), e),
         }
     }
 }

@@ -21,14 +21,6 @@ pub struct ArchiverError {
 }
 
 impl ArchiverError {
-    pub fn new(message: String, stack: Vec<StackFrame>) -> Self {
-        Self {
-            message,
-            stack,
-            level: ArchiverErrorLevel::Fatal,
-        }
-    }
-
     pub fn info(message: String, stack: Vec<StackFrame>) -> Self {
         Self {
             message,
@@ -84,7 +76,7 @@ impl std::fmt::Display for ArchiverError {
 #[macro_export]
 macro_rules! err {
     ($e:expr) => {
-        $crate::models::error::ArchiverError::new(
+        $crate::models::error::ArchiverError::fatal(
             $e.to_string(),
             vec![$crate::models::error::StackFrame {
                 file: file!(),
@@ -143,7 +135,7 @@ macro_rules! wrap_expect {
                 module_path!()
             )
             .as_str(),
-        );
+        )
     };
 }
 

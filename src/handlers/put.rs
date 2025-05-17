@@ -10,6 +10,7 @@ use crate::{
 };
 
 pub fn handler(targets: &[String]) {
+    let oper = OperType::Put;
     for target in targets {
         println!("Putting '{}' into archive", target);
         match archive(&target) {
@@ -20,9 +21,9 @@ pub fn handler(targets: &[String]) {
                     target,
                     id.magenta()
                 );
-                log::succ(OperType::Put, target.clone(), Some(id), None);
+                log::succ(&oper, target, Some(id), None);
             }
-            Err(e) => log::err(OperType::Put, target.clone(), None, e),
+            Err(e) => log::err(&oper, target, None, e),
         };
     }
     println!("Use `arv list` to check the archived list");
