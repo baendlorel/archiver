@@ -14,13 +14,9 @@ pub fn handler(range: Option<String>) {
     }
 }
 
-fn log_content(
-    range: &(u32, u32),
-    content: &String,
-    counter: &mut u32,
-) -> Result<(), ArchiverError> {
+fn log_content(range: &(u32, u32), content: &str, counter: &mut u32) -> Result<(), ArchiverError> {
     // 把年月取出来组成一个整数用于比较
-    let parse_ym = |s: &String| -> Result<u32, ArchiverError> {
+    let parse_ym = |s: &str| -> Result<u32, ArchiverError> {
         // 现在s基本认为一定是一个时间字符串
         let mut iter = s.split("-");
         let raw_year = iter

@@ -9,7 +9,7 @@ use crate::{
     models::{error::ArchiverError, types::OperType},
 };
 
-pub fn handler(targets: Vec<String>) {
+pub fn handler(targets: &[String]) {
     for target in targets {
         println!("Putting '{}' into archive", target);
         match archive(&target) {
@@ -28,7 +28,7 @@ pub fn handler(targets: Vec<String>) {
     println!("Use `arv list` to check the archived list");
 }
 
-fn archive(target: &String) -> Result<u32, ArchiverError> {
+fn archive(target: &str) -> Result<u32, ArchiverError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd = paths::CWD.clone();
     let target_path = cwd.join(target);

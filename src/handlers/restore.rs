@@ -13,10 +13,10 @@ use crate::models::{
     types::{ListEntry, OperType},
 };
 
-pub fn handler(ids: Vec<u32>) {
+pub fn handler(ids: &[u32]) {
     for id in ids {
         println!("Restoring id: {}", id.magenta());
-        match restore(id) {
+        match restore(*id) {
             Ok(entry) => {
                 println!(
                     "{} id:{} is successfully restored to '{}'",
@@ -24,9 +24,9 @@ pub fn handler(ids: Vec<u32>) {
                     id.magenta(),
                     entry.get_target_path()
                 );
-                log::succ(OperType::Restore, id.to_string(), Some(id), None);
+                log::succ(OperType::Restore, id.to_string(), Some(*id), None);
             }
-            Err(e) => log::err(OperType::Restore, id.to_string(), Some(id), e),
+            Err(e) => log::err(OperType::Restore, id.to_string(), Some(*id), e),
         }
     }
 }

@@ -74,7 +74,7 @@ fn remove_alias(alias_entry: &String) -> Result<(), ArchiverError> {
     Ok(())
 }
 
-fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
+fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut configs = wrap_result!(load())?;
 
@@ -103,7 +103,7 @@ fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
 }
 
 // # 辅助函数
-fn parse_alias_entry_string(alias_entry: &String) -> Result<(String, String), ArchiverError> {
+fn parse_alias_entry_string(alias_entry: &str) -> Result<(String, String), ArchiverError> {
     if let Some((alias, origin)) = alias_entry.split_once("=") {
         if alias.is_empty() {
             return Err(err_warn!(format!("alias is empty. Got '{}'", alias_entry)));

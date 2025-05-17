@@ -139,7 +139,6 @@ pub fn auto_incr_id() -> u32 {
         "Failed to read auto increment file"
     );
 
-    // todo 这样使用貌似是有异常的，运行后查看详情
     let current_id = wrap_expect!(
         content.trim().parse::<u32>(),
         "Failed to parse auto increment value"
@@ -154,7 +153,7 @@ pub fn auto_incr_id() -> u32 {
     new_id
 }
 
-pub fn apply_alias(path_str: &String) -> String {
+pub fn apply_alias(path_str: &str) -> String {
     // 使用普通循环，可以在找到匹配时提前返回
     for (alias, origin) in ALIAS_MAP.iter() {
         if path_str.starts_with(origin) {
@@ -168,7 +167,7 @@ pub fn apply_alias(path_str: &String) -> String {
         }
     }
 
-    path_str.clone()
+    path_str.to_string()
 }
 
 pub fn get_log_file_path(year: u32) -> PathBuf {

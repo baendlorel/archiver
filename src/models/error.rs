@@ -15,7 +15,6 @@ pub enum ArchiverErrorLevel {
 }
 
 pub struct ArchiverError {
-    // todo 不如把这里改成level。分warn、fatal等级别
     pub level: ArchiverErrorLevel,
     pub message: String,
     pub stack: Vec<StackFrame>,

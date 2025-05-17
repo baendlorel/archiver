@@ -12,11 +12,11 @@ use owo_colors::OwoColorize;
 //     )
 // }
 
-pub fn grey(str: &String) -> String {
+pub fn grey(str: &str) -> String {
     str.fg_rgb::<142, 142, 142>().to_string()
 }
 
-pub fn target_color(target: &String, is_dir: bool) -> String {
+pub fn target_color(target: &str, is_dir: bool) -> String {
     if is_dir {
         target.blue().to_string()
     } else {
