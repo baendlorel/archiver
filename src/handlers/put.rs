@@ -1,11 +1,11 @@
-use crate::{err, misc::status_mark, wrap_err, wrap_result};
+use crate::{err, err_info, wrap_err, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::fs;
 
 use super::{list, log};
 use crate::{
-    misc::{ForceToString, force_no_loss_string, paths},
+    misc::{ForceToString, force_no_loss_string, paths, status_mark},
     models::{error::ArchiverError, types::OperType},
 };
 
@@ -35,7 +35,7 @@ fn archive(target: &String) -> Result<u32, ArchiverError> {
 
     // 目标不存在则报错
     if !target_path.exists() {
-        return Err(err!(format!(
+        return Err(err_info!(format!(
             "Target '{}' does not exist in current directory.",
             target
         )));
@@ -46,7 +46,7 @@ fn archive(target: &String) -> Result<u32, ArchiverError> {
 
     let target_name: &std::ffi::OsStr = target_path
         .file_name()
-        .ok_or(err!("Fail to get target name".to_string()))?;
+        .ok_or(err!("Fail to get target name".to_string()))?; // 需要fatal
 
     // 必须无损转换OsString
     let target_name_str = force_no_loss_string(target_name);

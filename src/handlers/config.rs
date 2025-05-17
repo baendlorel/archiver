@@ -1,4 +1,4 @@
-use crate::{err, wrap_err};
+use crate::{err, err_info, err_warn, wrap_err, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::{fs, path};
@@ -57,7 +57,7 @@ pub fn handler_alias_remove(arg: String) {
 
 // # 业务函数
 fn remove_alias(alias_entry: &String) -> Result<(), ArchiverError> {
-    let (alias, origin) = wrap_err!(parse_alias_entry_string(alias_entry))?;
+    let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut configs = load()?;
 
     let mut index = 0;
@@ -69,24 +69,24 @@ fn remove_alias(alias_entry: &String) -> Result<(), ArchiverError> {
     }
 
     configs.alias_list.splice(index..index, []);
-    wrap_err!(save(&configs))?;
+    wrap_result!(save(&configs))?;
 
     Ok(())
 }
 
 fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
-    let (alias, origin) = wrap_err!(parse_alias_entry_string(alias_entry))?;
-    let mut configs = wrap_err!(load())?;
+    let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
+    let mut configs = wrap_result!(load())?;
 
     for entry in &configs.alias_list {
         if entry.alias == alias {
-            return Err(err!(format!(
+            return Err(err_info!(format!(
                 "Alias '{}' is already bound with origin '{}'",
                 entry.alias, entry.origin
             )));
         }
         if entry.origin == origin {
-            return Err(err!(format!(
+            return Err(err_info!(format!(
                 "Origin '{}' is already bound with alias '{}'",
                 entry.origin, entry.alias
             )));
@@ -97,7 +97,7 @@ fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
         alias: alias.to_string(),
         origin: origin.to_string(),
     });
-    wrap_err!(save(&configs))?;
+    wrap_result!(save(&configs))?;
 
     Ok(())
 }
@@ -106,11 +106,11 @@ fn set_alias(alias_entry: &String) -> Result<(), ArchiverError> {
 fn parse_alias_entry_string(alias_entry: &String) -> Result<(String, String), ArchiverError> {
     if let Some((alias, origin)) = alias_entry.split_once("=") {
         if alias.is_empty() {
-            return Err(err!(format!("alias is empty. Got '{}'", alias_entry)));
+            return Err(err_warn!(format!("alias is empty. Got '{}'", alias_entry)));
         }
 
         if origin.is_empty() {
-            return Err(err!(format!("origin is empty. Got '{}'", alias_entry)));
+            return Err(err_warn!(format!("origin is empty. Got '{}'", alias_entry)));
         }
 
         // 去掉origin后面的斜杠
@@ -118,20 +118,20 @@ fn parse_alias_entry_string(alias_entry: &String) -> Result<(String, String), Ar
         let origin = origin.trim_end_matches(path::MAIN_SEPARATOR);
 
         if alias == origin {
-            return Err(err!(format!(
+            return Err(err_warn!(format!(
                 "Alias and origin cannot be the same. Got '{}'",
                 alias_entry
             )));
         }
 
         if origin == paths::HOME_DIR.force_to_string() || alias == "~" {
-            return Err(err!(
+            return Err(err_info!(
                 "HOME_DIR already has a default alias '~', no need to set it again."
             ));
         }
         return Ok((alias.to_string(), origin.to_string()));
     } else {
-        Err(err!(format!(
+        Err(err_warn!(format!(
             "Alias config string must take the form of 'xxx=/a/b'. Got '{}'",
             alias_entry
         )))

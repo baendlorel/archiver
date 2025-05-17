@@ -1,3 +1,5 @@
+use owo_colors::OwoColorize;
+
 #[derive(Clone)]
 pub struct StackFrame {
     pub file: &'static str,
@@ -6,8 +8,15 @@ pub struct StackFrame {
     pub module_path: &'static str,
 }
 
+pub enum ArchiverErrorLevel {
+    Fatal,
+    Warn,
+    Info,
+}
+
 pub struct ArchiverError {
-    pub is_fatal: bool,
+    // todo 不如把这里改成level。分warn、fatal等级别
+    pub level: ArchiverErrorLevel,
     pub message: String,
     pub stack: Vec<StackFrame>,
 }
@@ -17,34 +26,58 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            is_fatal: true,
+            level: ArchiverErrorLevel::Fatal,
         }
     }
 
-    pub fn not_fatal(message: String, stack: Vec<StackFrame>) -> Self {
+    pub fn info(message: String, stack: Vec<StackFrame>) -> Self {
         Self {
             message,
             stack,
-            is_fatal: false,
+            level: ArchiverErrorLevel::Info,
+        }
+    }
+
+    pub fn warn(message: String, stack: Vec<StackFrame>) -> Self {
+        Self {
+            message,
+            stack,
+            level: ArchiverErrorLevel::Warn,
+        }
+    }
+
+    pub fn fatal(message: String, stack: Vec<StackFrame>) -> Self {
+        Self {
+            message,
+            stack,
+            level: ArchiverErrorLevel::Fatal,
         }
     }
 }
 
 impl std::fmt::Display for ArchiverError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.is_fatal {
-            let mut stack_info = String::new();
-            let mut counter: u32 = 0;
-            for frame in &self.stack {
-                counter += 1;
-                stack_info.push_str(&format!(
-                    " {}. at {}:{}:{} ({})\n",
-                    counter, frame.file, frame.line, frame.col, frame.module_path
-                ));
+        match self.level {
+            ArchiverErrorLevel::Info => return write!(f, "{}", self.message),
+            ArchiverErrorLevel::Warn => return write!(f, "{}", self.message),
+            ArchiverErrorLevel::Fatal => {
+                let mut stack_info = String::new();
+                let mut counter: u32 = 0;
+                for frame in &self.stack {
+                    counter += 1;
+                    stack_info.push_str(&format!(
+                        " {}. at {}:{}:{} ({})\n",
+                        counter, frame.file, frame.line, frame.col, frame.module_path
+                    ));
+                }
+                write!(
+                    f,
+                    "{} - {} \n{}",
+                    "Fatal".red(),
+                    self.message,
+                    stack_info.trim_end_matches("\n")
+                )
             }
-            write!(f, "{}\n{}", self.message, stack_info.trim_end_matches("\n"))
-        } else {
-            write!(f, "{}", self.message)
         }
     }
 }
@@ -65,9 +98,24 @@ macro_rules! err {
 }
 
 #[macro_export]
-macro_rules! not_fatal {
+macro_rules! err_info {
     ($e:expr) => {
-        $crate::models::error::ArchiverError::not_fatal(
+        $crate::models::error::ArchiverError::info(
+            $e.to_string(),
+            vec![$crate::models::error::StackFrame {
+                file: file!(),
+                line: line!(),
+                col: column!(),
+                module_path: module_path!(),
+            }],
+        )
+    };
+}
+
+#[macro_export]
+macro_rules! err_warn {
+    ($e:expr) => {
+        $crate::models::error::ArchiverError::warn(
             $e.to_string(),
             vec![$crate::models::error::StackFrame {
                 file: file!(),
@@ -110,6 +158,26 @@ macro_rules! wrap_err {
     };
 }
 
+// #[macro_export]
+// macro_rules! wrap_self {
+//     ($e:expr) => {
+//         return $crate::models::error::ArchiverError {
+//             message: $e.message,
+//             stack: {
+//                 let mut stack = $e.stack.clone();
+//                 stack.push($crate::models::error::StackFrame {
+//                     file: file!(),
+//                     line: line!(),
+//                     col: column!(),
+//                     module_path: module_path!(),
+//                 });
+//                 stack
+//             },
+//             level: $e.level,
+//         };
+//     };
+// }
+
 #[macro_export]
 macro_rules! wrap_result {
     ($o:expr) => {
@@ -126,7 +194,7 @@ macro_rules! wrap_result {
                 return Err($crate::models::error::ArchiverError {
                     message: e.message,
                     stack,
-                    is_fatal: e.is_fatal,
+                    level: e.level,
                 });
             }
         }

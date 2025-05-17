@@ -1,4 +1,4 @@
-use crate::{err, wrap_err, wrap_result};
+use crate::{err, err_warn, wrap_err, wrap_result};
 
 use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
@@ -25,16 +25,16 @@ fn log_content(
         let mut iter = s.split("-");
         let raw_year = iter
             .next()
-            .ok_or(err!(format!("Year parse failed for '{}'", s)))?;
+            .ok_or(err_warn!(format!("Year parse failed for '{}'", s)))?;
         let raw_month = iter
             .next()
-            .ok_or(err!(format!("Month parse failed for '{}'", s)))?;
+            .ok_or(err_warn!(format!("Month parse failed for '{}'", s)))?;
 
         let year = wrap_err!(raw_year.parse::<u32>())?;
         let month = wrap_err!(raw_month.parse::<u32>())?;
 
         if month > 12 || month < 1 {
-            return Err(err!(format!("Month > 12, parse failed for '{}'", s)));
+            return Err(err_warn!(format!("Month > 12, parse failed for '{}'", s)));
         }
 
         Ok(year * 100 + month)
@@ -187,12 +187,15 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
 
         let is_valid_len = s.len() > 2;
         if !is_valid_len {
-            return Err(err!("Length of date string must > 2"));
+            return Err(err_warn!("Length of date string must > 2"));
         }
 
         let raw_month = wrap_err!(s[(s.len() - 2)..s.len()].parse::<u32>())?;
         if raw_month > 12 || raw_month < 1 {
-            return Err(err!(format!("Month must be 1~12. Got '{}'", raw_month)));
+            return Err(err_warn!(format!(
+                "Month must be 1~12. Got '{}'",
+                raw_month
+            )));
         }
 
         Ok(wrap_err!(s.parse::<u32>())?)
@@ -204,13 +207,13 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
 
     if let Some((a_str, b_str)) = range.split_once('-') {
         if !is_parsable(&a_str.to_string()) {
-            return Err(err!(format!(
+            return Err(err_warn!(format!(
                 "Start date is not * or contains letters other than digits. Got '{}'",
                 a_str
             )));
         }
         if !is_parsable(&b_str.to_string()) {
-            return Err(err!(format!(
+            return Err(err_warn!(format!(
                 "End date is not * or contains letters other than digits. Got '{}'",
                 b_str
             )));
@@ -220,10 +223,12 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
         let b = parse(&b_str.to_string(), default_b)?;
 
         if a > b {
-            return Err(err!("Start date > end date"));
+            return Err(err_warn!("Start date > end date"));
         }
         return Ok((a, b));
     }
 
-    Err(err!("Must give args like 202501, 202501-202506,*-202501"))
+    Err(err_warn!(
+        "Must give args like `202501`, `202501-202506`,`*-202501`"
+    ))
 }

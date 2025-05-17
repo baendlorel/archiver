@@ -1,4 +1,4 @@
-use crate::{err, wrap_err, wrap_result};
+use crate::{err, err_info, wrap_err, wrap_result};
 
 use chrono::Local;
 use owo_colors::OwoColorize;
@@ -57,7 +57,10 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverE
         }
     }
 
-    Err(err!(format!("ID '{}' cannot be found in the list", id)))
+    Err(err_info!(format!(
+        "id:{} cannot be found in the list",
+        id.magenta()
+    )))
 }
 
 /// Will only be called when the file is successfully restored
