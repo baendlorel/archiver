@@ -4,6 +4,7 @@ use serde::Serialize;
 
 use crate::{models::error::ArchiverError, wrap_err};
 
+/// 给jsonl文件追加一行
 pub fn append_entry<T>(entry: &T, file_path: PathBuf) -> Result<(), ArchiverError>
 where
     T: ?Sized + Serialize,

@@ -1,7 +1,8 @@
+use crate::{err, wrap_err, wrap_result};
+
 use std::fs;
 
 use super::{list, log};
-use crate::{err, wrap_err, wrap_result};
 use crate::{
     misc::{ForceToString, force_no_loss_string, paths},
     models::{error::ArchiverError, types::OperType},
@@ -12,6 +13,7 @@ pub fn handler(target: String) {
     match archive(&target) {
         Ok(id) => {
             println!("'{}' is successfully archived, id:{}", target, id);
+            println!("Use `arv list` to check the archived list");
             log::succ(OperType::Put, target.clone(), Some(id), None);
         }
         Err(e) => log::err(OperType::Put, target.clone(), None, e.to_string()),

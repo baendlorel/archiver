@@ -1,3 +1,4 @@
+use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
@@ -35,8 +36,29 @@ pub struct ListRow {
 
     pub dir: String,
 
-    pub _width: usize,
+    pub _width: ListRowColWidth,
 }
+
+pub struct ListRowColWidth {
+    pub time: usize,
+    pub id: usize,
+    pub target: usize,
+    pub dir: usize,
+}
+
+pub struct ListRowField {
+    pub time: String,
+    pub id: String,
+    pub target: String,
+    pub dir: String,
+}
+
+pub static LIST_ROW_FIELD: Lazy<ListRowField> = Lazy::new(|| ListRowField {
+    time: "Archived At".to_string(),
+    id: "ID".to_string(),
+    target: "Item".to_string(),
+    dir: "Directory".to_string(),
+});
 
 impl ListEntry {
     pub fn to_row(&self) -> ListRow {
@@ -50,11 +72,16 @@ impl ListEntry {
 
         ListRow {
             time: field_style::grey(&self.time),
-            // id: self.id.magenta().to_string(),
-            id: field_style::id_to_str(self.id),
-            target: field_style::dir_color(&self.target, self.is_dir) + &is_restored,
+            id: self.id.magenta().to_string(),
+            // id: field_style::id_to_str(self.id),
+            target: field_style::target_color(&self.target, self.is_dir) + &is_restored,
             dir: field_style::grey(&dir),
-            _width: self.target.len() + if self.is_restored { 3 } else { 0 },
+            _width: ListRowColWidth {
+                time: self.time.len(),
+                id: self.id.to_string().len(),
+                target: self.target.len() + if self.is_restored { 3 } else { 0 },
+                dir: dir.len(),
+            },
         }
     }
 }

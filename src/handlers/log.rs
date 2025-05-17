@@ -1,3 +1,5 @@
+use crate::{err, wrap_err, wrap_result};
+
 use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
 use std::{fs, u32};
@@ -5,7 +7,6 @@ use std::{fs, u32};
 use crate::misc::{ForceToString, append_entry, paths};
 use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
-use crate::{err, wrap_err, wrap_result};
 
 pub fn handler(range: Option<String>) {
     if let Err(e) = load(range) {

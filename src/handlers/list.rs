@@ -1,3 +1,5 @@
+use crate::{err, wrap_err, wrap_result};
+
 use chrono::Local;
 use owo_colors::OwoColorize;
 use std::fs;
@@ -5,9 +7,8 @@ use std::fs;
 use crate::misc::{append_entry, paths};
 use crate::models::{
     error::ArchiverError,
-    types::{ListEntry, ListRow},
+    types::{LIST_ROW_FIELD, ListEntry, ListRow, ListRowColWidth},
 };
-use crate::{err, wrap_err, wrap_result};
 
 pub fn handler(all: bool) {
     if let Err(e) = print_list(all) {
@@ -103,8 +104,6 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
             // 设置了all的话，展示全部，否则只展示未恢复的对象
             if all || !entry.is_restored {
                 counter += 1;
-                // println!("{}", entry.to_log());
-                // list.push(entry.to_row());
                 let row = entry.to_row();
                 list.push(row);
             }
@@ -124,19 +123,48 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
         println!("No archived object found");
     }
 
-    let mut max_width = 0;
-    for row in list.iter().clone() {
-        max_width = max_width.max(row._width);
+    // 下面开始输出对好了空格的列表
+    let mut max_width = ListRowColWidth {
+        time: LIST_ROW_FIELD.time.len(),
+        id: LIST_ROW_FIELD.id.len(),
+        target: LIST_ROW_FIELD.target.len(),
+        dir: LIST_ROW_FIELD.dir.len(),
+    };
+
+    for row in list.iter() {
+        max_width.time = max_width.time.max(row._width.time);
+        max_width.id = max_width.id.max(row._width.id);
+        max_width.target = max_width.target.max(row._width.target);
+        max_width.dir = max_width.dir.max(row._width.dir);
     }
+
+    println!(
+        "{}",
+        format!(
+            "{field_time}{} {field_id}{} {field_target}{} {field_dir}{}",
+            " ".repeat(max_width.time - LIST_ROW_FIELD.time.len()),
+            " ".repeat(max_width.id - LIST_ROW_FIELD.id.len()),
+            " ".repeat(max_width.target - LIST_ROW_FIELD.target.len()),
+            " ".repeat(max_width.dir - LIST_ROW_FIELD.dir.len()),
+            field_time = LIST_ROW_FIELD.time,
+            field_id = LIST_ROW_FIELD.id,
+            field_target = LIST_ROW_FIELD.target,
+            field_dir = LIST_ROW_FIELD.dir,
+        )
+        .bold()
+        .underline()
+    );
 
     for row in list.iter().clone() {
         println!(
-            "{} {} - {}{} - {}",
-            row.time,
-            row.id,
-            row.target,
-            " ".repeat(max_width - row._width),
-            row.dir,
+            "{time}{} {id}{} {target}{} {dir}",
+            " ".repeat(max_width.time - row._width.time),
+            " ".repeat(max_width.id - row._width.id),
+            " ".repeat(max_width.target - row._width.target),
+            time = row.time,
+            id = row.id,
+            target = row.target,
+            dir = row.dir,
         );
     }
 

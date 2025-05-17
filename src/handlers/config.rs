@@ -1,9 +1,10 @@
+use crate::{err, wrap_err};
+
 use owo_colors::OwoColorize;
 use std::{fs, path};
 
 use crate::misc::ForceToString;
 use crate::models::types::{AliasEntry, ArchiverConfig};
-use crate::{err, wrap_err};
 use crate::{
     handlers::log,
     misc::paths,

@@ -40,7 +40,7 @@ impl LogEntry {
 
         let id = if let Some(id) = self.id {
             if self.oper == OperType::Put {
-                String::from("-> ") + &field_style::id_to_str(id)
+                format!("-> {}", id.magenta())
             } else {
                 "".to_string()
             }
