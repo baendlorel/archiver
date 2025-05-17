@@ -4,7 +4,7 @@ use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
 use std::{fs, u32};
 
-use crate::misc::{ForceToString, append_entry, paths};
+use crate::misc::{ForceToString, append_entry, paths, status_mark};
 use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
 
@@ -74,8 +74,9 @@ pub fn succ(oper: OperType, arg: String, id: Option<u32>, remark: Option<String>
     }
 }
 
-pub fn err(oper: OperType, arg: String, id: Option<u32>, err_msg: String) {
-    println!("{}", err_msg);
+pub fn err(oper: OperType, arg: String, id: Option<u32>, e: ArchiverError) {
+    let err_msg = e.to_string();
+    println!("{} {}", status_mark::fail(), err_msg);
     if let Err(e) = save(oper, arg, false, id, Some(err_msg)) {
         println!("{}", e.to_string())
     }

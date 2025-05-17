@@ -61,6 +61,12 @@ pub static LIST_ROW_FIELD: Lazy<ListRowField> = Lazy::new(|| ListRowField {
 });
 
 impl ListEntry {
+    pub fn get_target_path(&self) -> String {
+        let target_name = &self.target;
+        let dir = paths::apply_alias(&self.dir);
+        format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, target_name)
+    }
+
     pub fn to_row(&self) -> ListRow {
         let is_restored = if self.is_restored {
             "(R)".fg_rgb::<255, 165, 0>().to_string()

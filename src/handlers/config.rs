@@ -21,7 +21,7 @@ pub fn handler_alias(arg: String) {
             println!("Alias '{}' is set successfully.", arg);
             log::succ(oper, arg, None, None);
         }
-        Err(e) => log::err(oper, arg, None, e.to_string()),
+        Err(e) => log::err(oper, arg, None, e),
     }
 }
 
@@ -51,7 +51,7 @@ pub fn handler_alias_remove(arg: String) {
             println!("Alias '{}' is removed successfully.", arg);
             log::succ(oper, arg, None, None);
         }
-        Err(e) => log::err(oper, arg, None, e.to_string()),
+        Err(e) => log::err(oper, arg, None, e),
     }
 }
 

@@ -18,8 +18,8 @@ fn main() {
 fn apply_command() {
     let args = Args::parse();
     match args.command {
-        Some(ArvCmd::Put { target }) => handlers::put::handler(target),
-        Some(ArvCmd::Restore { id }) => handlers::restore::handler(id),
+        Some(ArvCmd::Put { targets }) => handlers::put::handler(targets),
+        Some(ArvCmd::Restore { ids }) => handlers::restore::handler(ids),
         Some(ArvCmd::List { all }) => handlers::list::handler(all),
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Config {

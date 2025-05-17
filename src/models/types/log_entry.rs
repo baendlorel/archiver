@@ -1,7 +1,7 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::misc::paths;
+use crate::misc::{paths, status_mark};
 
 use super::{OperType, field_style};
 
@@ -20,9 +20,9 @@ impl LogEntry {
     pub fn to_log(&self) -> String {
         let status = if self.is_succ {
             //  ✓ 和 ✗
-            "✓".green().to_string()
+            status_mark::succ()
         } else {
-            "✗".red().to_string()
+            status_mark::fail()
         };
 
         // 带空格的，要包裹单引号

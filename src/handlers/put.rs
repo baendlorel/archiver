@@ -1,5 +1,6 @@
-use crate::{err, wrap_err, wrap_result};
+use crate::{err, misc::status_mark, wrap_err, wrap_result};
 
+use owo_colors::OwoColorize;
 use std::fs;
 
 use super::{list, log};
@@ -8,16 +9,23 @@ use crate::{
     models::{error::ArchiverError, types::OperType},
 };
 
-pub fn handler(target: String) {
-    println!("Putting '{}' into archive", target);
-    match archive(&target) {
-        Ok(id) => {
-            println!("'{}' is successfully archived, id:{}", target, id);
-            println!("Use `arv list` to check the archived list");
-            log::succ(OperType::Put, target.clone(), Some(id), None);
-        }
-        Err(e) => log::err(OperType::Put, target.clone(), None, e.to_string()),
-    };
+pub fn handler(targets: Vec<String>) {
+    for target in targets {
+        println!("Putting '{}' into archive", target);
+        match archive(&target) {
+            Ok(id) => {
+                println!(
+                    "{} '{}' is successfully archived, id: {}",
+                    status_mark::succ(),
+                    target,
+                    id.magenta()
+                );
+                log::succ(OperType::Put, target.clone(), Some(id), None);
+            }
+            Err(e) => log::err(OperType::Put, target.clone(), None, e),
+        };
+    }
+    println!("Use `arv list` to check the archived list");
 }
 
 fn archive(target: &String) -> Result<u32, ArchiverError> {

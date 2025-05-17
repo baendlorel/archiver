@@ -10,19 +10,19 @@ pub struct Args {
 #[derive(Subcommand)]
 pub enum ArvCmd {
     /// Archive a file/directory by its name
-    #[command(visible_alias = "p")]
+    #[command(visible_aliases = ["p", "add", "a"])]
     Put {
-        /// The name to archive
-        #[arg(value_name = "name")]
-        target: String,
+        /// The file/directory names to be archived.
+        #[arg(value_name = "targets", required = true)]
+        targets: Vec<String>, // 改成 Vec<String>
     },
 
     /// Restore an archived object by its file/directory name or id
     #[command(visible_aliases = ["r", "res", "rst"])]
     Restore {
         /// id of the target to be restored. Can be obtained by command `arv list`
-        #[arg(value_name = "id")]
-        id: u32,
+        #[arg(value_name = "ids", required = true)]
+        ids: Vec<u32>,
     },
 
     /// Show the list of archived objects

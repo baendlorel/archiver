@@ -1,52 +1,65 @@
-use crate::{err, wrap_err, wrap_result};
+use owo_colors::OwoColorize;
+
+use crate::{err, not_fatal, wrap_err, wrap_result};
 
 use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
 
 use super::{list, log};
-use crate::misc::{ForceToString, paths};
-use crate::models::{error::ArchiverError, types::OperType};
+use crate::misc::{ForceToString, paths, status_mark};
+use crate::models::{
+    error::ArchiverError,
+    types::{ListEntry, OperType},
+};
 
-pub fn handler(id: u32) {
-    println!("Restoring id:{}", id);
-    match restore(id) {
-        Ok(_) => {
-            println!("{} is successfully restored", id);
-            log::succ(OperType::Restore, id.to_string(), Some(id), None);
+pub fn handler(ids: Vec<u32>) {
+    for id in ids {
+        println!("Restoring id: {}", id.magenta());
+        match restore(id) {
+            Ok(entry) => {
+                println!(
+                    "{} id:{} is successfully restored to '{}'",
+                    status_mark::succ(),
+                    id.magenta(),
+                    entry.get_target_path()
+                );
+                log::succ(OperType::Restore, id.to_string(), Some(id), None);
+            }
+            Err(e) => log::err(OperType::Restore, id.to_string(), Some(id), e),
         }
-        Err(e) => log::err(OperType::Restore, id.to_string(), Some(id), e.to_string()),
     }
 }
 
-fn restore(id: u32) -> Result<(), ArchiverError> {
+fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     let mut target_line_index: u32 = 0;
     match list::find(id, &mut target_line_index) {
         Ok(entry) => {
             if entry.is_restored {
-                return Err(err!(format!(
-                    "id:{} has already been restored. Cannot restore it again.",
-                    id
+                return Err(not_fatal!(format!(
+                    "id:{} has already been restored to '{}'.",
+                    id.magenta(),
+                    entry.get_target_path()
                 )));
             }
 
-            let target_name = OsString::from(entry.target);
-            let dir = PathBuf::from(OsString::from(entry.dir));
+            let target_name = OsString::from(&entry.target);
+            let dir = PathBuf::from(OsString::from(&entry.dir));
             let target_path = dir.join(target_name);
             let archive_path = paths::ROOT_DIR.join(id.to_string());
 
             // 要检查archive里面的文件和系统外面的路径是否都存在
             // 还要检查复制后是否会导致文件覆盖
             if target_path.exists() {
-                return Err(err!(format!(
+                return Err(not_fatal!(format!(
                     "Path '{}' already exists, please remove or rename it first",
                     target_path.force_to_string()
                 )));
             }
 
             if !archive_path.exists() {
-                return Err(err!(format!(
-                    "The archive file id:{} does not exist",
+                return Err(not_fatal!(format!(
+                    "The archive file id: {} does not exist",
                     archive_path.force_to_string()
                 )));
             }
@@ -59,7 +72,7 @@ fn restore(id: u32) -> Result<(), ArchiverError> {
 
             wrap_err!(fs::rename(archive_path, target_path))?;
             wrap_result!(list::mark_as_restored(target_line_index))?;
-            return Ok(());
+            return Ok(entry);
         }
         Err(e) => return Err(err!(e)),
     }
