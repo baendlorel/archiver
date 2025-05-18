@@ -14,16 +14,20 @@ pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut config = config_data::load()?;
 
-    let mut index = 0;
-    for entry in &config.alias_list {
-        if entry.alias == alias && entry.origin == origin {
-            break;
-        }
-        index += 1;
-    }
+    let target_index = config
+        .alias_list
+        .iter()
+        .position(|entry| entry.alias == alias && entry.origin == origin);
 
-    config.alias_list.splice(index..index, []);
-    wrap_result!(config_data::save(&config))?;
+    if let Some(index) = target_index {
+        config.alias_list.remove(index);
+        wrap_result!(config_data::save(&config))?;
+    } else {
+        return Err(err_info!(format!(
+            "Alias '{}' with origin '{}' not found",
+            alias, origin
+        )));
+    }
 
     Ok(())
 }

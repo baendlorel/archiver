@@ -11,7 +11,17 @@ pub fn load() -> Result<ArchiverConfig, ArchiverError> {
     // 在设置全局变量时已经创建了假如不存在的config.json
     let config_path = paths::CONFIG_FILE_PATH.clone();
     let content = wrap_err!(fs::read_to_string(config_path))?;
-    Ok(wrap_err!(serde_json::from_str::<ArchiverConfig>(&content))?)
+    let mut config = wrap_err!(serde_json::from_str::<ArchiverConfig>(&content))?;
+
+    // 下面进行一些正规化
+    // 保持这个开关不是on就是off
+    if config.auto_check_update == "on" {
+        config.auto_check_update = "on".to_string();
+    } else {
+        config.auto_check_update = "off".to_string();
+    }
+
+    Ok(config)
 }
 
 pub fn save(config: &ArchiverConfig) -> Result<(), ArchiverError> {

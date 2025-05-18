@@ -27,26 +27,7 @@ fn apply_command() {
             alias,
             alias_remove,
             auto_check_update,
-        }) => {
-            handlers::config::handler(&config_item, &alias, &alias_remove, &auto_check_update);
-            // 和上面range不一样，这里的选项参数是必须要写的，所以先判定后调用handler
-            // if let Some(alias_entry) = alias {
-            //     handlers::config::handler_alias(&alias_entry);
-            //     return;
-            // }
-            // if alias_list {
-            //     handlers::config::handler_alias_list();
-            //     return;
-            // }
-            // if let Some(alias_entry) = alias_remove {
-            //     handlers::config::handler_alias_remove(&alias_entry);
-            //     return;
-            // }
-            // if let Some(auto_check_update) = auto_check_update {
-            //     handlers::config::handler_alias_remove(&auto_check_update);
-            //     return;
-            // }
-        }
+        }) => handlers::config::handler(&config_item, &alias, &alias_remove, &auto_check_update),
         Some(ArvCmd::Update) => handlers::update::handler(),
         None => {
             println!("{}", "Please enter your command".yellow());

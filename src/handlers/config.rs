@@ -1,6 +1,4 @@
-use owo_colors::OwoColorize;
-
-use crate::{handlers::log, misc::paths, models::types::OperType};
+use crate::{handlers::log, models::types::OperType};
 
 mod alias;
 mod auto_check_update;
@@ -8,14 +6,18 @@ mod config_data;
 mod list;
 
 pub fn handler(
-    config_item: &Option<String>,
+    config_item: &Option<Option<String>>,
     alias: &Option<String>,
     alias_remove: &Option<String>,
     auto_check_update: &Option<String>,
 ) {
-    // todo copilot 貌似说的不对：
-    // 用户输入 arv config --list 或 arv config --list alias，config_item 是 Some(...)。用户没有输入 --list，config_item 就是 None。
+    // println!("config_item: {:?}", config_item);
+    // println!("alias: {:?}", alias);
+    // println!("alias_remove: {:?}", alias_remove);
+    // println!("auto_check_update: {:?}", auto_check_update);
+
     if let Some(config_item) = config_item {
+        // 进入这里说明输入了--list，下面判定是否给了后续参数
         handle_show(config_item);
     } else if let Some(alias) = alias {
         handle_alias(alias);
@@ -39,20 +41,9 @@ fn handle_alias(arg: &str) {
     }
 }
 
-fn handle_show(config_item: &str) {
-    match config_data::load() {
-        Ok(config) => {
-            println!(
-                "Alias entries:\n  ~={} {}",
-                paths::HOME_DIR.to_string_lossy().to_string(),
-                "(default)".cyan()
-            );
-            for entry in config.alias_list {
-                let content = format!("{}={}", entry.alias, entry.origin,);
-                println!("  {}", content);
-            }
-        }
-        Err(e) => println!("Show aliases failed. {}", e.to_string()),
+fn handle_show(config_item: &Option<String>) {
+    if let Err(e) = list::show(config_item) {
+        println!("Show aliases failed. {}", e.to_string());
     }
 }
 

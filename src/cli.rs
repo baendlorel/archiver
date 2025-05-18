@@ -43,8 +43,9 @@ pub enum ArvCmd {
     /// Configurations
     #[command(visible_aliases = ["c", "cfg"])]
     Config {
+        /// Show all configs or specify an item. e.g.`--list`, `--list alias` or `--list auto-check-update`
         #[arg(short, long, aliases = ["ls", "show", "display"], num_args = 0..=1, group = "config_options")]
-        list: Option<String>,
+        list: Option<Option<String>>,
 
         /// Example: `--alias /usr/bin=@bin`. Can shorten the paths showed in console, but full paths are still preserved on records.
         #[arg(long, group = "config_options")]
