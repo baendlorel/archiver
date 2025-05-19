@@ -8,7 +8,7 @@ use crate::misc::{ForceToString, append_entry, paths, status_mark};
 use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
 
-pub fn handler(range: Option<String>) {
+pub fn handler(range: &Option<String>) {
     if let Err(e) = load(range) {
         println!("{}", e.to_string())
     }
@@ -136,7 +136,7 @@ fn save(
 ///
 /// If the log file doesn't exist, it will return success without loading any records.
 /// Failed log line parsing will be skipped and warning messages will be output.
-fn load(range: Option<String>) -> Result<(), ArchiverError> {
+fn load(range: &Option<String>) -> Result<(), ArchiverError> {
     // 考虑到日期本质上是一个不定型进制数，可以考虑直接转为数字来对比大小
     let range = parse_range(range)?;
     let year_range = (range.0 / 100, range.1 / 100);
@@ -165,7 +165,7 @@ fn load(range: Option<String>) -> Result<(), ArchiverError> {
     Ok(())
 }
 
-fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
+fn parse_range(range: &Option<String>) -> Result<(u32, u32), ArchiverError> {
     let default_a = u32::MIN;
     let default_b = u32::MAX;
 
@@ -173,11 +173,11 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
         return Ok((default_a, default_b));
     }
 
-    let range = &range.unwrap();
+    let range = range.clone().unwrap();
 
-    let is_parsable = |s: &String| -> bool { s == "*" || s.chars().all(|c| c.is_numeric()) };
+    let is_parsable = |s: &str| -> bool { s == "*" || s.chars().all(|c| c.is_numeric()) };
 
-    let parse = |s: &String, default_value: u32| -> Result<u32, ArchiverError> {
+    let parse = |s: &str, default_value: u32| -> Result<u32, ArchiverError> {
         if s == "*" {
             return Ok(default_value);
         }
@@ -198,8 +198,8 @@ fn parse_range(range: Option<String>) -> Result<(u32, u32), ArchiverError> {
         Ok(wrap_err!(s.parse::<u32>())?)
     };
 
-    if is_parsable(range) {
-        return Ok((parse(range, default_a)?, default_b));
+    if is_parsable(&range) {
+        return Ok((parse(&range, default_a)?, default_b));
     }
 
     if let Some((a_str, b_str)) = range.split_once('-') {

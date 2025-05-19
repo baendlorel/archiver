@@ -1,12 +1,108 @@
 use owo_colors::OwoColorize;
 use std::process::Command;
 
+use crate::{err_info, misc::status_mark, models::error::ArchiverError};
+
+struct Version {
+    major: u32,
+    minor: u32,
+    patch: u32,
+}
+
+impl Version {
+    pub fn from(version_str: &str) -> Self {
+        let parts: Vec<u32> = version_str
+            .split('.')
+            .map(|x| {
+                x.parse::<u32>()
+                    .expect(&format!("Parse version error! {}", version_str))
+            })
+            .collect();
+        if parts.len() != 3 {
+            panic!("Version string must be in the format x.y.z");
+        }
+
+        Version {
+            major: parts[0],
+            minor: parts[1],
+            patch: parts[2],
+        }
+    }
+
+    pub fn is_greater_than(&self, other: &Version) -> i8 {
+        if self.major > other.major {
+            return 1;
+        }
+        if self.major < other.major {
+            return -1;
+        }
+
+        if self.minor > other.minor {
+            return 1;
+        }
+        if self.minor < other.minor {
+            return -1;
+        }
+
+        if self.patch > other.patch {
+            return 1;
+        }
+        if self.patch < other.patch {
+            return -1;
+        }
+        0
+    }
+
+    pub fn to_string(&self) -> String {
+        format!("{}.{}.{}", self.major, self.minor, self.patch)
+    }
+}
+
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
     // 获取当前版本
-    let current_version = env!("CARGO_PKG_VERSION");
-    println!("Current version: {}", current_version.cyan());
+    let (cur, latest) = match prepare_versions() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("{}", e.to_string());
+            return;
+        }
+    };
 
+    match latest.is_greater_than(&cur) {
+        1 => println!(
+            "{} New version available! Please update.",
+            status_mark::warn()
+        ),
+        0 => println!("{} You are using the latest version.", status_mark::succ()),
+        -1 => println!("{} How could you use a newer version?", status_mark::warn()),
+        _ => panic!("Version comparison error!"),
+    }
+}
+
+/// 和上面的区别在于版本相同时静默
+pub fn auto_check_update() {
+    // 获取当前版本
+    let (cur, latest) = match prepare_versions() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("{}", e.to_string());
+            return;
+        }
+    };
+
+    match latest.is_greater_than(&cur) {
+        1 => println!(
+            "{} New version available! Please update.",
+            status_mark::warn()
+        ),
+        -1 => println!("{} How could you use a newer version?", status_mark::warn()),
+        _ => panic!("Version comparison error!"),
+    }
+}
+
+fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
+    let current = Version::from(env!("CARGO_PKG_VERSION"));
     // 通过 GitHub API 获取最新 release
     let output = Command::new("curl")
         .arg("-s")
@@ -18,16 +114,17 @@ pub fn handler() {
     let output = match output {
         Ok(o) => o,
         Err(e) => {
-            println!("{} curl failed: {}", "[update]".yellow(), e);
-            return;
+            return Err(err_info!(format!("curl failed: {}", e)));
         }
     };
 
     let json = match String::from_utf8(output.stdout) {
         Ok(s) => s,
         Err(e) => {
-            println!("{} output decode failed: {}", "[update]".yellow(), e);
-            return;
+            return Err(err_info!(format!(
+                "output decode failed: {}",
+                e.to_string()
+            )));
         }
     };
 
@@ -39,22 +136,15 @@ pub fn handler() {
         .unwrap_or("");
 
     if latest_version.is_empty() {
-        println!(
-            "{} Failed to parse latest version from GitHub releases",
-            "[update]".yellow()
-        );
-        return;
+        return Err(err_info!(format!(
+            "Failed to parse latest version from GitHub releases"
+        )));
     }
 
-    println!("Latest release: {}", latest_version.green());
-    // 去掉 tag 前缀 v
-    let latest_version_trimmed = latest_version.trim_start_matches('v');
-    if latest_version_trimmed > current_version {
-        println!(
-            "{} New version available! Please update.",
-            "[update]".green()
-        );
-    } else {
-        println!("{} You are using the latest version.", "[update]".cyan());
-    }
+    let latest = Version::from(latest_version.trim_start_matches('v'));
+
+    println!("Current version: {}", current.to_string().cyan());
+    println!("Latest  release: {}", latest.to_string().green());
+
+    Ok((current, latest))
 }

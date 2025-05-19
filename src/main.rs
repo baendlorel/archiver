@@ -9,18 +9,16 @@ mod models;
 use cli::{Args, ArvCmd};
 
 fn main() {
-    apply_command();
-
-    // todo check for updates
-    println!("checking for updates");
+    let args: Args = Args::parse();
+    apply_command(&args);
+    auto_check_update(&args);
 }
 
-fn apply_command() {
-    let args = Args::parse();
-    match args.command {
+fn apply_command(args: &Args) {
+    match &args.command {
         Some(ArvCmd::Put { targets }) => handlers::put::handler(&targets),
         Some(ArvCmd::Restore { ids }) => handlers::restore::handler(&ids),
-        Some(ArvCmd::List { all }) => handlers::list::handler(all),
+        Some(ArvCmd::List { all }) => handlers::list::handler(*all),
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Config {
             list: config_item,
@@ -40,5 +38,19 @@ fn apply_command() {
                 .expect("Cannot print help text");
             println!(); // 添加一个空行
         }
+    }
+}
+
+fn auto_check_update(args: &Args) {
+    let need_checking = match &args.command {
+        Some(ArvCmd::Update) => false,
+        Some(ArvCmd::List { all: _ }) => false,
+        Some(ArvCmd::Log { range: _ }) => false,
+        _ => true,
+    };
+
+    println!("need_checking: {}", need_checking);
+    if need_checking {
+        handlers::update::auto_check_update();
     }
 }
