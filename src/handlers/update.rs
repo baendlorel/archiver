@@ -8,6 +8,8 @@ use crate::{
     models::{error::ArchiverError, types::Version},
 };
 
+use super::config;
+
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
     // 获取当前版本
@@ -32,6 +34,19 @@ pub fn handler() {
 
 /// 和上面的区别在于版本相同时静默
 pub fn auto_check_update() {
+    let config = match config::config_data::load() {
+        Ok(c) => c,
+        Err(e) => {
+            println!("{}", e.to_string());
+            return;
+        }
+    };
+
+    // 只在config为真时进行
+    if config.auto_check_update == "off" {
+        return;
+    }
+
     // 获取当前版本
     let (cur, latest) = match prepare_versions() {
         Ok(v) => v,

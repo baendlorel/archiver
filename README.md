@@ -35,7 +35,8 @@ Move archived file/directory back to where it came from.
 - The restored targets will be hidden when executing `list` command, unless you use `list --all`.
 
 ```bash
-arv restore <id> # also `arv rst <id>` or `arv r <id>`
+# also `arv rst <id>` or `arv r <id>`
+arv restore <id>
 ```
 
 ### list
@@ -50,8 +51,8 @@ List all entries in the archive.
 arv list # also `arv ls`
 
 # It should show a table like this
-# 2025-05-12 17:00:05 id:4 - temp1.a   - ~/projects
-# 2025-05-12 19:35:07 id:6 - temp2.b.f - ~/projects
+# 2025-05-12 17:00:05 4 temp1.a   ~/projects
+# 2025-05-12 19:35:07 6 temp2.b.f ~/projects
 ```
 
 #### option: all
@@ -62,10 +63,10 @@ Show all archived records, including the restored ones.
 arv list --all # also `arv ls -a`
 
 # It should show a table like this
-# 2025-05-12 17:00:05 id:4 - temp1.a   - ~/projects
-# 2025-05-12 19:35:07 id:5 - temp3(R)  - ~/projects
-# 2025-05-12 19:35:07 id:6 - temp2.b.f - ~/projects
-# 2025-05-12 19:35:07 id:7 - temp4(R)  - ~/projects
+# 2025-05-12 17:00:05 4 temp1.a   ~/projects
+# 2025-05-12 19:35:07 5 temp3(R)  ~/projects
+# 2025-05-12 19:35:07 6 temp2.b.f ~/projects
+# 2025-05-12 19:35:07 7 temp4(R)  ~/projects
 ```
 
 ### log
@@ -88,15 +89,40 @@ arv log [range] # also `arv lg [range]`
 
 Configure some properties of Archiver.
 
+You can set the following configurations:
+
+1. `alias` : set an alias for a path
+2. `list`: show configurations
+3. `auto-check-update`: enable or disable auto check for updates
+
+#### option: list \[item\]
+
+Show configurations.
+
+```bash
+arv config --list
+
+# show all aliases
+arv config --list alias
+```
+
 #### option: alias
 
 Aliases will shorten the paths shown in command `list` and `log`. However, Archiver will still keep the full version. This is just for display purposes.
 
 ```bash
-arv config --alias a=/b/c # path `/b/c/xxx` displays as `a/xxx`
-arv config --alias-list  # show all aliases
-arv config --alias-remove a=/b/c  # remove alias config `a=/b/c`
+# path `/b/c/xxx` displays as `a/xxx`
+arv config --alias a=/b/c
+
+# remove alias config `a=/b/c`
+arv config --alias-remove a=/b/c
 ```
+
+#### option: auto-check-update
+
+### update
+
+The
 
 ### help
 

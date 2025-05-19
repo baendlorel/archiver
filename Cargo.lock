@@ -68,7 +68,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "archiver"
+name = "arv"
 version = "0.1.0"
 dependencies = [
  "chrono",
@@ -78,7 +78,6 @@ dependencies = [
  "owo-colors",
  "serde",
  "serde_json",
- "thiserror",
 ]
 
 [[package]]

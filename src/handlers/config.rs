@@ -2,9 +2,11 @@ use crate::{handlers::log, models::types::OperType};
 
 mod alias;
 mod auto_check_update;
-mod config_data;
+pub mod config_data;
 mod list;
 
+// todo 改造这里，命令格式化为arv config alias.add xxx
+// alias.remove  xxx | auto-xxx=on |
 pub fn handler(
     config_item: &Option<Option<String>>,
     alias: &Option<String>,
@@ -68,7 +70,7 @@ fn handle_auto_check_update(arg: &str) {
 
     match auto_check_update::toggle(&arg) {
         Ok(_) => {
-            println!("Alias '{}' is removed successfully.", arg);
+            println!("Auto check update is set to '{}'.", arg);
             log::succ(&oper, arg, None, None);
         }
         Err(e) => log::err(&oper, arg, None, e),
