@@ -39,7 +39,7 @@ impl ArchiverConfig {
                 } else {
                     "off".red().to_string()
                 };
-                format!("{} {}", head, status)
+                format!("{}\n  {}", head, status)
             }
             _ => format!("Undefined config item '{}'", item),
         }

@@ -5,34 +5,52 @@ mod auto_check_update;
 pub mod config_data;
 mod list;
 
-// todo 改造这里，命令格式化为arv config alias.add xxx
-// alias.remove  xxx | auto-xxx=on |
-pub fn handler(
-    config_item: &Option<Option<String>>,
-    alias: &Option<String>,
-    alias_remove: &Option<String>,
-    auto_check_update: &Option<String>,
-) {
-    // println!("config_item: {:?}", config_item);
-    // println!("alias: {:?}", alias);
-    // println!("alias_remove: {:?}", alias_remove);
-    // println!("auto_check_update: {:?}", auto_check_update);
+pub fn handler(statement: &Option<Vec<String>>) {
+    // 下面开始判定具体改了什么设置
+    if statement.is_none() {
+        handle_show(&None);
+        return;
+    }
 
-    if let Some(config_item) = config_item {
-        // 进入这里说明输入了--list，下面判定是否给了后续参数
-        handle_show(config_item);
-    } else if let Some(alias) = alias {
-        handle_alias(alias);
-    } else if let Some(alias_remove) = alias_remove {
-        handle_alias_remove(alias_remove);
-    } else if let Some(auto_check_update) = auto_check_update {
-        handle_auto_check_update(auto_check_update);
+    let args = statement.as_ref().unwrap();
+    // 只打印，不做修改
+    if args.len() == 1 {
+        let arg = args[0].to_string();
+        handle_show(&Some(arg));
+        return;
+    }
+
+    if args.len() != 2 {
+        println!(
+            "Invalid config statement. There must be 2 args. Got '{}'.",
+            args.join(" ")
+        );
+        return;
+    }
+
+    let item = &args[0];
+    let arg = &args[1];
+
+    match item.as_str() {
+        "alias.add" => handle_add_alias(arg),
+        "alias.remove" => handle_remove_alias(arg),
+        "auto-check-update" => handle_auto_check_update(arg),
+        _ => {
+            println!("Unknown config item: '{}'", item);
+            return;
+        }
     }
 }
 
-fn handle_alias(arg: &str) {
+fn handle_show(config_item: &Option<String>) {
+    if let Err(e) = list::show(config_item) {
+        println!("{}", e.to_string());
+    }
+}
+
+fn handle_add_alias(arg: &str) {
     let oper = OperType::Config {
-        option: "--alias".to_string(),
+        option: "alias.add".to_string(),
     };
     match alias::set_alias(&arg) {
         Ok(_) => {
@@ -43,15 +61,9 @@ fn handle_alias(arg: &str) {
     }
 }
 
-fn handle_show(config_item: &Option<String>) {
-    if let Err(e) = list::show(config_item) {
-        println!("Show aliases failed. {}", e.to_string());
-    }
-}
-
-fn handle_alias_remove(arg: &str) {
+fn handle_remove_alias(arg: &str) {
     let oper = OperType::Config {
-        option: "--alias-remove".to_string(),
+        option: "alias.remove".to_string(),
     };
 
     match alias::remove_alias(&arg) {
@@ -65,7 +77,7 @@ fn handle_alias_remove(arg: &str) {
 
 fn handle_auto_check_update(arg: &str) {
     let oper = OperType::Config {
-        option: "--auto-check-update".to_string(),
+        option: "auto-check-update".to_string(),
     };
 
     match auto_check_update::toggle(&arg) {

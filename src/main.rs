@@ -20,12 +20,7 @@ fn apply_command(args: &Args) {
         Some(ArvCmd::Restore { ids }) => handlers::restore::handler(&ids),
         Some(ArvCmd::List { all }) => handlers::list::handler(*all),
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
-        Some(ArvCmd::Config {
-            list: config_item,
-            alias,
-            alias_remove,
-            auto_check_update,
-        }) => handlers::config::handler(&config_item, &alias, &alias_remove, &auto_check_update),
+        Some(ArvCmd::Config { statement }) => handlers::config::handler(&statement),
         Some(ArvCmd::Update) => handlers::update::handler(),
         None => {
             println!("{}", "Please enter your command".yellow());
