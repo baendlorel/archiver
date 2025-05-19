@@ -14,8 +14,7 @@ pub fn toggle(status: &str) -> Result<(), ArchiverError> {
 
     let mut config = wrap_err!(config_data::load())?;
     config.auto_check_update = status.to_string();
-    // todo 此处有宏报错
-    wrap_result!(config_data::save(&config));
+    wrap_result!(config_data::save(&config))?;
 
     Ok(())
 }

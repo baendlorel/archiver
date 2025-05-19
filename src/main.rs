@@ -49,7 +49,6 @@ fn auto_check_update(args: &Args) {
         _ => true,
     };
 
-    println!("need_checking: {}", need_checking);
     if need_checking {
         handlers::update::auto_check_update();
     }

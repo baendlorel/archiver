@@ -1,62 +1,12 @@
+use crate::err_info;
+
 use owo_colors::OwoColorize;
 use std::process::Command;
 
-use crate::{err_info, misc::status_mark, models::error::ArchiverError};
-
-struct Version {
-    major: u32,
-    minor: u32,
-    patch: u32,
-}
-
-impl Version {
-    pub fn from(version_str: &str) -> Self {
-        let parts: Vec<u32> = version_str
-            .split('.')
-            .map(|x| {
-                x.parse::<u32>()
-                    .expect(&format!("Parse version error! {}", version_str))
-            })
-            .collect();
-        if parts.len() != 3 {
-            panic!("Version string must be in the format x.y.z");
-        }
-
-        Version {
-            major: parts[0],
-            minor: parts[1],
-            patch: parts[2],
-        }
-    }
-
-    pub fn is_greater_than(&self, other: &Version) -> i8 {
-        if self.major > other.major {
-            return 1;
-        }
-        if self.major < other.major {
-            return -1;
-        }
-
-        if self.minor > other.minor {
-            return 1;
-        }
-        if self.minor < other.minor {
-            return -1;
-        }
-
-        if self.patch > other.patch {
-            return 1;
-        }
-        if self.patch < other.patch {
-            return -1;
-        }
-        0
-    }
-
-    pub fn to_string(&self) -> String {
-        format!("{}.{}.{}", self.major, self.minor, self.patch)
-    }
-}
+use crate::{
+    misc::status_mark,
+    models::{error::ArchiverError, types::Version},
+};
 
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
@@ -69,7 +19,7 @@ pub fn handler() {
         }
     };
 
-    match latest.is_greater_than(&cur) {
+    match latest.compare(&cur) {
         1 => println!(
             "{} New version available! Please update.",
             status_mark::warn()
@@ -91,9 +41,9 @@ pub fn auto_check_update() {
         }
     };
 
-    match latest.is_greater_than(&cur) {
+    match latest.compare(&cur) {
         1 => println!(
-            "{} New version available! Please update.",
+            "{} New version available! Please download it manually.",
             status_mark::warn()
         ),
         -1 => println!("{} How could you use a newer version?", status_mark::warn()),
