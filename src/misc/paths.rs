@@ -132,6 +132,7 @@ pub fn auto_incr_id() -> u32 {
     new_id
 }
 
+// todo id:15 has clready been restored to
 pub fn apply_alias(path_str: &str) -> String {
     // 使用普通循环，可以在找到匹配时提前返回
     // for (alias, origin) in ALIAS_MAP.iter() {
@@ -167,7 +168,7 @@ pub fn apply_alias(path_str: &str) -> String {
     path_str.to_string()
 }
 
-pub fn get_log_file_path(year: u32) -> PathBuf {
+pub fn get_log_path(year: u32) -> PathBuf {
     LOGS_DIR.join(format!("{}.jsonl", year))
 }
 

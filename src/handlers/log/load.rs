@@ -8,7 +8,7 @@ use crate::misc::paths;
 use crate::models::error::ArchiverError;
 use crate::models::types::LogEntry;
 
-const MAX_CASUAL_COUNT: usize = 20;
+const MAX_CASUAL_COUNT: usize = 15;
 
 pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
@@ -26,7 +26,7 @@ pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
             continue;
         }
 
-        let log_file_path = paths::get_log_file_path(year);
+        let log_file_path = paths::get_log_path(year);
         if !log_file_path.exists() {
             continue;
         }
@@ -47,7 +47,8 @@ pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
     // 如果是随便看看而且到达最大值，那么提示可以看更多
     if casual && logs.len() == MAX_CASUAL_COUNT {
         println!(
-            "Recent {} logs displayed. Specify a [range] to see more. e.g. arv lg 202505",
+            // "Recent {} logs displayed. Specify a [range] to see more. e.g. arv lg 202505",
+            "Recent {} logs displayed.",
             MAX_CASUAL_COUNT
         );
     }

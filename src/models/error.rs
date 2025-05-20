@@ -52,13 +52,17 @@ impl std::fmt::Display for ArchiverError {
             ArchiverErrorLevel::Info => return write!(f, "{}", self.message),
             ArchiverErrorLevel::Warn => return write!(f, "{}", self.message),
             ArchiverErrorLevel::Fatal => {
-                let mut stack_info = String::new();
+                let mut stack_info: Vec<String> = vec![];
                 let mut counter: u32 = 0;
                 for frame in &self.stack {
                     counter += 1;
-                    stack_info.push_str(&format!(
-                        " {}. at {}:{}:{} ({})\n",
-                        counter, frame.file, frame.line, frame.col, frame.module_path
+                    stack_info.push(format!(
+                        "  {}.at {}:{}:{} {}",
+                        counter,
+                        frame.file,
+                        frame.line,
+                        frame.col,
+                        frame.module_path.repeat(0) // 模块路径太长了，和普通路径重复，此处省略 frame.module_path
                     ));
                 }
                 write!(
@@ -66,7 +70,7 @@ impl std::fmt::Display for ArchiverError {
                     "{} - {} \n{}",
                     "Fatal".red(),
                     self.message,
-                    stack_info.trim_end_matches("\n")
+                    stack_info.join("\n")
                 )
             }
         }

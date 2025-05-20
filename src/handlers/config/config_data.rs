@@ -15,9 +15,7 @@ pub fn load() -> Result<ArchiverConfig, ArchiverError> {
 
     // 下面进行一些正规化
     // 保持这个开关不是on就是off
-    if config.auto_check_update == "on" {
-        config.auto_check_update = "on".to_string();
-    } else {
+    if config.auto_check_update != "on" {
         config.auto_check_update = "off".to_string();
     }
 

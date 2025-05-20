@@ -18,4 +18,11 @@ impl OperType {
             OperType::Config { option } => format!("{} {}", "cfg".bright_purple(), option),
         }
     }
+    pub fn len(&self) -> usize {
+        match self {
+            OperType::Put => 3,
+            OperType::Restore => 3,
+            OperType::Config { option } => 3 + 1 + option.len(), // e.g. cfg_alias.add
+        }
+    }
 }

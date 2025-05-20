@@ -12,6 +12,11 @@ pub fn parse_range(range: &Option<String>) -> Result<(u32, u32), ArchiverError> 
 
     let range = range.clone().unwrap();
 
+    // 允许看所有
+    if range == "all" || range == "*" || range == "a" {
+        return Ok((default_a, default_b));
+    }
+
     let is_parsable = |s: &str| -> bool { s == "*" || s.chars().all(|c| c.is_numeric()) };
 
     let parse = |s: &str, default_value: u32| -> Result<u32, ArchiverError> {

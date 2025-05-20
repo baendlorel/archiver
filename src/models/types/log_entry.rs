@@ -16,6 +16,10 @@ pub struct LogEntry {
     pub id: Option<u32>, // archive id，如果有的话
 }
 
+/// 为remark换行的缩进准备的常量
+/// 由此公式算得：字段间空格数量+状态字符数量+短横线两个
+/// 当前为 5+1+3
+const INVARIANT_PADDING: usize = 9;
 impl LogEntry {
     pub fn to_log(&self) -> String {
         let status = if self.is_succ {
@@ -25,18 +29,23 @@ impl LogEntry {
             status_mark::fail()
         };
 
-        // 带空格的，要包裹单引号
-        let arg = if self.arg.find(" ").is_some() {
-            field_style::grey(&format!("'{}'", self.arg))
-        } else {
-            self.arg.clone()
-        };
-
-        // todo 多行的remark，在另起一行时要添加足够的空格来对其自己开始的位置
         let remark = if self.remark.is_empty() {
             field_style::grey(&"(no remark)".to_string())
         } else {
-            field_style::grey(&paths::apply_alias(&self.remark))
+            let r = paths::apply_alias(&self.remark);
+            let padding_count =
+                self.time.len() + INVARIANT_PADDING + self.oper.len() + self.arg.len();
+            // let replacer = format!(
+            //     "\n{}{}{}{}{}{}",
+            //     "t".repeat(self.time.len()),
+            //     "-".repeat(5),
+            //     "o".repeat(self.oper.len()),
+            //     " ".repeat(1),
+            //     "a".repeat(self.arg.len()),
+            //     " ".repeat(3),
+            // );
+            let replacer = format!("\n{}", " ".repeat(padding_count));
+            field_style::grey(&r.replace("\n", replacer.as_str()))
         };
 
         let id = if let Some(id) = self.id {
@@ -54,7 +63,7 @@ impl LogEntry {
             field_style::grey(&self.time),
             status,
             self.oper.to_padded_str(),
-            arg,
+            self.arg,
             remark,
             id,
         )
