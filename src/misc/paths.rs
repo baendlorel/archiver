@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fs;
-use std::path::{MAIN_SEPARATOR, PathBuf};
+use std::path::PathBuf;
 
 use crate::models::types::ArchiverConfig;
 use crate::wrap_expect;
@@ -171,8 +171,9 @@ pub fn get_log_file_path(year: u32) -> PathBuf {
     LOGS_DIR.join(format!("{}.jsonl", year))
 }
 
-pub fn get_all_logs_year() -> Vec<u32> {
-    let mut logs = Vec::new();
+/// 获取所有logs文件夹下的日志的年份，从大到小排列
+pub fn get_years_desc() -> Vec<u32> {
+    let mut years = Vec::new();
     if let Ok(entries) = fs::read_dir(&*LOGS_DIR) {
         for entry in entries.flatten() {
             if let Some(file_name) = entry.path().file_name() {
@@ -183,10 +184,11 @@ pub fn get_all_logs_year() -> Vec<u32> {
                     .trim_end_matches(".jsonl")
                     .parse::<u32>()
                 {
-                    logs.push(year);
+                    years.push(year);
                 }
             }
         }
     }
-    logs
+    years.sort_by(|a, b| b.cmp(a));
+    years
 }

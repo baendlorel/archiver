@@ -1,7 +1,7 @@
 use crate::err_info;
 
 use owo_colors::OwoColorize;
-use std::process::Command;
+use std::{cmp::Ordering, process::Command};
 
 use crate::{
     misc::status_mark,
@@ -21,14 +21,13 @@ pub fn handler() {
         }
     };
 
-    match latest.compare(&cur) {
-        1 => println!(
+    match latest.cmp(&cur) {
+        Ordering::Greater => println!(
             "{} New version available! Please update.",
             status_mark::warn()
         ),
-        0 => println!("{} You are using the latest version.", status_mark::succ()),
-        -1 => println!("{} How could you use a newer version?", status_mark::warn()),
-        _ => panic!("Version comparison error!"),
+        Ordering::Equal => println!("{} You are using the latest version.", status_mark::succ()),
+        Ordering::Less => println!("{} How could you use a newer version?", status_mark::warn()),
     }
 }
 
@@ -56,13 +55,13 @@ pub fn auto_check_update() {
         }
     };
 
-    match latest.compare(&cur) {
-        1 => println!(
+    match latest.cmp(&cur) {
+        Ordering::Greater => println!(
             "{} New version available! Please download it manually.",
             status_mark::warn()
         ),
-        -1 => println!("{} How could you use a newer version?", status_mark::warn()),
-        _ => panic!("Version comparison error!"),
+        Ordering::Less => println!("{} How could you use a newer version?", status_mark::warn()),
+        Ordering::Equal => {}
     }
 }
 

@@ -35,8 +35,8 @@ pub enum ArvCmd {
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]
     Log {
-        /// YYYYMM=to now, YYYYMM-YYYYMM=date range, *-YYYYMM= to ym.
-        #[arg(value_name = "time range")]
+        /// YYYYMM (from yyyymm to now), YYYYMM-YYYYMM (date range), *-YYYYMM
+        #[arg(value_name = "time-range")]
         range: Option<String>,
     },
 

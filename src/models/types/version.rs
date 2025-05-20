@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 pub struct Version {
     major: u32,
     minor: u32,
@@ -25,28 +27,28 @@ impl Version {
     }
 
     /// 比较版本，如果大于则返回1，等于返回0，小于则返回-1
-    pub fn compare(&self, other: &Version) -> i8 {
+    pub fn cmp(&self, other: &Version) -> Ordering {
         if self.major > other.major {
-            return 1;
+            return Ordering::Greater;
         }
         if self.major < other.major {
-            return -1;
+            return Ordering::Less;
         }
 
         if self.minor > other.minor {
-            return 1;
+            return Ordering::Greater;
         }
         if self.minor < other.minor {
-            return -1;
+            return Ordering::Less;
         }
 
         if self.patch > other.patch {
-            return 1;
+            return Ordering::Greater;
         }
         if self.patch < other.patch {
-            return -1;
+            return Ordering::Less;
         }
-        0
+        return Ordering::Equal;
     }
 
     pub fn to_string(&self) -> String {
