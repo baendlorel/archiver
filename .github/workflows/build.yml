@@ -1,6 +1,13 @@
-name: Build # Workflow 的名称，会显示在 GitHub Actions 页面
+name: Rust
 
-on: [push] # 触发条件：每次 push  时都会运行此 workflow // pull request
+on:
+  push:
+    branches: ['release'] # 触发条件：当有 push 到 release 分支时
+  # pull_request:
+  #   branches: ['main']
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build: # 定义一个名为 build 的 job
