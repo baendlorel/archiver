@@ -31,8 +31,19 @@ jobs:
         id: version
         run: echo "version=$(grep '^version =' Cargo.toml | head -1 | cut -d '"' -f2)" >> $GITHUB_OUTPUT
 
-      - name: Upload arv binary # 第四步：上传编译好的二进制文件作为 artifact
+      - name: Set short platform name
+        id: set_platform
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            echo "platform_short=linux" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            echo "platform_short=darwin" >> $GITHUB_OUTPUT
+          else
+            echo "platform_short=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload arv binary
         uses: actions/upload-artifact@v4
         with:
-          name: arv-${{ matrix.os }}-v${{ steps.version.outputs.version }} # artifact 名字，带上平台名
-          path: target/release/arv # 指定要上传的文件路径
+          name: arv-${{ steps.set_platform.outputs.platform_short }}-v${{ steps.version.outputs.version }}
+          path: target/release/arv
