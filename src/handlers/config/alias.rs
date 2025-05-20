@@ -15,12 +15,12 @@ pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let mut config = config_data::load()?;
 
     let target_index = config
-        .alias_list
+        .alias
         .iter()
         .position(|entry| entry.alias == alias && entry.origin == origin);
 
     if let Some(index) = target_index {
-        config.alias_list.remove(index);
+        config.alias.remove(index);
         wrap_result!(config_data::save(&config))?;
     } else {
         return Err(err_info!(format!(
@@ -36,7 +36,7 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut config = wrap_result!(config_data::load())?;
 
-    for entry in &config.alias_list {
+    for entry in &config.alias {
         if entry.alias == alias {
             return Err(err_info!(format!(
                 "Alias '{}' is already bound with origin '{}'",
@@ -51,7 +51,7 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
         }
     }
 
-    config.alias_list.push(AliasEntry {
+    config.alias.push(AliasEntry {
         alias: alias.to_string(),
         origin: origin.to_string(),
     });

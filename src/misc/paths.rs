@@ -67,7 +67,7 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     if !path.exists() {
         let config = ArchiverConfig {
             auto_check_update: "on".to_string(),
-            alias_list: vec![],
+            alias: vec![],
         };
         let content = wrap_expect!(
             serde_json::to_string_pretty(&config),
@@ -97,7 +97,7 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let mut map: HashMap<String, String> = HashMap::new();
 
     map.insert("~".to_string(), HOME_DIR.force_to_string());
-    for line in config.alias_list {
+    for line in config.alias {
         map.insert(line.alias, line.origin);
     }
 
