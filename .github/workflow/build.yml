@@ -1,0 +1,31 @@
+name: Build # Workflow 的名称，会显示在 GitHub Actions 页面
+
+on: [push] # 触发条件：每次 push  时都会运行此 workflow // pull request
+
+jobs:
+  build: # 定义一个名为 build 的 job
+    runs-on: ${{ matrix.os }} # 指定 runner 平台，使用 matrix 变量（见下）
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest] # 定义 matrix，分别在 Ubuntu 和 macOS 上各跑一遍
+
+    steps:
+      - uses: actions/checkout@v3 # 第一步：拉取你的仓库代码到 runner
+
+      - uses: actions-rs/toolchain@v1 # 第二步：安装 Rust 工具链
+        with:
+          toolchain: stable # 安装 stable 版本的 Rust
+          override: true # 设置为默认工具链
+
+      - name: Build with Cargo # 第三步：用 cargo 编译 release 版本
+        run: cargo build --release
+
+      - name: Get version
+        id: version
+        run: echo "version=$(grep '^version =' Cargo.toml | head -1 | cut -d '"' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Upload arv binary # 第四步：上传编译好的二进制文件作为 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arv-${{ matrix.os }}-v${{ steps.version.outputs.version }} # artifact 名字，带上平台名
+          path: target/release/arv # 指定要上传的文件路径
