@@ -37,8 +37,8 @@ fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     let entry = wrap_result!(list::find(id, &mut target_line_index))?;
     if entry.is_restored {
         return Err(err_info!(format!(
-            "id:{} has already been restored to '{}'.",
-            id.magenta(),
+            "id:{} has already been restored to '{}'",
+            id,
             entry.get_target_path()
         )));
     }

@@ -19,9 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3 # 第一步：拉取你的仓库代码到 runner
 
-      - uses: actions-rs/toolchain@v1 # 第二步：安装 Rust 工具链
+      - uses: actions/setup-rust@v1
         with:
-          toolchain: stable # 安装 stable 版本的 Rust
+          rust-version: stable
           override: true # 设置为默认工具链
 
       - name: Build with Cargo # 第三步：用 cargo 编译 release 版本

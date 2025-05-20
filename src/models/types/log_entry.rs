@@ -32,6 +32,7 @@ impl LogEntry {
             self.arg.clone()
         };
 
+        // todo 多行的remark，在另起一行时要添加足够的空格来对其自己开始的位置
         let remark = if self.remark.is_empty() {
             field_style::grey(&"(no remark)".to_string())
         } else {

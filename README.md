@@ -4,11 +4,30 @@ Troubled with too many projects? Cannot focus on your current work?
 
 **Archiver helps you now!**
 
-## Commands
+## Install
+
+Install script recommended （supports Linux/macOS）
+
+_Does not support Windows yet_
+
+```bash
+curl -fsSL https://github.com/baendlorel/archiver/blob/main/archiver-installer.sh | bash
+```
+
+## Where does the files go?
 
 Archived files are stored in `~/.archive` where `~` means home directory. You can use following commands to manage your archived files.
 
-### put
+```text
+.archive          Store all archived files
+  ├logs/          Log files, in form of `jsonl`
+  └core/          Includes important files
+    ├config.json  Configurations
+    ├auto-incr    Auto-increment id for archive id
+    └list.jsonl   List of all archived objects
+```
+
+## Put/Add
 
 Put a file/directory into the archive.
 
@@ -24,7 +43,7 @@ arv put <target> # e.g. `arv put my.txt`
 # 'my.txt' is successfully archived, id:1
 ```
 
-### restore
+## Restore
 
 Move archived file/directory back to where it came from.
 
@@ -39,28 +58,31 @@ Move archived file/directory back to where it came from.
 arv restore <id>
 ```
 
-### list
+## List
 
-List all entries in the archive.
+Show all entries in the archive.
 
 - The list will contain archived time, id, target name and original directory
 - If the target is a directory, its name will be shown in blue
 - The `<id>` will be shown in magenta.
 
 ```bash
-arv list # also `arv ls`
+arv list
+arv ls
+arv l
 
 # It should show a table like this
 # 2025-05-12 17:00:05 4 temp1.a   ~/projects
 # 2025-05-12 19:35:07 6 temp2.b.f ~/projects
 ```
 
-#### option: all
+### option: --all
 
 Show all archived records, including the restored ones.
 
 ```bash
-arv list --all # also `arv ls -a`
+arv list --all
+arv l -a
 
 # It should show a table like this
 # 2025-05-12 17:00:05 4 temp1.a   ~/projects
@@ -69,11 +91,11 @@ arv list --all # also `arv ls -a`
 # 2025-05-12 19:35:07 7 temp4(R)  ~/projects
 ```
 
-### log
+## Log
 
 Show the logs of `put`, `restore`, and `config` operations.
 
-`[range]` means showing logs within a specific period of time. It can take the following forms:
+`[range]` is optional. It means showing logs within a specific period of time. It can take the following forms:
 
 1. normal ranges : `YYYYMM-YYYYMM`
 2. left side only : `YYYYMM`
@@ -82,49 +104,56 @@ Show the logs of `put`, `restore`, and `config` operations.
 5. Archiver will always consider the last 2 digits of the number as the month, and the rest as the year.
 
 ```bash
-arv log [range] # also `arv lg [range]`
+arv log [range]
+arv lg  [range]
 ```
 
-### config
+## config
 
-Configure some properties of Archiver.
-
-You can set the following configurations:
+Configure some properties of Archiver. You can set the following items:
 
 1. `alias` : set an alias for a path
-2. `list`: show configurations
-3. `auto-check-update`: enable or disable auto check for updates
+2. `auto-check-update`: enable or disable auto check for updates
 
-#### option: list \[item\]
-
-Show configurations.
+### basic usage
 
 ```bash
-arv config --list
-
-# show all aliases
-arv config --list alias
+arv config # show all configs
+arv config alias # show alias config entries
+arv config [other-item-name]
 ```
 
-#### option: alias
+### alias
 
 Aliases will shorten the paths shown in command `list` and `log`. However, Archiver will still keep the full version. This is just for display purposes.
 
 ```bash
-# path `/b/c/xxx` displays as `a/xxx`
-arv config --alias a=/b/c
+# path `/home/user/temp/xxx` displays as `mytemp/xxx`
+arv config alias.add mytemp=/home/user/temp
 
-# remove alias config `a=/b/c`
-arv config --alias-remove a=/b/c
+# remove alias config `mytemp=/home/user/temp`
+arv config alias.remove mytemp=/home/user/temp
 ```
 
-#### option: auto-check-update
+### auto-check-update
 
-### update
+Will check for updates automatically when you run `put`, `restore` and `config` command. Default value is `on`. If you want to disable this feature, you can set it to `off`.
 
-The
+```bash
+arv config auto-check-update.set off
+```
 
-### help
+## update
+
+Check whether there is a newer version of Archiver. If there is, it will be downloaded and installed automatically.
+
+_Internet connection required!_
+
+```bash
+arv update
+```
+
+## help
 
 Show help information for all commands.
 

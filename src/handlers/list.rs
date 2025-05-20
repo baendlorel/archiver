@@ -57,10 +57,7 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverE
         }
     }
 
-    Err(err_info!(format!(
-        "id:{} cannot be found in the list",
-        id.magenta()
-    )))
+    Err(err_info!(format!("id:{} cannot be found in the list", id)))
 }
 
 /// Will only be called when the file is successfully restored

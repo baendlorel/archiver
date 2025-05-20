@@ -1,6 +1,5 @@
 use crate::{err, err_info, wrap_err, wrap_result};
 
-use owo_colors::OwoColorize;
 use std::fs;
 
 use super::{list, log};
@@ -19,7 +18,7 @@ pub fn handler(targets: &[String]) {
                     "{} '{}' is successfully archived, id: {}",
                     status_mark::succ(),
                     target,
-                    id.magenta()
+                    id
                 );
                 log::succ(&oper, target, Some(id), None);
             }
