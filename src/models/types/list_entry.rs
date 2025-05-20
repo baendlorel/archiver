@@ -76,6 +76,13 @@ impl ListEntry {
 
         let dir = paths::apply_alias(&self.dir);
 
+        let get_target_width = || -> usize {
+            let base = self.target.len();
+            let rst = if self.is_restored { 3 } else { 0 };
+            let dirslash = if self.is_dir { 1 } else { 0 };
+            base + rst + dirslash
+        };
+
         ListRow {
             time: field_style::grey(&self.time),
             id: self.id.magenta().to_string(),
@@ -85,7 +92,7 @@ impl ListEntry {
             _width: ListRowColWidth {
                 time: self.time.len(),
                 id: self.id.to_string().len(),
-                target: self.target.len() + if self.is_restored { 3 } else { 0 },
+                target: get_target_width(),
                 dir: dir.len(),
             },
         }

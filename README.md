@@ -27,7 +27,7 @@ Archived files are stored in `~/.archive` where `~` means home directory. You ca
     └list.jsonl   List of all archived objects
 ```
 
-## Put/Add
+## Put
 
 Put a file/directory into the archive.
 

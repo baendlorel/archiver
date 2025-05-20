@@ -10,7 +10,7 @@ pub struct Args {
 #[derive(Subcommand)]
 pub enum ArvCmd {
     /// Archive a file/directory by its name
-    #[command(visible_aliases = ["p", "add", "a"])]
+    #[command(visible_aliases = ["p"])]
     Put {
         /// The file/directory names to be archived.
         #[arg(value_name = "targets", required = true)]

@@ -134,18 +134,36 @@ pub fn auto_incr_id() -> u32 {
 
 pub fn apply_alias(path_str: &str) -> String {
     // 使用普通循环，可以在找到匹配时提前返回
+    // for (alias, origin) in ALIAS_MAP.iter() {
+    //     if let Some(idx) = path_str.find(origin) {
+    //         // 替换第一个匹配到的 origin 为 alias
+    //         let mut replaced = path_str.to_string();
+    //         replaced.replace_range(idx..idx + origin.len(), alias);
+    //         return replaced;
+    //     }
+    // }
     for (alias, origin) in ALIAS_MAP.iter() {
-        if path_str.starts_with(origin) {
-            // 替换原始路径前缀为别名
-            let relative_path = &path_str[origin.len()..];
-            // 处理可能的路径分隔符
-            let relative_path = relative_path.trim_start_matches(MAIN_SEPARATOR);
+        let bytes = path_str.as_bytes();
+        let origin_bytes = origin.as_bytes();
+        let len = path_str.len();
+        let olen = origin.len();
 
-            // 构建新路径
-            return format!("{}{}{}", alias, MAIN_SEPARATOR, relative_path);
+        let mut i = 0;
+        while i + olen <= len {
+            if &bytes[i..i + olen] == origin_bytes {
+                // 判断是不是单词起始
+                let is_word_start =
+                    i == 0 || !bytes[i - 1].is_ascii_alphanumeric() && bytes[i - 1] != b'_';
+                if is_word_start {
+                    // 替换第一个匹配到的 origin 为 alias
+                    let mut replaced = path_str.to_string();
+                    replaced.replace_range(i..i + olen, alias);
+                    return replaced;
+                }
+            }
+            i += 1;
         }
     }
-
     path_str.to_string()
 }
 

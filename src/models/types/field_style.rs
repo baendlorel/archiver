@@ -1,3 +1,5 @@
+use std::path;
+
 use owo_colors::OwoColorize;
 
 // use crate::misc::paths::CURRENT_ID;
@@ -18,7 +20,7 @@ pub fn grey(str: &str) -> String {
 
 pub fn target_color(target: &str, is_dir: bool) -> String {
     if is_dir {
-        target.blue().to_string()
+        format!("{}{}", target.blue(), path::MAIN_SEPARATOR)
     } else {
         target.to_string()
     }
