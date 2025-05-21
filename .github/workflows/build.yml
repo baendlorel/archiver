@@ -1,30 +1,33 @@
-name: Rust
+name: Rust Build
 
 on:
   push:
-    branches: ['release'] # 触发条件：push 到 release 分支
+    branches: [release]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    name: Build
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macOS-latest] # 支持 Linux 和 macOS
+        rust: [stable]
+      fail-fast: false
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Rust (official)
-        uses: actions-rs/toolchain@v1
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
-          override: true
+          toolchain: ${{ matrix.rust }}
 
-      - name: Cache Cargo dependencies
+      - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -32,30 +35,27 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
 
-      - name: Build in release mode
-        run: cargo build --release
+      - name: Build
+        run: cargo build --release --verbose --all-features
 
-      - name: Get crate version from Cargo.toml
-        id: version
+      # 获取项目版本号并设置二进制文件名
+      - name: Set binary name
         run: |
-          version=$(grep '^version =' Cargo.toml | head -1 | cut -d '"' -f2)
-          echo "version=$version" >> $GITHUB_OUTPUT
+          VERSION=$(cargo pkgid | cut -d# -f2 | cut -d: -f2)
+          SYSTEM_NAME=$(echo "${{ matrix.os }}" | tr '[:upper:]' '[:lower:]' | sed 's/-latest//')
+          BINARY_NAME="aaa-${SYSTEM_NAME}-v${VERSION}"
+          echo "BINARY_NAME=${BINARY_NAME}" >> $GITHUB_ENV
 
-      - name: Set short platform name
-        id: set_platform
+      # 重命名二进制文件
+      - name: Rename binary
         run: |
-          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            echo "platform_short=linux" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            echo "platform_short=darwin" >> $GITHUB_OUTPUT
-          else
-            echo "platform_short=unknown" >> $GITHUB_OUTPUT
+          mv target/release/aaa $GITHUB_WORKSPACE/${{ env.BINARY_NAME }}
+        working-directory: ${{ github.workspace }}
 
-      - name: Upload binary artifact
+      # 上传二进制文件
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: arv-${{ steps.set_platform.outputs.platform_short }}-v${{ steps.version.outputs.version }}
-          path: target/release/arv
+          name: ${{ env.BINARY_NAME }}
+          path: ${{ env.BINARY_NAME }}
