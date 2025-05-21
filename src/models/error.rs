@@ -1,5 +1,3 @@
-use owo_colors::OwoColorize;
-
 #[derive(Clone)]
 pub struct StackFrame {
     pub file: &'static str,
