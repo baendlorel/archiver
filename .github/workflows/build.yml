@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3 # 第一步：拉取你的仓库代码到 runner
 
-      - uses: actions/setup-rust@v1
+      - uses: rust-lang/setup-rust@v1
         with:
           rust-version: stable
           override: true # 设置为默认工具链
