@@ -4,9 +4,9 @@ if [ $? -eq 0 ]; then
   read msg
   git commit -m "$msg"
 fi
-git checkout main
-git merge --no-commit dev
-git push
+# git checkout main
+# git merge --no-commit dev
+# git push
 git checkout release
 git merge --no-commit dev
 git commit -m "$msg"

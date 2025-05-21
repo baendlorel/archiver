@@ -2,34 +2,46 @@ name: Rust
 
 on:
   push:
-    branches: ['release'] # 触发条件：当有 push 到 release 分支时
-  # pull_request:
-  #   branches: ['main']
+    branches: ['release'] # 触发条件：push 到 release 分支
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build: # 定义一个名为 build 的 job
-    runs-on: ${{ matrix.os }} # 指定 runner 平台，使用 matrix 变量（见下）
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest] # 定义 matrix，分别在 Ubuntu 和 macOS 上各跑一遍
+        os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v3 # 第一步：拉取你的仓库代码到 runner
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions-rs/toolchain@v1
+      - name: Set up Rust (official)
+        uses: rust-lang/setup-rust@v1
         with:
           rust-version: stable
-          override: true # 设置为默认工具链
 
-      - name: Build with Cargo # 第三步：用 cargo 编译 release 版本
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build in release mode
         run: cargo build --release
 
-      - name: Get version
+      - name: Get crate version from Cargo.toml
         id: version
-        run: echo "version=$(grep '^version =' Cargo.toml | head -1 | cut -d '"' -f2)" >> $GITHUB_OUTPUT
+        run: |
+          version=$(grep '^version =' Cargo.toml | head -1 | cut -d '"' -f2)
+          echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Set short platform name
         id: set_platform
@@ -40,9 +52,8 @@ jobs:
             echo "platform_short=darwin" >> $GITHUB_OUTPUT
           else
             echo "platform_short=unknown" >> $GITHUB_OUTPUT
-          fi
 
-      - name: Upload arv binary
+      - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: arv-${{ steps.set_platform.outputs.platform_short }}-v${{ steps.version.outputs.version }}
