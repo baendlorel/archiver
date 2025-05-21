@@ -42,15 +42,15 @@ jobs:
       # 获取项目版本号并设置二进制文件名
       - name: Set binary name
         run: |
-          VERSION=$(cargo pkgid | cut -d# -f2 | cut -d: -f2)
-          SYSTEM_NAME=$(echo "${{ matrix.os }}" | tr '[:upper:]' '[:lower:]' | sed 's/-latest//')
-          BINARY_NAME="aaa-${SYSTEM_NAME}-v${VERSION}"
+          VERSION=$(cargo pkgid | cut -d# -f2 | cut -d@ -f2)
+          SYSTEM_NAME=$( [ "${{ matrix.os }}" = "ubuntu-latest" ] && echo "linux" || echo "macos" )
+          BINARY_NAME="arv-${SYSTEM_NAME}-v${VERSION}"
           echo "BINARY_NAME=${BINARY_NAME}" >> $GITHUB_ENV
 
       # 重命名二进制文件
       - name: Rename binary
         run: |
-          mv target/release/aaa $GITHUB_WORKSPACE/${{ env.BINARY_NAME }}
+          mv target/release/arv $GITHUB_WORKSPACE/${{ env.BINARY_NAME }}
         working-directory: ${{ github.workspace }}
 
       # 上传二进制文件
