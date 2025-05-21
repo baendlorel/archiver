@@ -107,6 +107,7 @@ fn load_from_content(
             }
         }
 
+        // 注意此处不是ArchiverError，不能用宏
         if let Err(e) = &result {
             println!("{}: {}", "Parse log failed".red(), e.to_string().yellow());
         }

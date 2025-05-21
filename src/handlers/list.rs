@@ -1,4 +1,4 @@
-use crate::{err_info, wrap_err, wrap_result};
+use crate::{err_info, println_err, wrap_err, wrap_result};
 
 use chrono::Local;
 use owo_colors::OwoColorize;
@@ -12,7 +12,7 @@ use crate::models::{
 
 pub fn handler(all: bool) {
     if let Err(e) = print_list(all) {
-        println!("{}", e.to_string());
+        println_err!(e);
     }
 }
 
@@ -110,11 +110,12 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
         }
 
         if let Err(e) = &result {
-            println!(
-                "{}: {}",
-                "Parse list file failed".red(),
-                e.to_string().yellow()
-            );
+            // println!(
+            //     "{}: {}",
+            //     "Parse list file failed".red(),
+            //     e.to_string().yellow()
+            // );
+            println_err!(e);
             continue;
         }
     }

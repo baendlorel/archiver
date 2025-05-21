@@ -68,13 +68,30 @@ impl std::fmt::Display for ArchiverError {
                 write!(
                     f,
                     "{} - {} \n{}",
-                    "Fatal".red(),
+                    "Fatal",
                     self.message,
                     stack_info.join("\n")
                 )
             }
         }
     }
+}
+
+#[macro_export]
+macro_rules! println_err {
+    ($e:expr) => {
+        match $e.level {
+            crate::models::error::ArchiverErrorLevel::Fatal => {
+                println!("{}", $e.to_string().red());
+            }
+            crate::models::error::ArchiverErrorLevel::Warn => {
+                println!("{}", $e.to_string().yellow());
+            }
+            crate::models::error::ArchiverErrorLevel::Info => {
+                println!("{}", $e.to_string());
+            }
+        }
+    };
 }
 
 #[macro_export]

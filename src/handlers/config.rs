@@ -1,3 +1,5 @@
+use crate::println_err;
+
 use owo_colors::OwoColorize;
 
 use crate::{handlers::log, models::types::OperType};
@@ -91,7 +93,7 @@ pub fn handler(statement: &Option<Vec<String>>) {
 
 fn handle_show(config_item: &Option<String>) {
     if let Err(e) = list::show(config_item) {
-        println!("{}", e.to_string());
+        println_err!(e);
     }
 }
 

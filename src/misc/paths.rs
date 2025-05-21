@@ -132,17 +132,8 @@ pub fn auto_incr_id() -> u32 {
     new_id
 }
 
-// todo id:15 has clready been restored to
 pub fn apply_alias(path_str: &str) -> String {
-    // 使用普通循环，可以在找到匹配时提前返回
-    // for (alias, origin) in ALIAS_MAP.iter() {
-    //     if let Some(idx) = path_str.find(origin) {
-    //         // 替换第一个匹配到的 origin 为 alias
-    //         let mut replaced = path_str.to_string();
-    //         replaced.replace_range(idx..idx + origin.len(), alias);
-    //         return replaced;
-    //     }
-    // }
+    use std::path::MAIN_SEPARATOR;
     for (alias, origin) in ALIAS_MAP.iter() {
         let bytes = path_str.as_bytes();
         let origin_bytes = origin.as_bytes();
@@ -156,10 +147,28 @@ pub fn apply_alias(path_str: &str) -> String {
                 let is_word_start =
                     i == 0 || !bytes[i - 1].is_ascii_alphanumeric() && bytes[i - 1] != b'_';
                 if is_word_start {
-                    // 替换第一个匹配到的 origin 为 alias
-                    let mut replaced = path_str.to_string();
-                    replaced.replace_range(i..i + olen, alias);
-                    return replaced;
+                    // 找到单词边界
+                    let mut left = i;
+                    let mut right = i + olen;
+                    // 向左扩展
+                    while left > 0
+                        && (bytes[left - 1].is_ascii_alphanumeric() || bytes[left - 1] == b'_')
+                    {
+                        left -= 1;
+                    }
+                    // 向右扩展
+                    while right < len
+                        && (bytes[right].is_ascii_alphanumeric() || bytes[right] == b'_')
+                    {
+                        right += 1;
+                    }
+                    // 检查单词是否包含 MAIN_SEPARATOR
+                    let word = &path_str[left..right];
+                    if word.contains(MAIN_SEPARATOR) {
+                        let mut replaced = path_str.to_string();
+                        replaced.replace_range(i..i + olen, alias);
+                        return replaced;
+                    }
                 }
             }
             i += 1;
