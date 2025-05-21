@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Rust (official)
-        uses: rust-lang/setup-rust@v1
+        uses: actions-rs/toolchain@v1
         with:
           rust-version: stable
 
