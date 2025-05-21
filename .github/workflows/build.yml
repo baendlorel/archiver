@@ -43,7 +43,7 @@ jobs:
       - name: Set binary name
         run: |
           VERSION=$(cargo pkgid | cut -d# -f2 | cut -d@ -f2)
-          SYSTEM_NAME=$( [ "${{ matrix.os }}" = "ubuntu-latest" ] && echo "linux" || echo "macos" )
+          SYSTEM_NAME=$( [ "${{ matrix.os }}" = "ubuntu-latest" ] && echo "linux" || echo "darwin" )
           BINARY_NAME="arv-${SYSTEM_NAME}-v${VERSION}"
           echo "BINARY_NAME=${BINARY_NAME}" >> $GITHUB_ENV
 

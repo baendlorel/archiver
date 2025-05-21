@@ -3,7 +3,7 @@
 # 支持 macOS 和 Linux
 
 set -e
-REPO="aldia-dev/archiver"
+REPO="baendlorel/archiver"
 BINARY="arv"
 INSTALL_DIR="$HOME/.local/bin"
 
@@ -34,20 +34,25 @@ chmod +x "$tmpfile"
 mkdir -p "$INSTALL_DIR"
 
 # 安装到 ~/.local/bin
-mv "$tmpfile" "$INSTALL_DIR/$BINARY"
+mv "$tmpfile" "$INSTALL_DIR/$BINARY" # 这里其实顺带连名字也一起改成了arv
 echo "Installation finished: $INSTALL_DIR/$BINARY"
 
 # 检查 ~/.local/bin 是否在 PATH 中
-if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+if ! echo ":$PATH:" | grep -q ":$HOME/.local/bin:"; then
     # 检测当前 shell
-    shell_name="$(basename \"$SHELL\")"
+    shell_name="$(basename "$SHELL")"
     if [ "$shell_name" = "zsh" ]; then
         rc_file="$HOME/.zshrc"
-    else
+    elif [ "$shell_name" = "bash" ]; then
         rc_file="$HOME/.bashrc"
+    else
+        echo "Unknown shell: $shell_name"
+        echo "Please add $HOME/.local/bin to your PATH manually."
+        exit 0
     fi
     echo "Adding $HOME/.local/bin into $rc_file。"
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$rc_file"
+    # 防止重复追加
+    grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' "$rc_file" || echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$rc_file"
     echo "Please reopen your shell or execute: source $rc_file"
 fi
 

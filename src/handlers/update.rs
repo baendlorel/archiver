@@ -21,6 +21,7 @@ pub fn handler() {
         }
     };
 
+    // todo 真正实现update
     match latest.cmp(&cur) {
         Ordering::Greater => println!(
             "{} New version available! Please update.",
@@ -105,7 +106,7 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
         )));
     }
 
-    let latest = Version::from(latest_version.trim_start_matches('v'));
+    let latest = Version::from(latest_version);
 
     println!("Current version: {}", current.to_string().cyan());
     println!("Latest  release: {}", latest.to_string().green());

@@ -9,6 +9,7 @@ pub struct Version {
 impl Version {
     pub fn from(version_str: &str) -> Self {
         let parts: Vec<u32> = version_str
+            .trim_start_matches('v')
             .split('.')
             .map(|x| {
                 x.parse::<u32>()
