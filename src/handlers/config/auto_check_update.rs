@@ -1,4 +1,4 @@
-use crate::{err_warn, wrap_err, wrap_result};
+use crate::{err_warn, wrap_err_fatal, wrap_result};
 
 use crate::models::error::ArchiverError;
 
@@ -12,7 +12,7 @@ pub fn toggle(status: &str) -> Result<(), ArchiverError> {
         );
     }
 
-    let mut config = wrap_err!(config_data::load())?;
+    let mut config = wrap_err_fatal!(config_data::load())?;
     config.auto_check_update = status.to_string();
     wrap_result!(config_data::save(&config))?;
 

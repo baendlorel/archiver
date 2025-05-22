@@ -1,3 +1,31 @@
+use owo_colors::OwoColorize;
+
+use crate::misc::status_mark;
+
+pub enum ErrorLevel {
+    Fatal,
+    Warn,
+    Info,
+}
+
+impl ErrorLevel {
+    pub fn to_string_styled(&self) -> String {
+        match self {
+            ErrorLevel::Info => format!("{} {}", status_mark::info(), "Info".cyan()),
+            ErrorLevel::Warn => format!("{} {}", status_mark::warn(), "Warn".yellow()),
+            ErrorLevel::Fatal => format!("{} {}", status_mark::fail(), "Fatal".red()),
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            ErrorLevel::Info => format!("{}", "Info"),
+            ErrorLevel::Warn => format!("{}", "Warn"),
+            ErrorLevel::Fatal => format!("{}", "Fatal"),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct StackFrame {
     pub file: &'static str,
@@ -6,14 +34,8 @@ pub struct StackFrame {
     pub module_path: &'static str,
 }
 
-pub enum ArchiverErrorLevel {
-    Fatal,
-    Warn,
-    Info,
-}
-
 pub struct ArchiverError {
-    pub level: ArchiverErrorLevel,
+    pub level: ErrorLevel,
     pub message: String,
     pub stack: Vec<StackFrame>,
 }
@@ -23,7 +45,7 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            level: ArchiverErrorLevel::Info,
+            level: ErrorLevel::Info,
         }
     }
 
@@ -31,7 +53,7 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            level: ArchiverErrorLevel::Warn,
+            level: ErrorLevel::Warn,
         }
     }
 
@@ -39,64 +61,91 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            level: ArchiverErrorLevel::Fatal,
+            level: ErrorLevel::Fatal,
         }
     }
-}
 
-impl std::fmt::Display for ArchiverError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn stack_to_string(&self) -> String {
+        let mut stack_info: Vec<String> = vec![];
+        let mut counter: u32 = 0;
+        for frame in &self.stack {
+            counter += 1;
+            stack_info.push(format!(
+                "  {}.at {}:{}:{} {}",
+                counter,
+                frame.file,
+                frame.line,
+                frame.col,
+                frame.module_path.repeat(0) // 模块路径太长了，和普通路径重复，此处省略 frame.module_path
+            ));
+        }
+        stack_info.join("\n")
+    }
+
+    #[cfg(feature = "dev")]
+    /// 将Error转化为显示在终端的日志，含彩色
+    /// - dev环境下总是显示stack信息
+    pub fn to_log(&self) -> String {
+        let stack_info = self.stack_to_string();
+        format!("{}\n{}", self.message, stack_info)
+    }
+
+    #[cfg(not(feature = "dev"))]
+    /// 将Error转化为显示在终端的日志，含彩色
+    /// - 生产环境下，仅fatal报错展示stack信息
+    pub fn to_log(&self) -> String {
         match self.level {
-            ArchiverErrorLevel::Info => return write!(f, "{}", self.message),
-            ArchiverErrorLevel::Warn => return write!(f, "{}", self.message),
-            ArchiverErrorLevel::Fatal => {
-                let mut stack_info: Vec<String> = vec![];
-                let mut counter: u32 = 0;
-                for frame in &self.stack {
-                    counter += 1;
-                    stack_info.push(format!(
-                        "  {}.at {}:{}:{} {}",
-                        counter,
-                        frame.file,
-                        frame.line,
-                        frame.col,
-                        frame.module_path.repeat(0) // 模块路径太长了，和普通路径重复，此处省略 frame.module_path
-                    ));
-                }
-                write!(
-                    f,
+            ErrorLevel::Fatal => format!("{}\n{}", self.message, self.stack_to_string()),
+            _ => self.message.clone(),
+        }
+    }
+
+    pub fn display(&self) {
+        println!(
+            "{} {}",
+            self.level.to_string_styled().underline(),
+            self.to_log()
+        );
+    }
+
+    #[cfg(feature = "dev")]
+    /// 将Error转化为写入文件的字符串，无彩色
+    /// - dev环境下，包含全部stack信息
+    pub fn to_string(&self) -> String {
+        let stack_info = self.stack_to_string();
+        format!(
+            "{} - {} \n{}",
+            self.level.to_string(),
+            self.message,
+            stack_info
+        )
+    }
+
+    #[cfg(not(feature = "dev"))]
+    /// 将Error转化为写入文件的字符串，无彩色
+    /// - 生产环境下，仅fatal报错包含stack信息
+    pub fn to_string(&self) -> String {
+        match self.level {
+            ErrorLevel::Fatal => {
+                let stack_info = self.stack_to_string();
+                return format!(
                     "{} - {} \n{}",
-                    "Fatal",
+                    self.level.to_string(),
                     self.message,
-                    stack_info.join("\n")
-                )
+                    stack_info
+                );
             }
+            _ => return format!("{} - {}", self.level.to_string(), self.message),
         }
     }
 }
 
 #[macro_export]
-macro_rules! println_err {
-    ($e:expr) => {
-        match $e.level {
-            crate::models::error::ArchiverErrorLevel::Fatal => {
-                println!("{}", $e.to_string().red());
-            }
-            crate::models::error::ArchiverErrorLevel::Warn => {
-                println!("{}", $e.to_string().yellow());
-            }
-            crate::models::error::ArchiverErrorLevel::Info => {
-                println!("{}", $e.to_string());
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! err {
-    ($e:expr) => {
+/// 创建一个fatal级别的ArchiverError，支持字符串模板
+macro_rules! err_fatal_from_str {
+    ($($arg:tt)*) => {
         $crate::models::error::ArchiverError::fatal(
-            $e.to_string(),
+            format!($($arg)*),
             vec![$crate::models::error::StackFrame {
                 file: file!(),
                 line: line!(),
@@ -108,10 +157,19 @@ macro_rules! err {
 }
 
 #[macro_export]
+/// 创建一个fatal级别的ArchiverError的Result返回，支持字符串模板
+macro_rules! err_fatal {
+    ($($arg:tt)*) => {
+        Err($crate::err_fatal_from_str!($($arg)*))
+    };
+}
+
+#[macro_export]
+/// 创建一个info级别的ArchiverError，支持字符串模板
 macro_rules! err_info_from_str {
-    ($e:expr) => {
+    ($($arg:tt)*) => {
         $crate::models::error::ArchiverError::info(
-            $e.to_string(),
+            format!($($arg)*),
             vec![$crate::models::error::StackFrame {
                 file: file!(),
                 line: line!(),
@@ -126,15 +184,16 @@ macro_rules! err_info_from_str {
 /// 创建一个info级别的ArchiverError的Result返回，支持字符串模板
 macro_rules! err_info {
     ($($arg:tt)*) => {
-        Err($crate::err_info_from_str!(format!($($arg)*)))
+        Err($crate::err_info_from_str!($($arg)*))
     };
 }
 
 #[macro_export]
+/// 创建一个warn级别的ArchiverError，支持字符串模板
 macro_rules! err_warn_from_str {
-    ($e:expr) => {
+    ($($arg:tt)*) => {
         $crate::models::error::ArchiverError::warn(
-            $e.to_string(),
+            format!($($arg)*),
             vec![$crate::models::error::StackFrame {
                 file: file!(),
                 line: line!(),
@@ -149,11 +208,12 @@ macro_rules! err_warn_from_str {
 /// 创建一个warn级别的ArchiverError的Result返回，支持字符串模板
 macro_rules! err_warn {
     ($($arg:tt)*) => {
-        Err($crate::err_warn_from_str!(format!($($arg)*)))
+        Err($crate::err_warn_from_str!($($arg)*))
     };
 }
 
 #[macro_export]
+/// 包裹一个对象，让其在触发expect报错的时候可以附带代码位置
 macro_rules! wrap_expect {
     ($e:expr, $s:expr) => {
         $e.expect(
@@ -171,36 +231,17 @@ macro_rules! wrap_expect {
 }
 
 #[macro_export]
-macro_rules! wrap_err {
+macro_rules! wrap_err_fatal {
     ($o:expr) => {
         match $o {
             Ok(val) => Ok(val),
-            Err(e) => Err($crate::err!(e)),
+            Err(e) => Err($crate::err_fatal_from_str!("{}", e.to_string())),
         }
     };
 }
 
-// #[macro_export]
-// macro_rules! wrap_self {
-//     ($e:expr) => {
-//         return $crate::models::error::ArchiverError {
-//             message: $e.message,
-//             stack: {
-//                 let mut stack = $e.stack.clone();
-//                 stack.push($crate::models::error::StackFrame {
-//                     file: file!(),
-//                     line: line!(),
-//                     col: column!(),
-//                     module_path: module_path!(),
-//                 });
-//                 stack
-//             },
-//             level: $e.level,
-//         };
-//     };
-// }
-
 #[macro_export]
+/// 包裹一个Result<_,ArchiverError>对象，继承其stack
 macro_rules! wrap_result {
     ($o:expr) => {
         match $o {

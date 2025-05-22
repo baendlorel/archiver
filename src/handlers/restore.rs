@@ -1,6 +1,6 @@
 use owo_colors::OwoColorize;
 
-use crate::{err_info, wrap_err, wrap_result};
+use crate::{err_info, wrap_err_fatal, wrap_result};
 
 use std::ffi::OsString;
 use std::fs;
@@ -66,10 +66,10 @@ fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     // 先确保上面两个不异常
     // 再确保原目录存在
     if !dir.exists() {
-        wrap_err!(fs::create_dir_all(&dir))?;
+        wrap_err_fatal!(fs::create_dir_all(&dir))?;
     }
 
-    wrap_err!(fs::rename(archive_path, target_path))?;
+    wrap_err_fatal!(fs::rename(archive_path, target_path))?;
     wrap_result!(list::mark_as_restored(target_line_index))?;
     Ok(entry)
 }

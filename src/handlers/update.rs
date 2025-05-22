@@ -1,4 +1,4 @@
-use crate::{err_info, println_err};
+use crate::err_info;
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, process::Command};
@@ -16,7 +16,7 @@ pub fn handler() {
     let (cur, latest) = match prepare_versions() {
         Ok(v) => v,
         Err(e) => {
-            println_err!(e);
+            e.display();
             return;
         }
     };
@@ -37,7 +37,7 @@ pub fn auto_check_update() {
     let config = match config::config_data::load() {
         Ok(c) => c,
         Err(e) => {
-            println_err!(e);
+            e.display();
             return;
         }
     };
@@ -51,7 +51,7 @@ pub fn auto_check_update() {
     let (cur, latest) = match prepare_versions() {
         Ok(v) => v,
         Err(e) => {
-            println_err!(e);
+            e.display();
             return;
         }
     };

@@ -1,13 +1,13 @@
-use crate::{misc::status_mark, println_err};
-
-use owo_colors::OwoColorize;
-
-use crate::{handlers::log, misc::CONFIG_VALID_STMT, models::types::OperType};
+use crate::{
+    handlers::log,
+    misc::{CONFIG_VALID_STMT, status_mark},
+    models::types::OperType,
+};
 
 mod alias;
 mod auto_check_update;
 pub mod config_data;
-mod show;
+mod display;
 
 pub fn handler(statement: &Option<Vec<String>>) {
     // 输入arv config，后面没了，就会进入此分支
@@ -89,8 +89,8 @@ pub fn handler(statement: &Option<Vec<String>>) {
 }
 
 fn handle_show(config_item: &Option<String>) {
-    if let Err(e) = show::show(config_item) {
-        println_err!(e);
+    if let Err(e) = display::display(config_item) {
+        e.display();
     }
 }
 

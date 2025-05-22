@@ -1,4 +1,4 @@
-use crate::{err_warn, wrap_err};
+use crate::{err_warn, wrap_err_fatal};
 
 use crate::models::error::ArchiverError;
 
@@ -29,12 +29,12 @@ pub fn parse_range(range: &Option<String>) -> Result<(u32, u32), ArchiverError> 
             return err_warn!("Length of date string must > 2");
         }
 
-        let raw_month = wrap_err!(s[(s.len() - 2)..s.len()].parse::<u32>())?;
+        let raw_month = wrap_err_fatal!(s[(s.len() - 2)..s.len()].parse::<u32>())?;
         if raw_month > 12 || raw_month < 1 {
             return err_warn!("Month must be 1~12. Got '{}'", raw_month);
         }
 
-        Ok(wrap_err!(s.parse::<u32>())?)
+        Ok(wrap_err_fatal!(s.parse::<u32>())?)
     };
 
     if is_parsable(&range) {

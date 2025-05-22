@@ -17,7 +17,7 @@ pub struct AliasEntry {
 }
 
 impl ArchiverConfig {
-    pub fn show(&self, item: &str) -> String {
+    pub fn display(&self, item: &str) -> String {
         match item {
             "alias" => {
                 let head = "Alias".fg_rgb::<153, 153, 153>();

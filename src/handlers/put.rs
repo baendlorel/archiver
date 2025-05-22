@@ -1,4 +1,4 @@
-use crate::{err, err_info, wrap_err, wrap_result};
+use crate::{err_fatal_from_str, err_info, wrap_err_fatal, wrap_result};
 
 use std::fs;
 
@@ -38,7 +38,7 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
 
     let target_name: &std::ffi::OsStr = target_path
         .file_name()
-        .ok_or(err!("Fail to get target name".to_string()))?; // 需要fatal
+        .ok_or(err_fatal_from_str!("Fail to get target name"))?; // 需要fatal
 
     // 必须无损转换OsString
     let target_name_str = force_no_loss_string(target_name);
@@ -48,7 +48,7 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
     let root = paths::ROOT_DIR.clone();
     let next_id = paths::auto_incr_id();
 
-    wrap_err!(fs::rename(&target_path, root.join(next_id.to_string())))?;
+    wrap_err_fatal!(fs::rename(&target_path, root.join(next_id.to_string())))?;
 
     wrap_result!(list::insert(next_id, target_name_str, is_dir, cwd_str))?;
 

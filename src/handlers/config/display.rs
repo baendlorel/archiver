@@ -7,12 +7,12 @@ use crate::misc::{ForceToString, paths};
 use crate::models::error::ArchiverError;
 use crate::models::types::CONFIG_ITEMS;
 
-pub fn show(config_item: &Option<String>) -> Result<(), ArchiverError> {
+pub fn display(config_item: &Option<String>) -> Result<(), ArchiverError> {
     let config = wrap_result!(config_data::load())?;
 
     // 制定了具体打印哪个配置
     if let Some(config_item) = config_item {
-        println!("{}", config.show(config_item));
+        println!("{}", config.display(config_item));
         return Ok(());
     }
 
@@ -26,7 +26,7 @@ pub fn show(config_item: &Option<String>) -> Result<(), ArchiverError> {
     );
 
     for item in CONFIG_ITEMS {
-        println!("{}", config.show(item));
+        println!("{}", config.display(item));
     }
 
     Ok(())

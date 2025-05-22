@@ -1,4 +1,4 @@
-use crate::{err_warn, wrap_err, wrap_result};
+use crate::{err_warn, err_warn_from_str, wrap_err_fatal, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::{fs, u32};
@@ -15,7 +15,7 @@ pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
     let casual = range.is_none();
 
     // 考虑到日期本质上是一个不定型进制数，可以考虑直接转为数字来对比大小
-    let range = parse_range(range)?;
+    let range = wrap_result!(parse_range(range))?;
     let year_range = (range.0 / 100, range.1 / 100);
 
     let years = paths::get_years_desc();
@@ -31,7 +31,7 @@ pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
             continue;
         }
 
-        let content = wrap_err!(fs::read_to_string(log_file_path))?;
+        let content = wrap_err_fatal!(fs::read_to_string(log_file_path))?;
         wrap_result!(load_from_content(casual, &range, &content, &mut logs))?;
 
         // 如果没设置范围，只是随便看看日志，那么不要打得太多
@@ -72,16 +72,16 @@ fn load_from_content(
         let mut iter = s.split("-");
         let raw_year = iter
             .next()
-            .ok_or(err_warn!(format!("Year parse failed for '{}'", s)))?;
+            .ok_or(err_warn_from_str!("Year parse failed for '{}'", s))?;
         let raw_month = iter
             .next()
-            .ok_or(err_warn!(format!("Month parse failed for '{}'", s)))?;
+            .ok_or(err_warn_from_str!("Month parse failed for '{}'", s))?;
 
-        let year = wrap_err!(raw_year.parse::<u32>())?;
-        let month = wrap_err!(raw_month.parse::<u32>())?;
+        let year = wrap_err_fatal!(raw_year.parse::<u32>())?;
+        let month = wrap_err_fatal!(raw_month.parse::<u32>())?;
 
         if month > 12 || month < 1 {
-            return err_warn!("Month > 12, parse failed for '{}'", s)));
+            return err_warn!("Month > 12, parse failed for '{}'", s);
         }
 
         Ok(year * 100 + month)

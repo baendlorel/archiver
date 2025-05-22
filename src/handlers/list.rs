@@ -1,4 +1,4 @@
-use crate::{err_info, println_err, wrap_err, wrap_result};
+use crate::{err_info, wrap_err_fatal, wrap_result};
 
 use chrono::Local;
 use owo_colors::OwoColorize;
@@ -12,7 +12,7 @@ use crate::models::{
 
 pub fn handler(all: bool) {
     if let Err(e) = print_list(all) {
-        println_err!(e);
+        e.display();
     }
 }
 
@@ -33,7 +33,7 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
 
 /// 查找某个id的归档记录，用在restore上
 pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverError> {
-    let content = wrap_err!(fs::read_to_string(paths::LIST_FILE_PATH.clone()))?;
+    let content = wrap_err_fatal!(fs::read_to_string(paths::LIST_FILE_PATH.clone()))?;
 
     for line in content.lines() {
         *target_line_index += 1;
@@ -65,21 +65,21 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverE
 pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
     let list_file_path = paths::LIST_FILE_PATH.clone();
     // 读取整个文件
-    let content = wrap_err!(fs::read_to_string(&list_file_path))?;
+    let content = wrap_err_fatal!(fs::read_to_string(&list_file_path))?;
 
     let mut lines: Vec<&str> = content.lines().collect();
     let target_line = lines[target_line_index as usize];
     let modified_line = {
         // 把这条记录标记为restored
-        let mut entry = wrap_err!(serde_json::from_str::<ListEntry>(target_line))?;
+        let mut entry = wrap_err_fatal!(serde_json::from_str::<ListEntry>(target_line))?;
         entry.is_restored = true;
-        wrap_err!(serde_json::to_string(&entry))?
+        wrap_err_fatal!(serde_json::to_string(&entry))?
     };
 
     lines[target_line_index as usize] = modified_line.as_str();
 
     // 将内容写回文件
-    wrap_err!(fs::write(&list_file_path, lines.join("\n") + "\n"))?;
+    wrap_err_fatal!(fs::write(&list_file_path, lines.join("\n") + "\n"))?;
 
     Ok(())
 }
@@ -91,7 +91,7 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
         return Ok(());
     }
 
-    let content = wrap_err!(fs::read_to_string(list_file_path))?;
+    let content = wrap_err_fatal!(fs::read_to_string(list_file_path))?;
 
     let mut list: Vec<ListRow> = vec![];
     let mut counter = 0;
@@ -100,7 +100,7 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
             continue; // 跳过空行
         }
 
-        let result = wrap_err!(serde_json::from_str::<ListEntry>(line));
+        let result = wrap_err_fatal!(serde_json::from_str::<ListEntry>(line));
         if let Ok(entry) = &result {
             // 设置了all的话，展示全部，否则只展示未恢复的对象
             if all || !entry.is_restored {
@@ -111,7 +111,7 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
         }
 
         if let Err(e) = &result {
-            println_err!(e);
+            e.display();
             continue;
         }
     }
