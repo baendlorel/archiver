@@ -4,7 +4,7 @@ use std::fs;
 
 use super::{list, log};
 use crate::{
-    misc::{ForceToString, force_no_loss_string, paths, status_mark},
+    misc::{ForceToString, force_no_loss_string, paths},
     models::{error::ArchiverError, types::OperType},
 };
 
@@ -30,10 +30,7 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
 
     // 目标不存在则报错
     if !target_path.exists() {
-        return Err(err_info!(format!(
-            "Target '{}' does not exist in current directory.",
-            target
-        )));
+        return err_info!("Target '{}' does not exist in current directory.", target);
     }
 
     // 必须无损转换OsString

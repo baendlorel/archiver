@@ -7,7 +7,7 @@ use std::fs;
 use crate::misc::{append_entry, paths};
 use crate::models::{
     error::ArchiverError,
-    types::{LIST_ROW_FIELD, ListEntry, ListRow, ListRowColWidth},
+    types::{ListEntry, ListRow, ListRowColWidth},
 };
 
 pub fn handler(all: bool) {
@@ -31,6 +31,7 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
     Ok(())
 }
 
+/// 查找某个id的归档记录，用在restore上
 pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverError> {
     let content = wrap_err!(fs::read_to_string(paths::LIST_FILE_PATH.clone()))?;
 
@@ -57,10 +58,10 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverE
         }
     }
 
-    Err(err_info!(format!("id:{} cannot be found in the list", id)))
+    err_info!("id:{} cannot be found", id)
 }
 
-/// Will only be called when the file is successfully restored
+/// 只会在目标已经被restored之后调用
 pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
     let list_file_path = paths::LIST_FILE_PATH.clone();
     // 读取整个文件
@@ -110,11 +111,6 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
         }
 
         if let Err(e) = &result {
-            // println!(
-            //     "{}: {}",
-            //     "Parse list file failed".red(),
-            //     e.to_string().yellow()
-            // );
             println_err!(e);
             continue;
         }
@@ -125,11 +121,17 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
     }
 
     // 下面开始输出对好了空格的列表
+    // 字段名称
+    let field_time = "Archived At";
+    let field_id = "ID";
+    let field_target = "Item";
+    let field_dir = "Directory";
+
     let mut max_width = ListRowColWidth {
-        time: LIST_ROW_FIELD.time.len(),
-        id: LIST_ROW_FIELD.id.len(),
-        target: LIST_ROW_FIELD.target.len(),
-        dir: LIST_ROW_FIELD.dir.len(),
+        time: field_time.len(),
+        id: field_id.len(),
+        target: field_target.len(),
+        dir: field_dir.len(),
     };
 
     for row in list.iter() {
@@ -143,14 +145,14 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
         "{}",
         format!(
             "{field_time}{} {field_id}{} {field_target}{} {field_dir}{}",
-            " ".repeat(max_width.time - LIST_ROW_FIELD.time.len()),
-            " ".repeat(max_width.id - LIST_ROW_FIELD.id.len()),
-            " ".repeat(max_width.target - LIST_ROW_FIELD.target.len()),
-            " ".repeat(max_width.dir - LIST_ROW_FIELD.dir.len()),
-            field_time = LIST_ROW_FIELD.time,
-            field_id = LIST_ROW_FIELD.id,
-            field_target = LIST_ROW_FIELD.target,
-            field_dir = LIST_ROW_FIELD.dir,
+            " ".repeat(max_width.time - field_time.len()),
+            " ".repeat(max_width.id - field_id.len()),
+            " ".repeat(max_width.target - field_target.len()),
+            " ".repeat(max_width.dir - field_dir.len()),
+            field_time = field_time,
+            field_id = field_id,
+            field_target = field_target,
+            field_dir = field_dir,
         )
         .bold()
         .underline()

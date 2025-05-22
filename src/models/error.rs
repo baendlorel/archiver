@@ -108,7 +108,7 @@ macro_rules! err {
 }
 
 #[macro_export]
-macro_rules! err_info {
+macro_rules! err_info_from_str {
     ($e:expr) => {
         $crate::models::error::ArchiverError::info(
             $e.to_string(),
@@ -123,7 +123,15 @@ macro_rules! err_info {
 }
 
 #[macro_export]
-macro_rules! err_warn {
+/// 创建一个info级别的ArchiverError的Result返回，支持字符串模板
+macro_rules! err_info {
+    ($($arg:tt)*) => {
+        Err($crate::err_info_from_str!(format!($($arg)*)))
+    };
+}
+
+#[macro_export]
+macro_rules! err_warn_from_str {
     ($e:expr) => {
         $crate::models::error::ArchiverError::warn(
             $e.to_string(),
@@ -137,10 +145,14 @@ macro_rules! err_warn {
     };
 }
 
-// wrap_expect!(
-//     Err(2) as Result<(), i32>,
-//     "Failed to create auto increment file"
-// );
+#[macro_export]
+/// 创建一个warn级别的ArchiverError的Result返回，支持字符串模板
+macro_rules! err_warn {
+    ($($arg:tt)*) => {
+        Err($crate::err_warn_from_str!(format!($($arg)*)))
+    };
+}
+
 #[macro_export]
 macro_rules! wrap_expect {
     ($e:expr, $s:expr) => {

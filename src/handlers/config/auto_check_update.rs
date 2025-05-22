@@ -6,10 +6,10 @@ use super::config_data;
 
 pub fn toggle(status: &str) -> Result<(), ArchiverError> {
     if status != "on" && status != "off" {
-        return Err(err_warn!(format!(
+        return err_warn!(
             "Status of auto check update must be 'on' or 'off', but got '{}'",
             status
-        )));
+        );
     }
 
     let mut config = wrap_err!(config_data::load())?;

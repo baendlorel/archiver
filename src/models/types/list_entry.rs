@@ -1,4 +1,3 @@
-use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
@@ -45,20 +44,6 @@ pub struct ListRowColWidth {
     pub target: usize,
     pub dir: usize,
 }
-
-pub struct ListRowField {
-    pub time: String,
-    pub id: String,
-    pub target: String,
-    pub dir: String,
-}
-
-pub static LIST_ROW_FIELD: Lazy<ListRowField> = Lazy::new(|| ListRowField {
-    time: "Archived At".to_string(),
-    id: "ID".to_string(),
-    target: "Item".to_string(),
-    dir: "Directory".to_string(),
-});
 
 impl ListEntry {
     pub fn get_target_path(&self) -> String {

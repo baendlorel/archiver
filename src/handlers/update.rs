@@ -79,17 +79,14 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     let output = match output {
         Ok(o) => o,
         Err(e) => {
-            return Err(err_info!(format!("curl failed: {}", e)));
+            return err_info!("curl failed: {}", e);
         }
     };
 
     let json = match String::from_utf8(output.stdout) {
         Ok(s) => s,
         Err(e) => {
-            return Err(err_info!(format!(
-                "output decode failed: {}",
-                e.to_string()
-            )));
+            return err_info!("output decode failed: {}", e.to_string());
         }
     };
 
@@ -101,9 +98,7 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
         .unwrap_or("");
 
     if latest_version.is_empty() {
-        return Err(err_info!(format!(
-            "Failed to parse latest version from GitHub releases"
-        )));
+        return err_info!("Failed to parse latest version from GitHub releases");
     }
 
     let latest = Version::from(latest_version);

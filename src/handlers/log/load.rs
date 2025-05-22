@@ -81,7 +81,7 @@ fn load_from_content(
         let month = wrap_err!(raw_month.parse::<u32>())?;
 
         if month > 12 || month < 1 {
-            return Err(err_warn!(format!("Month > 12, parse failed for '{}'", s)));
+            return err_warn!("Month > 12, parse failed for '{}'", s)));
         }
 
         Ok(year * 100 + month)
