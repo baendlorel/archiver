@@ -8,6 +8,10 @@ BINARY="arv"
 INSTALL_DIR="$HOME/.local/bin"
 ROOT_DIR="$HOME/.archiver"
 
+# 检查并创建安装目录和根目录
+[ -d "$INSTALL_DIR" ] || mkdir -p "$INSTALL_DIR"
+[ -d "$ROOT_DIR" ] || mkdir -p "$ROOT_DIR"
+
 # 检测平台
 OS="$(uname -s)"
 case "$OS" in

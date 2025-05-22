@@ -41,6 +41,7 @@ fn auto_check_update(args: &Args) {
         Some(ArvCmd::Update) => false,
         Some(ArvCmd::List { all: _ }) => false,
         Some(ArvCmd::Log { range: _ }) => false,
+        None => false,
         _ => true,
     };
 

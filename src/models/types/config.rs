@@ -1,12 +1,40 @@
 use std::vec;
 
+use chrono::NaiveDate;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+struct MyConfig {
+    // 自动用 RFC3339 字符串转 chrono::DateTime<Utc>
+    pub last_check_date: DateTime<Utc>,
+    // 或者用 NaiveDate
+    pub last_check_date2: NaiveDate,
+}
+fn default_auto_check_update() -> String {
+    "on".to_string()
+}
+
+fn default_last_check_update_date() -> NaiveDate {
+    NaiveDate::parse_from_str("2000-01-01", "%Y-%m-%d").unwrap()
+}
+
+fn default_alias() -> Vec<AliasEntry> {
+    vec![]
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct ArchiverConfig {
+    #[serde(default = "default_auto_check_update")]
+    /// 自动检查更新的开关，默认为on
     pub auto_check_update: String,
+
+    /// 上次检查更新的时间
+    #[serde(default = "default_last_check_update_date")]
+    pub last_check_update_date: NaiveDate,
+
     /// 别名映射表
+    #[serde(default = "default_alias")]
     pub alias: Vec<AliasEntry>,
 }
 

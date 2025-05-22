@@ -225,9 +225,13 @@ macro_rules! uoe_result {
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|error| {
             panic!(
-                "{} {}\n{}\n at {} {}:{}",
+                "{} {}{}\n at {} {}:{}",
                 crate::misc::mark::fail(),
-                $s,
+                if $s.is_empty() {
+                    "".to_string()
+                } else {
+                    format!("{}\n", $s)
+                },
                 error,
                 file!(),
                 line!(),

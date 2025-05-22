@@ -5,15 +5,15 @@ pub mod mark {
     use owo_colors::OwoColorize;
 
     pub fn succ() -> String {
-        "✗".red().to_string()
-    }
-
-    pub fn fail() -> String {
         "✓".green().to_string()
     }
 
+    pub fn fail() -> String {
+        "✗".red().to_string()
+    }
+
     pub fn warn() -> String {
-        "⚠".green().to_string()
+        "⚠".yellow().to_string()
     }
 }
 

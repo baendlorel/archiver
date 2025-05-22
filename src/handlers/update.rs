@@ -15,7 +15,7 @@ use super::config;
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
     // 获取当前版本
-    let (cur, latest) = match prepare_versions() {
+    let (current, latest) = match prepare_versions() {
         Ok(v) => v,
         Err(e) => {
             e.display();
@@ -23,7 +23,10 @@ pub fn handler() {
         }
     };
 
-    match latest.cmp(&cur) {
+    println!("Current version: {}", current.to_string().cyan());
+    println!("Latest  release: {}", latest.to_string().green());
+
+    match latest.cmp(&current) {
         Ordering::Greater => {
             println!("{} New version available! Now updating...", mark::warn());
             update();
@@ -35,7 +38,7 @@ pub fn handler() {
 
 /// 和上面的区别在于版本相同时静默
 pub fn auto_check_update() {
-    let config = match config::config_data::load() {
+    let config = match config::load() {
         Ok(c) => c,
         Err(e) => {
             e.display();
@@ -49,7 +52,7 @@ pub fn auto_check_update() {
     }
 
     // 获取当前版本
-    let (cur, latest) = match prepare_versions() {
+    let (current, latest) = match prepare_versions() {
         Ok(v) => v,
         Err(e) => {
             e.display();
@@ -57,7 +60,7 @@ pub fn auto_check_update() {
         }
     };
 
-    match latest.cmp(&cur) {
+    match latest.cmp(&current) {
         Ordering::Greater => println!(
             "{} New version available! Please run `arv update`",
             mark::warn()
@@ -103,10 +106,6 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     }
 
     let latest = Version::from(latest_version);
-
-    println!("Current version: {}", current.to_string().cyan());
-    println!("Latest  release: {}", latest.to_string().green());
-
     Ok((current, latest))
 }
 
@@ -116,7 +115,9 @@ fn update() {
         "https://github.com/baendlorel/archiver/releases/download/v0.1.0/archiver-installer.sh";
     let script_path = paths::ROOT_DIR.join("archiver-installer.sh");
 
-    uoe_result!(fs::remove_file(&script_path), "Fail to remove old script");
+    if script_path.exists() {
+        uoe_result!(fs::remove_file(&script_path), "Fail to remove old script");
+    }
 
     let status = std::process::Command::new("curl")
         .arg("-fsSL")
