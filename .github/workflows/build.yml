@@ -37,7 +37,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build
-        run: cargo build --release --verbose --all-features
+        run: cargo build --release --verbose
 
       # 获取项目版本号并设置二进制文件名
       - name: Set binary name
