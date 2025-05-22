@@ -7,9 +7,9 @@ pub enum Level {
 }
 
 // 下面是ArchiverError用的错误等级
-const FATAL: &str = "!"; // "\u{2757}";
+const FATAL: &str = "!"; // \u{2757};
 const WARN: &str = "⚠";
-const INFO: &str = "\u{2139}";
+const INFO: &str = "i"; // \u{2139}
 
 impl Level {
     pub fn to_string_styled(&self) -> String {
@@ -97,14 +97,14 @@ impl ArchiverError {
     #[cfg(feature = "dev")]
     /// 将Error转化为显示在终端的日志，含彩色
     /// - dev环境下总是显示stack信息
-    pub fn to_log(&self) -> String {
+    fn to_log(&self) -> String {
         format!("{}\n{}", self.message, self.get_stack_string())
     }
 
     #[cfg(not(feature = "dev"))]
     /// 将Error转化为显示在终端的日志，含彩色
     /// - 生产环境下，仅fatal报错展示stack信息
-    pub fn to_log(&self) -> String {
+    fn to_log(&self) -> String {
         match self.level {
             Level::Fatal => format!("{}\n{}", self.message, self.get_stack_string()),
             _ => self.message.clone(),

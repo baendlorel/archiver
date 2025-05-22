@@ -1,4 +1,4 @@
-use crate::{err_fatal_from_str, err_info, wrap_err_fatal, wrap_result};
+use crate::{err_fatal_from_str, err_info, err_warn, wrap_err_fatal, wrap_result};
 
 use std::fs;
 
@@ -30,7 +30,14 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
 
     // 目标不存在则报错
     if !target_path.exists() {
-        return err_info!("Target '{}' does not exist in current directory.", target);
+        return err_info!("'{}' does not exist in current directory.", target);
+    }
+
+    if paths::ROOT_DIR.starts_with(&target_path) {
+        return err_warn!(
+            "'{}' cannot be a parent of archiver directory or itself.",
+            target,
+        );
     }
 
     // 必须无损转换OsString

@@ -1,4 +1,3 @@
-use crate::handlers::config;
 use crate::uoe_result;
 
 use chrono::NaiveDate;
@@ -81,11 +80,15 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 
         // 不能使用config::save，因为此函数会用到CONFIG_FILE_PATH导致循环引用
         let json_str = uoe_result!(serde_json::to_string_pretty(&config), "");
-        uoe_result!(fs::write(path, json_str), "");
+        uoe_result!(fs::write(&path, json_str), "");
+        return path;
     }
 
     if path.is_dir() {
-        panic!("'{}' should be a json file, but got a directory", path);
+        panic!(
+            "'{}' should be a json file, but got a directory",
+            path.force_to_string()
+        );
     }
 
     path

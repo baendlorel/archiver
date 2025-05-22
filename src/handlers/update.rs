@@ -51,6 +51,8 @@ pub fn auto_check_update() {
         return;
     }
 
+    // todo 一个月看一次
+
     // 获取当前版本
     let (current, latest) = match prepare_versions() {
         Ok(v) => v,

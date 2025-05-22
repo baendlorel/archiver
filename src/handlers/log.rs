@@ -23,9 +23,9 @@ pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
 }
 
 pub fn err(oper: &OperType, arg: &str, id: Option<u32>, e: ArchiverError) {
-    let err_msg = e.to_string();
-    println!("{} {}", mark::fail(), err_msg);
-    if let Err(e) = save(oper, arg, false, id, Some(err_msg)) {
-        e.display();
+    e.display();
+    // todo 报了warn错误却没有记录log，只有“~/.archiver/ ”
+    if let Err(save_err) = save(oper, arg, false, id, Some(e.to_string())) {
+        save_err.display();
     }
 }
