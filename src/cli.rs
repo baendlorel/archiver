@@ -32,6 +32,7 @@ pub enum ArvCmd {
     List {
         #[arg[short,long]]
         all: bool,
+        // todo 增加一个--restored的选项，可以只显示被恢复的记录
     },
 
     /// Show the log of archiving operations
