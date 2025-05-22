@@ -1,13 +1,13 @@
-use crate::println_err;
+use crate::{misc::status_mark, println_err};
 
 use owo_colors::OwoColorize;
 
-use crate::{handlers::log, models::types::OperType};
+use crate::{handlers::log, misc::CONFIG_VALID_STMT, models::types::OperType};
 
 mod alias;
 mod auto_check_update;
 pub mod config_data;
-mod list;
+mod show;
 
 pub fn handler(statement: &Option<Vec<String>>) {
     // 输入arv config，后面没了，就会进入此分支
@@ -26,11 +26,8 @@ pub fn handler(statement: &Option<Vec<String>>) {
             problem,
             stmt.join(" ")
         );
-        println!("{}", head.red());
-        println!("{}", "Valid statements:".green());
-        println!("  arv config alias.add <alias> # <alias> is like `mytemp=/home/user/temp`");
-        println!("  arv config alias.remove <alias>");
-        println!("  arv config auto-check-update.set on/off");
+        println!("{} {}", status_mark::fail(), head);
+        println!("{}", CONFIG_VALID_STMT.as_str());
     };
 
     // 内部写一个handler，为了避免每次运行结束都要手写一遍show_standard_form
@@ -92,7 +89,7 @@ pub fn handler(statement: &Option<Vec<String>>) {
 }
 
 fn handle_show(config_item: &Option<String>) {
-    if let Err(e) = list::show(config_item) {
+    if let Err(e) = show::show(config_item) {
         println_err!(e);
     }
 }
@@ -103,8 +100,8 @@ fn handle_add_alias(arg: &str) {
     };
     match alias::set_alias(&arg) {
         Ok(_) => {
-            println!("Alias '{}' is set successfully.", arg);
-            log::succ(&oper, arg, None, None);
+            let msg = format!("Alias '{}' is set successfully.", arg);
+            log::succ(&oper, arg, None, &msg);
         }
         Err(e) => log::err(&oper, arg, None, e),
     }
@@ -117,8 +114,8 @@ fn handle_remove_alias(arg: &str) {
 
     match alias::remove_alias(&arg) {
         Ok(_) => {
-            println!("Alias '{}' is removed successfully.", arg);
-            log::succ(&oper, arg, None, None);
+            let msg = format!("Alias '{}' is removed successfully.", arg);
+            log::succ(&oper, arg, None, &msg);
         }
         Err(e) => log::err(&oper, arg, None, e),
     }
@@ -131,8 +128,8 @@ fn handle_auto_check_update(arg: &str) {
 
     match auto_check_update::toggle(&arg) {
         Ok(_) => {
-            println!("Auto check update is set to '{}'.", arg);
-            log::succ(&oper, arg, None, None);
+            let msg = format!("Auto check update is set to '{}'.", arg);
+            log::succ(&oper, arg, None, &msg);
         }
         Err(e) => log::err(&oper, arg, None, e),
     }

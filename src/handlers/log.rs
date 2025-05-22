@@ -19,8 +19,9 @@ pub fn handler(range: &Option<String>) {
     }
 }
 
-pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, remark: Option<String>) {
-    if let Err(e) = save(oper, arg, true, id, remark) {
+pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
+    println!("{} {}", status_mark::succ(), msg);
+    if let Err(e) = save(oper, arg, true, id, None) {
         println_err!(e);
     }
 }

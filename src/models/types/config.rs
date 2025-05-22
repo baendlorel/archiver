@@ -20,7 +20,7 @@ impl ArchiverConfig {
     pub fn show(&self, item: &str) -> String {
         match item {
             "alias" => {
-                let head = "Alias:".fg_rgb::<153, 153, 153>();
+                let head = "Alias".fg_rgb::<153, 153, 153>();
                 let mut result: Vec<String> = vec![head.to_string()];
                 result.push(format!(
                     "  ~={} {}",
@@ -33,7 +33,7 @@ impl ArchiverConfig {
                 result.join("\n")
             }
             "auto-check-update" => {
-                let head = "AutoCheckUpdate (after each command):".fg_rgb::<153, 153, 153>();
+                let head = "AutoCheckUpdate (after each command)".fg_rgb::<153, 153, 153>();
                 let status = if self.auto_check_update == "on" {
                     "on".green().to_string()
                 } else {
@@ -41,11 +41,13 @@ impl ArchiverConfig {
                 };
                 format!("{}\n  {}", head, status)
             }
-            _ => format!("Undefined config item '{}'", item),
+            _ => format!(
+                "Undefined config item '{}'\nValid config items: {}",
+                item,
+                CONFIG_ITEMS.join(", ")
+            ),
         }
     }
-
-    pub fn get_items(&self) -> Vec<&'static str> {
-        vec!["alias", "auto-check-update"]
-    }
 }
+
+pub const CONFIG_ITEMS: [&str; 2] = ["alias", "auto-check-update"];

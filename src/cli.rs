@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
 
+use crate::misc;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
@@ -40,11 +42,10 @@ pub enum ArvCmd {
         range: Option<String>,
     },
 
-    /// Configurations
+    /// Set or show configurations, use `arv config -h` to see more
     #[command(visible_aliases = ["c", "cfg"])]
     Config {
-        /// Example: `--alias /usr/bin=@bin`. Can shorten the paths showed in console, but full paths are still preserved on records.
-        #[arg(num_args = 0..=10, group = "config_options")]
+        #[arg(num_args = 0..=10, long_help=misc::CONFIG_HELP_TEXT,group = "config_options")]
         statement: Option<Vec<String>>,
     },
 

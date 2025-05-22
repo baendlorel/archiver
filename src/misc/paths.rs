@@ -21,6 +21,11 @@ mod paths {
 }
 
 /// 用户文件夹
+#[cfg(feature = "dev")]
+pub static HOME_DIR: Lazy<PathBuf> =
+    Lazy::new(|| wrap_expect!(std::env::current_dir(), "Failed to get current directory"));
+
+#[cfg(not(feature = "dev"))]
 pub static HOME_DIR: Lazy<PathBuf> =
     Lazy::new(|| wrap_expect!(dirs::home_dir(), "Failed to get home directory"));
 

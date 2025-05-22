@@ -19,13 +19,12 @@ pub fn handler(ids: &[u32]) {
         println!("Restoring id: {}", id.magenta());
         match restore(*id) {
             Ok(entry) => {
-                println!(
-                    "{} id:{} is successfully restored to '{}'",
-                    status_mark::succ(),
+                let msg = format!(
+                    "id:{} is successfully restored to '{}'",
                     id.magenta(),
                     entry.get_target_path()
                 );
-                log::succ(&oper, &id.to_string(), Some(*id), None);
+                log::succ(&oper, &id.to_string(), Some(*id), &msg);
             }
             Err(e) => log::err(&oper, &id.to_string(), Some(*id), e),
         }

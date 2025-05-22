@@ -14,13 +14,8 @@ pub fn handler(targets: &[String]) {
         println!("Putting '{}' into archive", target);
         match archive(&target) {
             Ok(id) => {
-                println!(
-                    "{} '{}' is successfully archived, id: {}",
-                    status_mark::succ(),
-                    target,
-                    id
-                );
-                log::succ(&oper, target, Some(id), None);
+                let msg = format!("'{}' is successfully archived, id: {}", target, id);
+                log::succ(&oper, target, Some(id), &msg);
             }
             Err(e) => log::err(&oper, target, None, e),
         };
