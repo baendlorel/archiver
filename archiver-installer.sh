@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # arv installer: 自动从 GitHub Releases 下载并安装最新版本
 # 支持 macOS 和 Linux
 
@@ -6,6 +6,7 @@ set -e
 REPO="baendlorel/archiver"
 BINARY="arv"
 INSTALL_DIR="$HOME/.local/bin"
+ROOT_DIR="$HOME/.archiver"
 
 # 检测平台
 OS="$(uname -s)"
@@ -24,8 +25,13 @@ fi
 echo "Preparing $BINARY $VERSION ($PLATFORM) ..."
 
 # 下载二进制文件
-dl_url="https://github.com/$REPO/releases/download/$VERSION/${BINARY}-${PLATFORM}-v${VERSION#v}"
-tmpfile="/tmp/${BINARY}-${PLATFORM}-v${VERSION#v}"
+dl_url="https://github.com/$REPO/releases/download/$VERSION/${BINARY}-${PLATFORM}-${VERSION}"
+tmpfile="${ROOT_DIR}/${BINARY}-${PLATFORM}-${VERSION}"
+
+echo "Clearing old version and temp files ..."
+rm -f "$tmpfile" # 删除下载过的旧文件
+rm -f "$INSTALL_DIR/$BINARY" # 删除旧文件
+
 echo "Downloading: $dl_url"
 curl -L --fail -o "$tmpfile" "$dl_url"
 chmod +x "$tmpfile"
@@ -50,7 +56,7 @@ if ! echo ":$PATH:" | grep -q ":$HOME/.local/bin:"; then
         echo "Please add $HOME/.local/bin to your PATH manually."
         exit 0
     fi
-    echo "Adding $HOME/.local/bin into $rc_file。"
+    echo "Adding $HOME/.local/bin into $rc_file"
     # 防止重复追加
     grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' "$rc_file" || echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$rc_file"
     echo "Please reopen your shell or execute: source $rc_file"

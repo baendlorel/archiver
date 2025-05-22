@@ -1,12 +1,12 @@
+use crate::{uoe_option, uoe_result};
+
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
-use crate::models::types::ArchiverConfig;
-use crate::wrap_expect;
-
 use super::ForceToString;
+use crate::models::types::ArchiverConfig;
 
 mod paths {
     // 目录
@@ -23,22 +23,22 @@ mod paths {
 /// 用户文件夹
 #[cfg(feature = "dev")]
 pub static HOME_DIR: Lazy<PathBuf> =
-    Lazy::new(|| wrap_expect!(std::env::current_dir(), "Failed to get current directory"));
+    Lazy::new(|| uoe_result!(std::env::current_dir(), "Failed to get current directory"));
 
 #[cfg(not(feature = "dev"))]
 pub static HOME_DIR: Lazy<PathBuf> =
-    Lazy::new(|| wrap_expect!(dirs::home_dir(), "Failed to get home directory"));
+    Lazy::new(|| uoe_option!(dirs::home_dir(), "Failed to get home directory"));
 
 /// 当前工作目录
 pub static CWD: Lazy<PathBuf> =
-    Lazy::new(|| wrap_expect!(std::env::current_dir(), "Failed to get current directory"));
+    Lazy::new(|| uoe_result!(std::env::current_dir(), "Failed to get current directory"));
 
 /// 程序主目录
 pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let path = HOME_DIR.join(paths::ROOT);
     // 检查路径是否存在，不存在则创建
     if !path.exists() {
-        wrap_expect!(fs::create_dir_all(&path), "Failed to create root directory");
+        uoe_result!(fs::create_dir_all(&path), "Failed to create root directory");
     }
     path
 });
@@ -47,7 +47,7 @@ pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
 pub static LOGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let path = ROOT_DIR.join(paths::LOGS_DIR);
     if !path.exists() {
-        wrap_expect!(
+        uoe_result!(
             fs::create_dir_all(&path),
             "Failed to create logs_dir directory"
         );
@@ -59,7 +59,7 @@ pub static LOGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
 pub static CORE_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let path = ROOT_DIR.join(paths::CORE_DIR);
     if !path.exists() {
-        wrap_expect!(
+        uoe_result!(
             fs::create_dir_all(&path),
             "Failed to create core_dir directory"
         );
@@ -74,11 +74,11 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
             auto_check_update: "on".to_string(),
             alias: vec![],
         };
-        let content = wrap_expect!(
+        let content = uoe_result!(
             serde_json::to_string_pretty(&config),
             "Failed to serialize config"
         );
-        wrap_expect!(fs::write(&path, content), "Failed to create config file");
+        uoe_result!(fs::write(&path, content), "Failed to create config file");
     }
     path
 });
@@ -89,12 +89,12 @@ pub static LIST_FILE_PATH: Lazy<PathBuf> =
 
 /// 别名映射表
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
-    let content = wrap_expect!(
+    let content = uoe_result!(
         fs::read_to_string(CONFIG_FILE_PATH.clone()),
         "Cannot read config file"
     );
 
-    let config = wrap_expect!(
+    let config = uoe_result!(
         serde_json::from_str::<ArchiverConfig>(&content),
         "Cannot parse config file"
     );
@@ -112,24 +112,24 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
 pub fn auto_incr_id() -> u32 {
     let auto_incr_file = CORE_DIR.join(paths::AUTO_INCR_FILE);
     if !auto_incr_file.exists() {
-        wrap_expect!(
+        uoe_result!(
             fs::write(&auto_incr_file, "1"),
             "Failed to create auto increment file"
         );
         return 1;
     }
-    let content = wrap_expect!(
+    let content = uoe_result!(
         fs::read_to_string(&auto_incr_file),
         "Failed to read auto increment file"
     );
 
-    let current_id = wrap_expect!(
+    let current_id = uoe_result!(
         content.trim().parse::<u32>(),
         "Failed to parse auto increment value"
     );
 
     let new_id = 1 + current_id;
-    wrap_expect!(
+    uoe_result!(
         fs::write(&auto_incr_file, new_id.to_string()),
         "Failed to create auto increment file"
     );

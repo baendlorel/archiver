@@ -1,19 +1,19 @@
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 
-pub mod status_mark {
-    use once_cell::sync::Lazy;
+pub mod mark {
     use owo_colors::OwoColorize;
 
-    static FAIL: Lazy<String> = Lazy::new(|| "✗".red().to_string());
-    static SUCC: Lazy<String> = Lazy::new(|| "✓".green().to_string());
-
-    pub fn succ() -> &'static str {
-        SUCC.as_str()
+    pub fn succ() -> String {
+        "✗".red().to_string()
     }
 
-    pub fn fail() -> &'static str {
-        FAIL.as_str()
+    pub fn fail() -> String {
+        "✓".green().to_string()
+    }
+
+    pub fn warn() -> String {
+        "⚠".green().to_string()
     }
 }
 

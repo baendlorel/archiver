@@ -1,4 +1,4 @@
-use crate::misc::status_mark;
+use crate::misc::mark;
 use crate::models::error::ArchiverError;
 use crate::models::types::OperType;
 
@@ -16,7 +16,7 @@ pub fn handler(range: &Option<String>) {
 }
 
 pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
-    println!("{} {}", status_mark::succ(), msg);
+    println!("{} {}", mark::succ(), msg);
     if let Err(e) = save(oper, arg, true, id, None) {
         e.display();
     }
@@ -24,7 +24,7 @@ pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
 
 pub fn err(oper: &OperType, arg: &str, id: Option<u32>, e: ArchiverError) {
     let err_msg = e.to_string();
-    println!("{} {}", status_mark::fail(), err_msg);
+    println!("{} {}", mark::fail(), err_msg);
     if let Err(e) = save(oper, arg, false, id, Some(err_msg)) {
         e.display();
     }

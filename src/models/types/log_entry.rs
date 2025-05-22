@@ -1,7 +1,7 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::misc::{paths, status_mark};
+use crate::misc::{paths, mark};
 
 use super::{OperType, field_style};
 
@@ -24,9 +24,9 @@ impl LogEntry {
     pub fn to_log(&self) -> String {
         let status = if self.is_succ {
             //  ✓ 和 ✗
-            status_mark::succ()
+            mark::succ()
         } else {
-            status_mark::fail()
+            mark::fail()
         };
 
         let remark = if self.remark.is_empty() {

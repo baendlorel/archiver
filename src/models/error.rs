@@ -220,20 +220,37 @@ macro_rules! err_warn {
 }
 
 #[macro_export]
-/// 包裹一个对象，让其在触发expect报错的时候可以附带代码位置
-macro_rules! wrap_expect {
+/// 包裹一个Result对象，让其在触发expect报错的时候可以附带代码位置
+macro_rules! uoe_result {
     ($e:expr, $s:expr) => {
-        $e.expect(
-            format!(
-                "{}\n  at {} {}:{} ({})",
+        $e.unwrap_or_else(|error| {
+            panic!(
+                "{} {}\n{}\n at {} {}:{}",
+                crate::misc::mark::fail(),
+                $s,
+                error,
+                file!(),
+                line!(),
+                column!()
+            )
+        })
+    };
+}
+
+#[macro_export]
+/// 包裹一个Option对象，让其在触发expect的时候可以附带代码位置
+macro_rules! uoe_option {
+    ($e:expr, $s:expr) => {
+        $e.unwrap_or_else(|| {
+            panic!(
+                "{} {}\n at {} {}:{}",
+                crate::misc::mark::fail(),
                 $s,
                 file!(),
                 line!(),
-                column!(),
-                module_path!()
+                column!()
             )
-            .as_str(),
-        )
+        })
     };
 }
 

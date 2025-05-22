@@ -1,6 +1,6 @@
 use crate::{
     handlers::log,
-    misc::{CONFIG_VALID_STMT, status_mark},
+    misc::{CONFIG_VALID_STMT, mark},
     models::types::OperType,
 };
 
@@ -26,7 +26,7 @@ pub fn handler(statement: &Option<Vec<String>>) {
             problem,
             stmt.join(" ")
         );
-        println!("{} {}", status_mark::fail(), head);
+        println!("{} {}", mark::fail(), head);
         println!("{}", CONFIG_VALID_STMT.as_str());
     };
 

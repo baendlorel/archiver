@@ -1,10 +1,12 @@
-use crate::err_info;
+use crate::{err_info, uoe_result};
 
 use owo_colors::OwoColorize;
-use std::{cmp::Ordering, process::Command};
+use std::fs;
+use std::os::unix::process::CommandExt;
+use std::{cmp::Ordering, process::Command}; // for exec
 
 use crate::{
-    misc::status_mark,
+    misc::{ForceToString, mark, paths},
     models::{error::ArchiverError, types::Version},
 };
 
@@ -21,11 +23,13 @@ pub fn handler() {
         }
     };
 
-    // todo 真正实现update
     match latest.cmp(&cur) {
-        Ordering::Greater => println!("status_mark::warn() New version available! Please update.",),
-        Ordering::Equal => println!("{} You are using the latest version.", status_mark::succ()),
-        Ordering::Less => println!("status_mark::warn() How could you use a newer version?"),
+        Ordering::Greater => {
+            println!("{} New version available! Now updating...", mark::warn());
+            update();
+        }
+        Ordering::Equal => println!("{} You are using the latest version.", mark::succ()),
+        Ordering::Less => println!("{} How could you use a newer version?", mark::warn()),
     }
 }
 
@@ -54,11 +58,12 @@ pub fn auto_check_update() {
     };
 
     match latest.cmp(&cur) {
-        Ordering::Greater => {
-            println!("status_mark::warn() New version available! Please download it manually.",)
-        }
-        Ordering::Less => println!("status_mark::warn() How could you use a newer version?"),
-        Ordering::Equal => {}
+        Ordering::Greater => println!(
+            "{} New version available! Please run `arv update`",
+            mark::warn()
+        ),
+        Ordering::Less => println!("{} How could you use a newer version?", mark::warn()),
+        Ordering::Equal => {} // 自动检测的话，版本相同旧无所谓
     }
 }
 
@@ -103,4 +108,41 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     println!("Latest  release: {}", latest.to_string().green());
 
     Ok((current, latest))
+}
+
+fn update() {
+    // 1. 下载脚本
+    let script_url =
+        "https://github.com/baendlorel/archiver/releases/download/v0.1.0/archiver-installer.sh";
+    let script_path = paths::ROOT_DIR.join("archiver-installer.sh");
+
+    uoe_result!(fs::remove_file(&script_path), "Fail to remove old script");
+
+    let status = std::process::Command::new("curl")
+        .arg("-fsSL")
+        .arg("-o")
+        .arg(script_path.force_to_string())
+        .arg(script_url)
+        .status();
+    if let Err(e) = status {
+        eprintln!("{} Failed to download update script: {}", mark::fail(), e);
+        return;
+    }
+    // 2. 设置可执行权限
+    let status = std::process::Command::new("chmod")
+        .arg("+x")
+        .arg(script_path.force_to_string())
+        .status();
+    if let Err(e) = status {
+        eprintln!("{} Failed to chmod update script: {}", mark::fail(), e);
+        return;
+    }
+    // 3. 用 exec 替换当前进程
+    let err = std::process::Command::new("sh")
+        .arg(script_path.force_to_string())
+        .exec();
+
+    // exec 只会在出错时返回
+    eprintln!("{} Failed to exec update script: {}", mark::fail(), err);
+    std::process::exit(1);
 }
