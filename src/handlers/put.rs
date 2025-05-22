@@ -35,8 +35,8 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
 
     if paths::ROOT_DIR.starts_with(&target_path) {
         return err_warn!(
-            "'{}' cannot be a parent of archiver directory or itself.",
-            target,
+            "Target cannot be a parent directory of archiver or itself. Got '{}'",
+            target
         );
     }
 

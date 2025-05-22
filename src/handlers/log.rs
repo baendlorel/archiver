@@ -17,15 +17,16 @@ pub fn handler(range: &Option<String>) {
 
 pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
     println!("{} {}", mark::succ(), msg);
-    if let Err(e) = save(oper, arg, true, id, None) {
-        e.display();
-    }
+
+    save(oper, arg, true, id, None)
+        .map_err(|e| e.display())
+        .ok();
 }
 
 pub fn err(oper: &OperType, arg: &str, id: Option<u32>, e: ArchiverError) {
     e.display();
-    // todo 报了warn错误却没有记录log，只有“~/.archiver/ ”
-    if let Err(save_err) = save(oper, arg, false, id, Some(e.to_string())) {
-        save_err.display();
-    }
+
+    save(oper, arg, false, id, Some(e.to_string()))
+        .map_err(|save_err| save_err.display())
+        .ok();
 }

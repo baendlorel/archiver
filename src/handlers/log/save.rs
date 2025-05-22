@@ -24,7 +24,11 @@ pub fn save(
     let normalized_remark = match oper {
         OperType::Put => {
             let full_path = paths::CWD.join(arg);
-            full_path.force_to_string()
+            if is_succ {
+                full_path.force_to_string()
+            } else {
+                remark.unwrap_or("".to_string())
+            }
         }
         _ => remark.unwrap_or("".to_string()),
     };
