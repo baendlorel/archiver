@@ -292,6 +292,14 @@ macro_rules! wrap_result {
     };
 }
 
+#[macro_export]
+/// 包裹一个Option对象，让其在触发expect的时候可以附带代码位置
+macro_rules! log_if_err {
+    ($e:expr) => {
+        $e.map_err(|e| e.display()).ok()
+    };
+}
+
 #[test]
 fn test_error_display() {
     let e = err_fatal_from_str!("asdf");

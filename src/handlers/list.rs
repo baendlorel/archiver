@@ -1,4 +1,4 @@
-use crate::{err_info, wrap_err_fatal, wrap_result};
+use crate::{err_info, log_if_err, wrap_err_fatal, wrap_result};
 
 use chrono::Local;
 use owo_colors::OwoColorize;
@@ -11,9 +11,7 @@ use crate::models::{
 };
 
 pub fn handler(all: bool) {
-    if let Err(e) = print_list(all) {
-        e.display();
-    }
+    log_if_err!(print_list(all));
 }
 
 pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ArchiverError> {

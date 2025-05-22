@@ -1,5 +1,6 @@
 use crate::{
     handlers::log,
+    log_if_err,
     misc::{CONFIG_VALID_STMT, mark},
     models::types::OperType,
 };
@@ -91,9 +92,7 @@ pub fn handler(statement: &Option<Vec<String>>) {
 }
 
 fn handle_show(config_item: &Option<String>) {
-    if let Err(e) = display::display(config_item) {
-        e.display();
-    }
+    log_if_err!(display::display(config_item));
 }
 
 fn handle_add_alias(arg: &str) {

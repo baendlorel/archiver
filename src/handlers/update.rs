@@ -1,4 +1,4 @@
-use crate::{err_info, uoe_result};
+use crate::{err_info, log_if_err, uoe_result};
 
 use owo_colors::OwoColorize;
 use std::fs;
@@ -75,9 +75,7 @@ pub fn auto_check() {
     }
 
     // 检查过了更新，刷新一下检测记录
-    auto_check_update::refresh(&mut config)
-        .map_err(|e| e.display())
-        .ok();
+    log_if_err!(auto_check_update::refresh(&mut config));
 }
 
 fn prepare_versions() -> Result<(Version, Version), ArchiverError> {

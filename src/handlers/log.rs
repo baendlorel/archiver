@@ -1,3 +1,4 @@
+use crate::log_if_err;
 use crate::misc::mark;
 use crate::models::error::ArchiverError;
 use crate::models::types::OperType;
@@ -10,23 +11,15 @@ mod load;
 use load::load;
 
 pub fn handler(range: &Option<String>) {
-    if let Err(e) = load(range) {
-        e.display();
-    }
+    log_if_err!(load(range));
 }
 
 pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
     println!("{} {}", mark::succ(), msg);
-
-    save(oper, arg, true, id, None)
-        .map_err(|e| e.display())
-        .ok();
+    log_if_err!(save(oper, arg, true, id, None));
 }
 
 pub fn err(oper: &OperType, arg: &str, id: Option<u32>, e: ArchiverError) {
     e.display();
-
-    save(oper, arg, false, id, Some(e.to_string()))
-        .map_err(|save_err| save_err.display())
-        .ok();
+    log_if_err!(save(oper, arg, false, id, Some(e.to_string())));
 }
