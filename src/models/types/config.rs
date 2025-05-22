@@ -1,6 +1,6 @@
 use std::vec;
 
-use chrono::NaiveDate;
+use chrono::{Local, NaiveDate};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +9,7 @@ fn default_auto_check_update() -> String {
 }
 
 fn default_last_check_update_date() -> NaiveDate {
-    NaiveDate::parse_from_str("2000-01-01", "%Y-%m-%d").unwrap()
+    Local::now().date_naive()
 }
 
 fn default_alias() -> Vec<AliasEntry> {
@@ -38,6 +38,14 @@ pub struct AliasEntry {
 }
 
 impl ArchiverConfig {
+    pub fn default() -> ArchiverConfig {
+        Self {
+            auto_check_update: "on".to_string(),
+            last_check_update_date: Local::now().date_naive(),
+            alias: vec![],
+        }
+    }
+
     pub fn display(&self, item: &str) -> String {
         match item {
             "alias" => {

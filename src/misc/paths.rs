@@ -72,12 +72,7 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let path = CORE_DIR.join(paths::CONFIG_FILE);
     // 从CORE_DIR读取说明CORE_DIR一定存在，下面只看配置文件是否存在
     if !path.exists() {
-        let config = ArchiverConfig {
-            auto_check_update: "on".to_string(),
-            last_check_update_date: NaiveDate::parse_from_str("2000-01-01", "%Y-%m-%d").unwrap(),
-            alias: vec![],
-        };
-
+        let config = ArchiverConfig::default();
         // 不能使用config::save，因为此函数会用到CONFIG_FILE_PATH导致循环引用
         let json_str = uoe_result!(serde_json::to_string_pretty(&config), "");
         uoe_result!(fs::write(&path, json_str), "");

@@ -46,6 +46,6 @@ fn auto_check_update(args: &Args) {
     };
 
     if need_checking {
-        handlers::update::auto_check_update();
+        handlers::update::auto_check();
     }
 }

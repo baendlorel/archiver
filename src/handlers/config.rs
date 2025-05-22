@@ -5,7 +5,7 @@ use crate::{
 };
 
 mod alias;
-mod auto_check_update;
+pub mod auto_check_update;
 mod data;
 mod display;
 

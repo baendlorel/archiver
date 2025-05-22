@@ -10,7 +10,7 @@ use crate::{
     models::{error::ArchiverError, types::Version},
 };
 
-use super::config;
+use super::config::{auto_check_update, load};
 
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
@@ -37,8 +37,8 @@ pub fn handler() {
 }
 
 /// 和上面的区别在于版本相同时静默
-pub fn auto_check_update() {
-    let config = match config::load() {
+pub fn auto_check() {
+    let mut config = match load() {
         Ok(c) => c,
         Err(e) => {
             e.display();
@@ -51,7 +51,10 @@ pub fn auto_check_update() {
         return;
     }
 
-    // todo 一个月看一次
+    // 一个月看一次
+    if !auto_check_update::overdue(&config) {
+        return;
+    }
 
     // 获取当前版本
     let (current, latest) = match prepare_versions() {
@@ -70,6 +73,11 @@ pub fn auto_check_update() {
         Ordering::Less => println!("{} How could you use a newer version?", mark::warn()),
         Ordering::Equal => {} // 自动检测的话，版本相同旧无所谓
     }
+
+    // 检查过了更新，刷新一下检测记录
+    auto_check_update::refresh(&mut config)
+        .map_err(|e| e.display())
+        .ok();
 }
 
 fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
