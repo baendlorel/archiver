@@ -23,12 +23,9 @@ pub fn handler() {
 
     // todo 真正实现update
     match latest.cmp(&cur) {
-        Ordering::Greater => println!(
-            "{} New version available! Please update.",
-            status_mark::warn()
-        ),
+        Ordering::Greater => println!("status_mark::warn() New version available! Please update.",),
         Ordering::Equal => println!("{} You are using the latest version.", status_mark::succ()),
-        Ordering::Less => println!("{} How could you use a newer version?", status_mark::warn()),
+        Ordering::Less => println!("status_mark::warn() How could you use a newer version?"),
     }
 }
 
@@ -57,11 +54,10 @@ pub fn auto_check_update() {
     };
 
     match latest.cmp(&cur) {
-        Ordering::Greater => println!(
-            "{} New version available! Please download it manually.",
-            status_mark::warn()
-        ),
-        Ordering::Less => println!("{} How could you use a newer version?", status_mark::warn()),
+        Ordering::Greater => {
+            println!("status_mark::warn() New version available! Please download it manually.",)
+        }
+        Ordering::Less => println!("status_mark::warn() How could you use a newer version?"),
         Ordering::Equal => {}
     }
 }

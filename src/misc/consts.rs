@@ -7,9 +7,6 @@ pub mod status_mark {
 
     static FAIL: Lazy<String> = Lazy::new(|| "✗".red().to_string());
     static SUCC: Lazy<String> = Lazy::new(|| "✓".green().to_string());
-    static WARN: Lazy<String> = Lazy::new(|| "⚠".yellow().to_string());
-    static INFO: Lazy<String> = Lazy::new(|| "i".cyan().to_string());
-    // static INFO: Lazy<String> = Lazy::new(|| "ℹ".cyan().to_string());
 
     pub fn succ() -> &'static str {
         SUCC.as_str()
@@ -17,14 +14,6 @@ pub mod status_mark {
 
     pub fn fail() -> &'static str {
         FAIL.as_str()
-    }
-
-    pub fn warn() -> &'static str {
-        WARN.as_str()
-    }
-
-    pub fn info() -> &'static str {
-        INFO.as_str()
     }
 }
 
