@@ -11,7 +11,7 @@ Install script recommended （supports Linux/macOS）
 _Does not support Windows yet_
 
 ```bash
-curl -fsSL https://github.com/baendlorel/archiver/releases/download/scripts/archiver-installer.sh | sh
+curl -fsSL https://github.com/baendlorel/archiver/blob/release/archiver-installer.sh | sh
 ```
 
 ## Where does the files go?

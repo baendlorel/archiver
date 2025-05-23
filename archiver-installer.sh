@@ -32,9 +32,9 @@ echo "Preparing $BINARY $VERSION ($PLATFORM) ..."
 dl_url="https://github.com/$REPO/releases/download/$VERSION/${BINARY}-${PLATFORM}-${VERSION}"
 tmpfile="${ROOT_DIR}/${BINARY}-${PLATFORM}-${VERSION}"
 
-echo "Clearing old version and temp files ..."
+echo "Clearing temp files..."
 rm -f "$tmpfile" # 删除下载过的旧文件
-rm -f "$INSTALL_DIR/$BINARY" # 删除旧文件
+echo "Temp files cleared"
 
 echo "Downloading: $dl_url"
 curl -L --fail -o "$tmpfile" "$dl_url"
@@ -44,6 +44,9 @@ chmod +x "$tmpfile"
 mkdir -p "$INSTALL_DIR"
 
 # 安装到 ~/.local/bin
+echo "Clearing old version..."
+rm -f "$INSTALL_DIR/$BINARY" # 删除旧文件
+echo "Old version cleared"
 mv "$tmpfile" "$INSTALL_DIR/$BINARY" # 这里其实顺带连名字也一起改成了arv
 echo "Installation finished: $INSTALL_DIR/$BINARY"
 

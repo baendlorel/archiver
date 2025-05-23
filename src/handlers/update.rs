@@ -12,6 +12,10 @@ use crate::{
 
 use super::config::{auto_check_update, load};
 
+const GITHUB_API_URL: &str = "https://api.github.com/repos/baendlorel/archiver/releases/latest";
+const SCRIPT_URL: &str =
+    "https://github.com/baendlorel/archiver/blob/release/archiver-installer.sh";
+
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
     // 获取当前版本
@@ -83,7 +87,7 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     // 通过 GitHub API 获取最新 release
     let output = Command::new("curl")
         .arg("-s")
-        .arg("https://api.github.com/repos/baendlorel/archiver/releases/latest")
+        .arg(GITHUB_API_URL)
         .arg("-H")
         .arg("User-Agent: archiver-cli") // GitHub API 需要 User-Agent
         .output();
@@ -119,8 +123,6 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
 
 fn update() {
     // 1. 下载脚本
-    let script_url =
-        "https://github.com/baendlorel/archiver/releases/download/v0.1.0/archiver-installer.sh";
     let script_path = paths::ROOT_DIR.join("archiver-installer.sh");
 
     if script_path.exists() {
@@ -131,12 +133,14 @@ fn update() {
         .arg("-fsSL")
         .arg("-o")
         .arg(script_path.force_to_string())
-        .arg(script_url)
+        .arg(SCRIPT_URL)
         .status();
+
     if let Err(e) = status {
         eprintln!("{} Failed to download update script: {}", mark::fail(), e);
         return;
     }
+
     // 2. 设置可执行权限
     let status = std::process::Command::new("chmod")
         .arg("+x")
@@ -146,6 +150,7 @@ fn update() {
         eprintln!("{} Failed to chmod update script: {}", mark::fail(), e);
         return;
     }
+
     // 3. 用 exec 替换当前进程
     let err = std::process::Command::new("sh")
         .arg(script_path.force_to_string())
