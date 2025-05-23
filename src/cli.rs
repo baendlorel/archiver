@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use crate::misc;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(name="Archiver", author=env!("CARGO_PKG_AUTHORS"), version=concat!("v", env!("CARGO_PKG_VERSION"), " by ", env!("CARGO_PKG_AUTHORS")), about="ReadMe: https://github.com/baendlorel/archiver/blob/main/README.md", long_about = None)]
 pub struct Args {
     #[command(subcommand)]
     pub command: Option<ArvCmd>,

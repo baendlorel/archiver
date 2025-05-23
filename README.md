@@ -38,7 +38,7 @@ Just get into a directory, run this command and you can move your target into `.
 ```bash
 arv put <target> # e.g. `arv put my.txt`
 
-# Might show
+# output:
 # Archiving my.txt
 # 'my.txt' is successfully archived, id:1
 ```
@@ -71,7 +71,8 @@ arv list
 arv ls
 arv l
 
-# It should show a table like this
+# output:
+# Archived At         ID Item      Directory
 # 2025-05-12 17:00:05 4 temp1.a   ~/projects
 # 2025-05-12 19:35:07 6 temp2.b.f ~/projects
 ```
@@ -84,11 +85,26 @@ Show all archived records, including the restored ones.
 arv list --all
 arv l -a
 
-# It should show a table like this
+# output:
+# Archived At         ID Item      Directory
 # 2025-05-12 17:00:05 4 temp1.a   ~/projects
 # 2025-05-12 19:35:07 5 temp3(R)  ~/projects
 # 2025-05-12 19:35:07 6 temp2.b.f ~/projects
 # 2025-05-12 19:35:07 7 temp4(R)  ~/projects
+```
+
+### option: --restored
+
+Show restored records.
+
+```bash
+arv list --restored
+arv l -r
+
+# output:
+# Archived At         ID Item      Directory
+# 2025-05-12 19:35:07 5  temp3(R)  ~/projects
+# 2025-05-12 19:35:07 7  temp4(R)  ~/projects
 ```
 
 ## Log

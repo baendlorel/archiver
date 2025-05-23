@@ -3,6 +3,7 @@ use crate::{err_warn, wrap_err_fatal};
 use crate::models::error::ArchiverError;
 
 // todo 可能还是用naivedate更好
+// todo 改变日期查询的逻辑，改为输入年月就只看那个年月
 pub fn parse_range(range: &Option<String>) -> Result<(u32, u32), ArchiverError> {
     let default_a = u32::MIN;
     let default_b = u32::MAX;
