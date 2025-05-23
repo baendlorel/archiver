@@ -1,3 +1,4 @@
+use crate::models::json_serde::JsonSerde;
 use crate::{err_info, log_if_err, wrap_err_fatal, wrap_result};
 
 use chrono::Local;
@@ -25,13 +26,16 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
         is_restored: false,
     };
 
-    wrap_result!(append_entry(&archive_entry, paths::LIST_FILE_PATH.clone()))?;
+    wrap_result!(append_entry(
+        &archive_entry,
+        paths::LIST_FILE_PATH.as_path()
+    ))?;
     Ok(())
 }
 
 /// 查找某个id的归档记录，用在restore上
 pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverError> {
-    let content = wrap_err_fatal!(fs::read_to_string(paths::LIST_FILE_PATH.clone()))?;
+    let content = wrap_err_fatal!(fs::read_to_string(paths::LIST_FILE_PATH.as_path()))?;
 
     for line in content.lines() {
         *target_line_index += 1;
@@ -40,18 +44,11 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverE
             continue; // 跳过空行
         }
 
-        if let Ok(entry) = &serde_json::from_str::<ListEntry>(line) {
+        if let Ok(entry) = ListEntry::from_json_string(line) {
             if entry.id == id {
                 // 因为第一行加得太早，这里得减去多加了的
                 *target_line_index -= 1;
-                return Ok(ListEntry {
-                    id: entry.id,
-                    target: entry.target.clone(),
-                    is_dir: entry.is_dir,
-                    dir: entry.dir.clone(),
-                    time: entry.time.clone(),
-                    is_restored: entry.is_restored,
-                });
+                return Ok(entry);
             }
         }
     }
@@ -61,7 +58,7 @@ pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverE
 
 /// 只会在目标已经被restored之后调用
 pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
-    let list_file_path = paths::LIST_FILE_PATH.clone();
+    let list_file_path = paths::LIST_FILE_PATH.as_path();
     // 读取整个文件
     let content = wrap_err_fatal!(fs::read_to_string(&list_file_path))?;
 
@@ -83,7 +80,7 @@ pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
 }
 
 fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
-    let list_file_path = paths::LIST_FILE_PATH.clone();
+    let list_file_path = paths::LIST_FILE_PATH.as_path();
     if !list_file_path.exists() {
         println!("No archived object yet");
         return Ok(());
@@ -156,7 +153,7 @@ fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
         .underline()
     );
 
-    for row in list.iter().clone() {
+    for row in list.iter() {
         println!(
             "{time}{} {id}{} {target}{} {dir}",
             " ".repeat(max_width.time - row._width.time),

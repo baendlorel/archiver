@@ -7,9 +7,15 @@ use crate::{
     models::{error::ArchiverError, json_serde::JsonSerde, types::ArchiverConfig},
 };
 
+pub fn save(config: &ArchiverConfig) -> Result<(), ArchiverError> {
+    let json = wrap_err_fatal!(config.to_json_string())?;
+    wrap_err_fatal!(fs::write(paths::CONFIG_FILE_PATH.as_path(), json))?;
+    Ok(())
+}
+
 pub fn load() -> Result<ArchiverConfig, ArchiverError> {
     // 在设置全局变量时已经创建了假如不存在的config.json
-    let config_path = paths::CONFIG_FILE_PATH.clone();
+    let config_path = paths::CONFIG_FILE_PATH.as_path();
     let content = wrap_err_fatal!(fs::read_to_string(config_path))?;
     let mut config = wrap_err_fatal!(serde_json::from_str::<ArchiverConfig>(&content))?;
 
@@ -20,10 +26,4 @@ pub fn load() -> Result<ArchiverConfig, ArchiverError> {
     }
 
     Ok(config)
-}
-
-pub fn save(config: &ArchiverConfig) -> Result<(), ArchiverError> {
-    let json = wrap_err_fatal!(config.to_json_string())?;
-    wrap_err_fatal!(fs::write(paths::CONFIG_FILE_PATH.as_path(), json))?;
-    Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::{uoe_result, wrap_result};
+use crate::uoe_result;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -128,7 +128,7 @@ pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 /// 别名映射表
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let content = uoe_result!(
-        fs::read_to_string(CONFIG_FILE_PATH.clone()),
+        fs::read_to_string(CONFIG_FILE_PATH.as_path()),
         "Cannot read config file"
     );
 

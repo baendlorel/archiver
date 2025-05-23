@@ -6,7 +6,7 @@ use crate::{
     models::types::field_style::Grey,
 };
 
-use super::{OperType, field_style};
+use super::OperType;
 
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]

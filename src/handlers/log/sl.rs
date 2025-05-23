@@ -1,14 +1,55 @@
 use crate::{err_warn, err_warn_from_str, wrap_err_fatal, wrap_result};
 
+use chrono::{Datelike, Local};
 use owo_colors::OwoColorize;
 use std::{fs, u32};
 
 use super::parse_range;
-use crate::misc::paths;
+use crate::misc::{ForceToString, append_entry, paths};
 use crate::models::error::ArchiverError;
-use crate::models::types::LogEntry;
+use crate::models::types::{LogEntry, OperType};
 
 const MAX_CASUAL_COUNT: usize = 15;
+
+pub fn save(
+    oper: &OperType,
+    arg: &str,
+    is_succ: bool,
+    id: Option<u32>,
+    remark: Option<String>,
+) -> Result<(), ArchiverError> {
+    // 获取日志文件路径
+    let log_file_path = paths::get_log_path(Local::now().year() as u32);
+
+    // 确保日志目录存在
+    // 获取当前时间
+    let opered_at = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let normalized_remark = match oper {
+        OperType::Put => {
+            let full_path = paths::CWD.join(arg);
+            if is_succ {
+                full_path.force_to_string()
+            } else {
+                remark.unwrap_or("".to_string())
+            }
+        }
+        _ => remark.unwrap_or("".to_string()),
+    };
+
+    // 准备日志内容
+    let log_entry = LogEntry {
+        time: opered_at,
+        is_succ,
+        oper: oper.clone(),
+        arg: arg.to_string(),
+        remark: normalized_remark,
+        id,
+    };
+
+    wrap_result!(append_entry(&log_entry, &log_file_path))?;
+    Ok(())
+}
 
 pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
