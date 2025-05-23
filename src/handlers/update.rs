@@ -14,7 +14,7 @@ use super::config::{auto_check_update, load};
 
 const GITHUB_API_URL: &str = "https://api.github.com/repos/baendlorel/archiver/releases/latest";
 const SCRIPT_URL: &str =
-    "https://github.com/baendlorel/archiver/blob/release/archiver-installer.sh";
+    "https://github.com/baendlorel/archiver/releases/download/scripts/archiver-installer.sh";
 
 /// 检查是否有新版本可用（从 GitHub Releases 获取）
 pub fn handler() {
@@ -127,6 +127,11 @@ fn update() {
 
     if script_path.exists() {
         uoe_result!(fs::remove_file(&script_path), "Fail to remove old script");
+        println!(
+            "{} Remove old script: {}",
+            mark::succ(),
+            script_path.force_to_string()
+        );
     }
 
     let status = std::process::Command::new("curl")
@@ -141,6 +146,8 @@ fn update() {
         return;
     }
 
+    println!("{} script downloaded", mark::succ());
+
     // 2. 设置可执行权限
     let status = std::process::Command::new("chmod")
         .arg("+x")
@@ -150,6 +157,8 @@ fn update() {
         eprintln!("{} Failed to chmod update script: {}", mark::fail(), e);
         return;
     }
+
+    println!("{} script is ready, executing...", mark::succ());
 
     // 3. 用 exec 替换当前进程
     let err = std::process::Command::new("sh")

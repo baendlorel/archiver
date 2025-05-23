@@ -20,10 +20,21 @@ case "$OS" in
     *)        echo "Unsupported system: $OS"; exit 1;;
 esac
 
-# 获取最新版本号（始终获取最新）
-VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -1 | cut -d '"' -f4)
+# 解析参数
+VERSION=""
+while getopts "v:" opt; do
+  case $opt in
+    v) VERSION="v${OPTARG#v}" ;;
+    *) echo "Usage: $0 [-v version]"; exit 1 ;;
+  esac
+done
+
+# 获取版本号
 if [ -z "$VERSION" ]; then
+  VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -1 | cut -d '"' -f4)
+  if [ -z "$VERSION" ]; then
     echo "Cannot get latest version"; exit 1
+  fi
 fi
 
 echo "Preparing $BINARY $VERSION ($PLATFORM) ..."
