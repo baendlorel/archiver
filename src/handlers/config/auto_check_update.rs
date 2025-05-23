@@ -2,7 +2,7 @@ use crate::{err_warn, wrap_err_fatal, wrap_result};
 
 use chrono::{Datelike, Local};
 
-use super::data;
+use super::sl;
 use crate::models::{error::ArchiverError, types::ArchiverConfig};
 
 pub fn toggle(status: &str) -> Result<(), ArchiverError> {
@@ -13,9 +13,9 @@ pub fn toggle(status: &str) -> Result<(), ArchiverError> {
         );
     }
 
-    let mut config = wrap_err_fatal!(data::load())?;
+    let mut config = wrap_err_fatal!(sl::load())?;
     config.auto_check_update = status.to_string();
-    wrap_result!(data::save(&config))?;
+    wrap_result!(sl::save(&config))?;
 
     Ok(())
 }
@@ -34,6 +34,6 @@ pub fn overdue(config: &ArchiverConfig) -> bool {
 
 pub fn refresh(config: &mut ArchiverConfig) -> Result<(), ArchiverError> {
     config.last_check_update_date = Local::now().date_naive();
-    wrap_result!(data::save(&config))?;
+    wrap_result!(sl::save(&config))?;
     Ok(())
 }

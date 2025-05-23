@@ -1,7 +1,10 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::misc::{paths, mark};
+use crate::{
+    misc::{mark, paths},
+    models::types::field_style::Grey,
+};
 
 use super::{OperType, field_style};
 
@@ -30,7 +33,7 @@ impl LogEntry {
         };
 
         let remark = if self.remark.is_empty() {
-            field_style::grey(&"(no remark)".to_string())
+            "(no remark)".grey()
         } else {
             let r = paths::apply_alias(&self.remark);
             let padding_count =
@@ -45,7 +48,7 @@ impl LogEntry {
             //     " ".repeat(3),
             // );
             let replacer = format!("\n{}", " ".repeat(padding_count));
-            field_style::grey(&r.replace("\n", replacer.as_str()))
+            r.replace("\n", replacer.as_str()).grey()
         };
 
         let id = if let Some(id) = self.id {
@@ -60,7 +63,7 @@ impl LogEntry {
 
         format!(
             "{} {} - {} {} - {} {}",
-            field_style::grey(&self.time),
+            self.time.grey(),
             status,
             self.oper.to_padded_str(),
             self.arg,

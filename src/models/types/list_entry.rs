@@ -1,7 +1,7 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use super::field_style;
+use super::field_style::Grey;
 use crate::misc::paths;
 
 #[derive(Serialize, Deserialize)]
@@ -59,6 +59,12 @@ impl ListEntry {
             "".to_string()
         };
 
+        let target = if self.is_dir {
+            format!("{}{}", self.target.blue(), std::path::MAIN_SEPARATOR)
+        } else {
+            self.target.to_string()
+        };
+
         let dir = paths::apply_alias(&self.dir);
 
         let get_target_width = || -> usize {
@@ -69,11 +75,11 @@ impl ListEntry {
         };
 
         ListRow {
-            time: field_style::grey(&self.time),
+            time: self.time.grey(),
             id: self.id.magenta().to_string(),
             // id: field_style::id_to_str(self.id),
-            target: field_style::target_color(&self.target, self.is_dir) + &is_restored,
-            dir: field_style::grey(&dir),
+            target: target + &is_restored,
+            dir: dir.grey(),
             _width: ListRowColWidth {
                 time: self.time.len(),
                 id: self.id.to_string().len(),

@@ -4,6 +4,10 @@ use chrono::{Local, NaiveDate};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
+fn default_current_vault_id() -> u32 {
+    0
+}
+
 fn default_auto_check_update() -> String {
     "on".to_string()
 }
@@ -18,6 +22,10 @@ fn default_alias() -> Vec<AliasEntry> {
 
 #[derive(Serialize, Deserialize)]
 pub struct ArchiverConfig {
+    #[serde(default = "default_current_vault_id")]
+    /// 自动检查更新的开关，默认为on
+    pub current_vault_id: u32,
+
     #[serde(default = "default_auto_check_update")]
     /// 自动检查更新的开关，默认为on
     pub auto_check_update: String,
@@ -40,6 +48,7 @@ pub struct AliasEntry {
 impl ArchiverConfig {
     pub fn default() -> ArchiverConfig {
         Self {
+            current_vault_id: 0,
             auto_check_update: "on".to_string(),
             last_check_update_date: Local::now().date_naive(),
             alias: vec![],

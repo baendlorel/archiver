@@ -1,4 +1,4 @@
-use crate::uoe_result;
+use crate::{uoe_result, wrap_result};
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -6,7 +6,10 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::ForceToString;
-use crate::models::types::ArchiverConfig;
+use crate::models::{
+    json_serde::JsonSerde,
+    types::{ArchiverConfig, AutoIncr},
+};
 
 mod consts {
     // 目录
@@ -18,7 +21,7 @@ mod consts {
 
     // 特定文件
     pub const LIST_FILE: &str = "list.jsonl";
-    pub const AUTO_INCR_FILE: &str = "auto-incr";
+    pub const AUTO_INCR_FILE: &str = "auto-incr.json";
     pub const CONFIG_FILE: &str = "config.json";
 }
 
@@ -107,8 +110,20 @@ pub static LIST_FILE_PATH: Lazy<PathBuf> =
     Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::LIST_FILE));
 
 /// 自增主键文件路径
-pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE));
+pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let path = ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE);
+    if !path.exists() {
+        let json = uoe_result!(
+            AutoIncr::default().to_json_string(),
+            "Failed to serialize AutoIncr"
+        );
+        uoe_result!(
+            fs::write(&path, json),
+            "Failed to create auto increment file"
+        );
+    }
+    path
+});
 
 /// 别名映射表
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
@@ -210,5 +225,12 @@ pub fn get_vault_path(name: &str) -> PathBuf {
 }
 
 pub fn get_default_vault_path() -> PathBuf {
-    VAULTS_DIR.join(consts::DEFAULT_VAULT)
+    let path = VAULTS_DIR.join(consts::DEFAULT_VAULT);
+    if !path.exists() {
+        uoe_result!(
+            fs::create_dir_all(&path),
+            "Failed to create DEFAULT_VAULT directory"
+        );
+    }
+    path
 }

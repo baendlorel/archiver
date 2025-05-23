@@ -7,10 +7,10 @@ use crate::{
 
 mod alias;
 pub mod auto_check_update;
-mod data;
 mod display;
+mod sl;
 
-pub use data::load;
+pub use sl::load;
 
 pub fn handler(statement: &Option<Vec<String>>) {
     // 输入arv config，后面没了，就会进入此分支

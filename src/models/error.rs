@@ -232,7 +232,7 @@ macro_rules! uoe_result {
                 } else {
                     format!("{}\n", $s)
                 },
-                error,
+                error.to_string(),
                 file!(),
                 line!(),
                 column!()

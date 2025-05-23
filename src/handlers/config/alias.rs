@@ -7,12 +7,12 @@ use crate::{
     models::{error::ArchiverError, types::AliasEntry},
 };
 
-use super::data;
+use super::sl;
 
 // # 业务函数
 pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
-    let mut config = data::load()?;
+    let mut config = sl::load()?;
 
     let target_index = config
         .alias
@@ -21,7 +21,7 @@ pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
 
     if let Some(index) = target_index {
         config.alias.remove(index);
-        wrap_result!(data::save(&config))?;
+        wrap_result!(sl::save(&config))?;
     } else {
         return err_info!("Alias '{}' with origin '{}' not found", alias, origin);
     }
@@ -31,7 +31,7 @@ pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
 
 pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
-    let mut config = wrap_result!(data::load())?;
+    let mut config = wrap_result!(sl::load())?;
 
     for entry in &config.alias {
         if entry.alias == alias {
@@ -54,7 +54,7 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
         alias: alias.to_string(),
         origin: origin.to_string(),
     });
-    wrap_result!(data::save(&config))?;
+    wrap_result!(sl::save(&config))?;
 
     Ok(())
 }

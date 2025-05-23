@@ -60,12 +60,14 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
 
     // 都没有异常，那么开始归档
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
-    let next_id = auto_incr::next_id();
+    let next_id = auto_incr::archive_id::next();
     let archived_path = vault_path.join(next_id.to_string());
 
     wrap_err_fatal!(fs::rename(&target_path, archived_path))?;
 
     wrap_result!(list::insert(next_id, target_name_str, is_dir, target_dir))?;
+
+    auto_incr::archive_id::update(next_id);
 
     Ok(next_id)
 }

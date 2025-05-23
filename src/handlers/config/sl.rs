@@ -4,7 +4,7 @@ use std::fs;
 
 use crate::{
     misc::paths,
-    models::{error::ArchiverError, types::ArchiverConfig},
+    models::{error::ArchiverError, json_serde::JsonSerde, types::ArchiverConfig},
 };
 
 pub fn load() -> Result<ArchiverConfig, ArchiverError> {
@@ -23,7 +23,7 @@ pub fn load() -> Result<ArchiverConfig, ArchiverError> {
 }
 
 pub fn save(config: &ArchiverConfig) -> Result<(), ArchiverError> {
-    let json_str = wrap_err_fatal!(serde_json::to_string_pretty(config))?;
-    wrap_err_fatal!(fs::write(paths::CONFIG_FILE_PATH.clone(), json_str))?;
+    let json = wrap_err_fatal!(config.to_json_string())?;
+    wrap_err_fatal!(fs::write(paths::CONFIG_FILE_PATH.as_path(), json))?;
     Ok(())
 }
