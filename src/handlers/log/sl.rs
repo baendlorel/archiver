@@ -5,7 +5,7 @@ use owo_colors::OwoColorize;
 use std::{fs, u32};
 
 use super::parse_range;
-use crate::misc::{ForceToString, append_entry, paths};
+use crate::misc::{ForceToString, jsonl, paths};
 use crate::models::error::ArchiverError;
 use crate::models::types::{LogEntry, OperType};
 
@@ -47,7 +47,7 @@ pub fn save(
         id,
     };
 
-    wrap_result!(append_entry(&log_entry, &log_file_path))?;
+    wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
     Ok(())
 }
 

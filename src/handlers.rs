@@ -4,3 +4,4 @@ pub mod log;
 pub mod put;
 pub mod restore;
 pub mod update;
+pub mod vault;

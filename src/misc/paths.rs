@@ -17,7 +17,8 @@ mod consts {
     pub const LOGS_DIR: &str = "logs";
     pub const CORE_DIR: &str = "core";
     pub const VAULTS_DIR: &str = "vaults";
-    pub const DEFAULT_VAULT: &str = "__default";
+    pub const LIST_DIR: &str = "list";
+    pub const DEFAULT_VAULT: &str = "0";
 
     // 特定文件
     pub const LIST_FILE: &str = "list.jsonl";
@@ -79,6 +80,18 @@ pub static VAULTS_DIR: Lazy<PathBuf> = Lazy::new(|| {
         uoe_result!(
             fs::create_dir_all(&path),
             "Failed to create VAULTS_DIR directory"
+        );
+    }
+    path
+});
+
+/// 归档的记录存放的地方
+pub static LIST_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let path = ROOT_DIR.join(consts::LIST_DIR);
+    if !path.exists() {
+        uoe_result!(
+            fs::create_dir_all(&path),
+            "Failed to create LIST_DIR directory"
         );
     }
     path
@@ -220,8 +233,8 @@ pub fn get_years_desc() -> Vec<u32> {
     years
 }
 
-pub fn get_vault_path(name: &str) -> PathBuf {
-    VAULTS_DIR.join(name)
+pub fn get_vault_path(id: u32) -> PathBuf {
+    VAULTS_DIR.join(id.to_string())
 }
 
 pub fn get_default_vault_path() -> PathBuf {
@@ -232,5 +245,11 @@ pub fn get_default_vault_path() -> PathBuf {
             "Failed to create DEFAULT_VAULT directory"
         );
     }
+    path
+}
+
+// todo 这里要添加config的默认vault_id，就能直接获取不需要id了
+pub fn get_list_of_vault(id: u32) -> PathBuf {
+    let path = LIST_DIR.join(id.to_string());
     path
 }
