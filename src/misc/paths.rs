@@ -8,11 +8,13 @@ use std::path::PathBuf;
 use super::ForceToString;
 use crate::models::types::ArchiverConfig;
 
-mod paths {
+mod consts {
     // 目录
     pub const ROOT: &str = ".archiver";
     pub const LOGS_DIR: &str = "logs";
     pub const CORE_DIR: &str = "core";
+    pub const VAULTS_DIR: &str = "vaults";
+    pub const DEFAULT_VAULT: &str = "__default";
 
     // 特定文件
     pub const LIST_FILE: &str = "list.jsonl";
@@ -35,7 +37,7 @@ pub static CWD: Lazy<PathBuf> =
 
 /// 程序主目录
 pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = HOME_DIR.join(paths::ROOT);
+    let path = HOME_DIR.join(consts::ROOT);
     // 检查路径是否存在，不存在则创建
     if !path.exists() {
         uoe_result!(fs::create_dir_all(&path), "Failed to create root directory");
@@ -45,7 +47,7 @@ pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
 
 /// 日志目录
 pub static LOGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(paths::LOGS_DIR);
+    let path = ROOT_DIR.join(consts::LOGS_DIR);
     if !path.exists() {
         uoe_result!(
             fs::create_dir_all(&path),
@@ -57,18 +59,30 @@ pub static LOGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
 
 /// 配置目录
 pub static CORE_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(paths::CORE_DIR);
+    let path = ROOT_DIR.join(consts::CORE_DIR);
     if !path.exists() {
         uoe_result!(
             fs::create_dir_all(&path),
-            "Failed to create core_dir directory"
+            "Failed to create CORE_DIR directory"
+        );
+    }
+    path
+});
+
+/// 归档的文件/文件夹存放的地方
+pub static VAULTS_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let path = ROOT_DIR.join(consts::VAULTS_DIR);
+    if !path.exists() {
+        uoe_result!(
+            fs::create_dir_all(&path),
+            "Failed to create VAULTS_DIR directory"
         );
     }
     path
 });
 
 pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let path = CORE_DIR.join(paths::CONFIG_FILE);
+    let path = CORE_DIR.join(consts::CONFIG_FILE);
     // 从CORE_DIR读取说明CORE_DIR一定存在，下面只看配置文件是否存在
     if !path.exists() {
         let config = ArchiverConfig::default();
@@ -90,7 +104,11 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 
 /// 归档记录文件路径
 pub static LIST_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| ROOT_DIR.join(paths::CORE_DIR).join(paths::LIST_FILE));
+    Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::LIST_FILE));
+
+/// 自增主键文件路径
+pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> =
+    Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE));
 
 /// 别名映射表
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
@@ -114,34 +132,7 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     map
 });
 
-pub fn auto_incr_id() -> u32 {
-    let auto_incr_file = CORE_DIR.join(paths::AUTO_INCR_FILE);
-    if !auto_incr_file.exists() {
-        uoe_result!(
-            fs::write(&auto_incr_file, "1"),
-            "Failed to create auto increment file"
-        );
-        return 1;
-    }
-    let content = uoe_result!(
-        fs::read_to_string(&auto_incr_file),
-        "Failed to read auto increment file"
-    );
-
-    let current_id = uoe_result!(
-        content.trim().parse::<u32>(),
-        "Failed to parse auto increment value"
-    );
-
-    let new_id = 1 + current_id;
-    uoe_result!(
-        fs::write(&auto_incr_file, new_id.to_string()),
-        "Failed to create auto increment file"
-    );
-
-    new_id
-}
-
+/// 将alias应用到一串路径字符串里
 pub fn apply_alias(path_str: &str) -> String {
     use std::path::MAIN_SEPARATOR;
     for (alias, origin) in ALIAS_MAP.iter() {
@@ -187,11 +178,12 @@ pub fn apply_alias(path_str: &str) -> String {
     path_str.to_string()
 }
 
+/// 根据年份获取日志文件路径
 pub fn get_log_path(year: u32) -> PathBuf {
     LOGS_DIR.join(format!("{}.jsonl", year))
 }
 
-/// 获取所有logs文件夹下的日志的年份，从大到小排列
+/// 获取logs文件夹下所有日志的年份，从大到小排列
 pub fn get_years_desc() -> Vec<u32> {
     let mut years = Vec::new();
     if let Ok(entries) = fs::read_dir(&*LOGS_DIR) {
@@ -211,4 +203,12 @@ pub fn get_years_desc() -> Vec<u32> {
     }
     years.sort_by(|a, b| b.cmp(a));
     years
+}
+
+pub fn get_vault_path(name: &str) -> PathBuf {
+    VAULTS_DIR.join(name)
+}
+
+pub fn get_default_vault_path() -> PathBuf {
+    VAULTS_DIR.join(consts::DEFAULT_VAULT)
 }

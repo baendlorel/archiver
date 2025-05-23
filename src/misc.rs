@@ -1,3 +1,4 @@
+pub mod auto_incr;
 pub mod paths;
 
 mod append_entry;

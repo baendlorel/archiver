@@ -16,16 +16,28 @@ curl -fsSL https://github.com/baendlorel/archiver/blob/release/archiver-installe
 
 ## Where does the files go?
 
-Archived files are stored in `~/.archive` where `~` means home directory. You can use following commands to manage your archived files.
+Archived files are stored in `~/.archive` where `~` means home directory.
 
-```text
-.archive          Store all archived files
-  ├logs/          Log files, in form of `jsonl`
-  └core/          Includes important files
-    ├config.json  Configurations
-    ├auto-incr    Auto-increment id for archive id
-    └list.jsonl   List of all archived objects
+`.archiver` structure is as follows:
+
+```mermaid
+graph TD
+    A[.archiver/] --> B[logs/]
+    A  --> C[core/]
+    A  --> D[vaults/]
+    C  --> C1[config.json]
+    C  --> C2[auto-incr]
+    C  --> C3[list.jsonl]
+    D  --> DD1[vault1/]
+    D  --> DD2[vault2/]
+    DD1 --> D1[1]
+    DD1 --> D2[2]
+    DD2 --> D3[3]
 ```
+
+# Commands
+
+You can use following commands to manage your archived objects.
 
 ## Put
 

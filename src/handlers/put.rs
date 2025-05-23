@@ -1,6 +1,6 @@
-use crate::{err_fatal_from_str, err_info, err_warn, wrap_err_fatal, wrap_result};
+use crate::{err_info, err_warn, misc::auto_incr, uoe_option, wrap_err_fatal, wrap_result};
 
-use std::fs;
+use std::{ffi::OsStr, fs, path::PathBuf};
 
 use super::{list, log};
 use crate::{
@@ -25,12 +25,13 @@ pub fn handler(targets: &[String]) {
 
 fn archive(target: &str) -> Result<u32, ArchiverError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
-    let cwd = paths::CWD.clone();
-    let target_path = cwd.join(target);
+    let cwd: std::path::PathBuf = paths::CWD.clone();
+    let target_path = wrap_err_fatal!(cwd.join(target).canonicalize())?;
+    let vault_path = paths::get_default_vault_path();
 
     // 目标不存在则报错
     if !target_path.exists() {
-        return err_info!("'{}' does not exist in current directory.", target);
+        return err_info!("'{}' does not exist.", target_path.force_to_string());
     }
 
     if paths::ROOT_DIR.starts_with(&target_path) {
@@ -40,24 +41,50 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
         );
     }
 
-    // 必须无损转换OsString
-    let cwd_str = cwd.force_to_string();
+    // & 路径相关性检测：不能归档归档器本身、其父目录、其子目录
+    if invalid_target(&target_path) {
+        return err_warn!(
+            "Target cannot be the archiver directory, its parent, or its inner object. Got '{}'",
+            target
+        );
+    }
 
-    let target_name: &std::ffi::OsStr = target_path
-        .file_name()
-        .ok_or(err_fatal_from_str!("Fail to get target name"))?; // 需要fatal
+    // 必须无损转换OsString
+    let target_dir =
+        uoe_option!(target_path.parent(), "Fail to get target directory").force_to_string();
+
+    let target_name: &OsStr = uoe_option!(target_path.file_name(), "Fail to get target name");
 
     // 必须无损转换OsString
     let target_name_str = force_no_loss_string(target_name);
 
     // 都没有异常，那么开始归档
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
-    let root = paths::ROOT_DIR.clone();
-    let next_id = paths::auto_incr_id();
+    let next_id = auto_incr::next_id();
+    let archived_path = vault_path.join(next_id.to_string());
 
-    wrap_err_fatal!(fs::rename(&target_path, root.join(next_id.to_string())))?;
+    wrap_err_fatal!(fs::rename(&target_path, archived_path))?;
 
-    wrap_result!(list::insert(next_id, target_name_str, is_dir, cwd_str))?;
+    wrap_result!(list::insert(next_id, target_name_str, is_dir, target_dir))?;
 
     Ok(next_id)
+}
+
+/// 属于Archiver自己的文件夹，以及其父文件夹，不允许put
+fn invalid_target(target_path: &PathBuf) -> bool {
+    let root = paths::ROOT_DIR.as_path();
+
+    // 这句可以判定target是不是Archiver及其子目录
+    if target_path.starts_with(root) {
+        return true;
+    }
+
+    // 这句可以判定target是不是Archiver的父目录
+    for ancestor in root.ancestors() {
+        if target_path == ancestor {
+            return true;
+        }
+    }
+
+    false
 }
