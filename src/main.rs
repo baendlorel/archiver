@@ -18,7 +18,7 @@ fn apply_command(args: &Args) {
     match &args.command {
         Some(ArvCmd::Put { targets }) => handlers::put::handler(&targets),
         Some(ArvCmd::Restore { ids }) => handlers::restore::handler(&ids),
-        Some(ArvCmd::List { all }) => handlers::list::handler(*all),
+        Some(ArvCmd::List { all, restored }) => handlers::list::handler(*all, *restored),
         Some(ArvCmd::Log { range }) => handlers::log::handler(range),
         Some(ArvCmd::Config { statement }) => handlers::config::handler(&statement),
         Some(ArvCmd::Update) => handlers::update::handler(),
@@ -39,7 +39,10 @@ fn apply_command(args: &Args) {
 fn auto_check_update(args: &Args) {
     let need_checking = match &args.command {
         Some(ArvCmd::Update) => false,
-        Some(ArvCmd::List { all: _ }) => false,
+        Some(ArvCmd::List {
+            all: _,
+            restored: _,
+        }) => false,
         Some(ArvCmd::Log { range: _ }) => false,
         None => false,
         _ => true,

@@ -30,9 +30,13 @@ pub enum ArvCmd {
     /// Show the list of archived objects
     #[command(visible_aliases = ["l", "ls"])]
     List {
-        #[arg[short,long]]
+        /// Show all archived objects
+        #[arg[short, long, group = "list_options"]]
         all: bool,
-        // todo 增加一个--restored的选项，可以只显示被恢复的记录
+
+        /// Show restored objects
+        #[arg[short, long, group = "list_options"]]
+        restored: bool,
     },
 
     /// Show the log of archiving operations

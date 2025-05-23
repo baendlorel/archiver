@@ -259,6 +259,7 @@ macro_rules! uoe_option {
 }
 
 #[macro_export]
+/// 包裹一个不是ArchiverError的Result对象，手动添加stack
 macro_rules! wrap_err_fatal {
     ($o:expr) => {
         match $o {

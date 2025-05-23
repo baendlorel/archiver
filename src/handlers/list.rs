@@ -10,8 +10,8 @@ use crate::models::{
     types::{ListEntry, ListRow, ListRowColWidth},
 };
 
-pub fn handler(all: bool) {
-    log_if_err!(print_list(all));
+pub fn handler(all: bool, restored: bool) {
+    log_if_err!(print_list(all, restored));
 }
 
 pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ArchiverError> {
@@ -82,7 +82,7 @@ pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
     Ok(())
 }
 
-fn print_list(all: bool) -> Result<(), ArchiverError> {
+fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
     let list_file_path = paths::LIST_FILE_PATH.clone();
     if !list_file_path.exists() {
         println!("No archived object yet");
@@ -98,19 +98,19 @@ fn print_list(all: bool) -> Result<(), ArchiverError> {
             continue; // 跳过空行
         }
 
-        let result = wrap_err_fatal!(serde_json::from_str::<ListEntry>(line));
-        if let Ok(entry) = &result {
-            // 设置了all的话，展示全部，否则只展示未恢复的对象
-            if all || !entry.is_restored {
-                counter += 1;
-                let row = entry.to_row();
-                list.push(row);
-            }
-        }
+        match wrap_err_fatal!(serde_json::from_str::<ListEntry>(line)) {
+            Ok(entry) => {
+                // 展示条件为全部展示，或者展示已恢复的，或者展示未恢复的
+                // * all || (restored && entry.is_restored) || (!restored && !entry.is_restored)
+                let display_condition = all || (restored == entry.is_restored);
 
-        if let Err(e) = &result {
-            e.display();
-            continue;
+                // 设置了all的话，展示全部，否则只展示未恢复的对象
+                if display_condition {
+                    counter += 1;
+                    list.push(entry.to_row());
+                }
+            }
+            Err(e) => e.display(),
         }
     }
 
