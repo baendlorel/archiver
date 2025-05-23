@@ -25,14 +25,16 @@ graph TD
     A[.archiver/] --> B[logs/]
     A  --> C[core/]
     A  --> D[vaults/]
+    B  --> B1[2024.jsonl]
+    B  --> B2[2025.jsonl]
     C  --> C1[config.json]
     C  --> C2[auto-incr]
     C  --> C3[list.jsonl]
-    D  --> DD1[vault1/]
-    D  --> DD2[vault2/]
-    DD1 --> D1[1]
-    DD1 --> D2[2]
-    DD2 --> D3[3]
+    D  --> D1[vault1/]
+    D  --> D2[vault2/]
+    D1 --> DD1[1]
+    D1 --> DD2[2]
+    D2 --> DD3[3]
 ```
 
 # Commands
