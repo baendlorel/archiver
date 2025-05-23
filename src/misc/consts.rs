@@ -15,6 +15,10 @@ pub mod mark {
     pub fn warn() -> String {
         "⚠".yellow().to_string()
     }
+
+    pub fn info() -> String {
+        "i".cyan().to_string()
+    }
 }
 
 pub const CONFIG_HELP_TEXT: &str = r#"Show configs:

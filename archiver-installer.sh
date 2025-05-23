@@ -30,7 +30,13 @@ while getopts "v:" opt; do
 done
 
 # 获取版本号
+RESP=""
+VER=""
 if [ -z "$VERSION" ]; then
+  RESP=$(curl -s "https://api.github.com/repos/$REPO/releases/latest");
+  echo "RESP: "$RESP;
+  VER=$(echo "$RESP" | grep '"tag_name"' | head -1 | cut -d '"' -f4);
+  echo "VER: "$VER;
   VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -1 | cut -d '"' -f4)
   if [ -z "$VERSION" ]; then
     echo "Cannot get latest version"; exit 1

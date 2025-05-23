@@ -128,11 +128,18 @@ fn update() {
     if script_path.exists() {
         uoe_result!(fs::remove_file(&script_path), "Fail to remove old script");
         println!(
-            "{} Remove old script: {}",
+            "{} old script: '{}' removed",
             mark::succ(),
             script_path.force_to_string()
         );
     }
+
+    println!(
+        "{} Downloading script from '{}' to '{}'",
+        mark::info(),
+        SCRIPT_URL,
+        script_path.force_to_string()
+    );
 
     let status = std::process::Command::new("curl")
         .arg("-fsSL")
@@ -141,21 +148,40 @@ fn update() {
         .arg(SCRIPT_URL)
         .status();
 
-    if let Err(e) = status {
-        eprintln!("{} Failed to download update script: {}", mark::fail(), e);
-        return;
+    match status {
+        Ok(s) => {
+            if s.success() {
+                println!("{} script downloaded", mark::succ());
+            } else {
+                eprintln!("{} Failed to download update script: {}", mark::fail(), s);
+                return;
+            }
+        }
+        Err(e) => {
+            eprintln!("{} Failed to download update script: {}", mark::fail(), e);
+            return;
+        }
     }
-
-    println!("{} script downloaded", mark::succ());
 
     // 2. 设置可执行权限
     let status = std::process::Command::new("chmod")
         .arg("+x")
         .arg(script_path.force_to_string())
         .status();
-    if let Err(e) = status {
-        eprintln!("{} Failed to chmod update script: {}", mark::fail(), e);
-        return;
+
+    match status {
+        Ok(s) => {
+            if s.success() {
+                println!("{} script chmoded", mark::succ());
+            } else {
+                eprintln!("{} Failed to chmod update script: {}", mark::fail(), s);
+                return;
+            }
+        }
+        Err(e) => {
+            eprintln!("{} Failed to chmod update script: {}", mark::fail(), e);
+            return;
+        }
     }
 
     println!("{} script is ready, executing...", mark::succ());
