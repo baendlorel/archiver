@@ -1,4 +1,4 @@
-use crate::{err_warn, uoe_option};
+use crate::{warn, uoe_option};
 
 use chrono::NaiveDateTime;
 
@@ -36,7 +36,7 @@ pub fn normalize_range(
     // 2. YYYYMM-YYYYMM
     if let Some((a_str, b_str)) = range.split_once('-') {
         if !is_numeric(&a_str) || !is_numeric(&b_str) {
-            return err_warn!("Range must be numeric or *");
+            return warn!("Range must be numeric or *");
         }
 
         let dt_a = if a_str == "*" {
@@ -57,11 +57,11 @@ pub fn normalize_range(
         };
 
         if dt_a > dt_b {
-            return err_warn!("Start date > end date");
+            return warn!("Start date > end date");
         }
 
         return Ok((dt_a, dt_b));
     }
 
-    err_warn!("<range> must be YYYYMM or YYYYMM-YYYYMM")
+    warn!("<range> must be YYYYMM or YYYYMM-YYYYMM")
 }

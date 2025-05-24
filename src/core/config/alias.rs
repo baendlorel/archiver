@@ -1,4 +1,4 @@
-use crate::{err_info, err_warn, wrap_result};
+use crate::{info, warn, wrap_result};
 
 use std::path;
 
@@ -23,7 +23,7 @@ pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
         config.alias.remove(index);
         wrap_result!(sl::save(&config))?;
     } else {
-        return err_info!("Alias '{}' with origin '{}' not found", alias, origin);
+        return info!("Alias '{}' with origin '{}' not found", alias, origin);
     }
 
     Ok(())
@@ -35,14 +35,14 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
 
     for entry in &config.alias {
         if entry.alias == alias {
-            return err_info!(
+            return info!(
                 "Alias '{}' is already bound with origin '{}'",
                 entry.alias,
                 entry.origin
             );
         }
         if entry.origin == origin {
-            return err_info!(
+            return info!(
                 "Origin '{}' is already bound with alias '{}'",
                 entry.origin,
                 entry.alias
@@ -63,11 +63,11 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
 pub fn parse_alias_entry_string(alias_entry: &str) -> Result<(String, String), ArchiverError> {
     if let Some((alias, origin)) = alias_entry.split_once("=") {
         if alias.is_empty() {
-            return err_warn!("alias is empty. Got '{}'", alias_entry);
+            return warn!("alias is empty. Got '{}'", alias_entry);
         }
 
         if origin.is_empty() {
-            return err_warn!("origin is empty. Got '{}'", alias_entry);
+            return warn!("origin is empty. Got '{}'", alias_entry);
         }
 
         // 去掉origin后面的斜杠
@@ -75,15 +75,15 @@ pub fn parse_alias_entry_string(alias_entry: &str) -> Result<(String, String), A
         let origin = origin.trim_end_matches(path::MAIN_SEPARATOR);
 
         if alias == origin {
-            return err_warn!("Alias and origin cannot be the same. Got '{}'", alias_entry);
+            return warn!("Alias and origin cannot be the same. Got '{}'", alias_entry);
         }
 
         if origin == paths::HOME_DIR.force_to_string() || alias == "~" {
-            return err_info!("HOME_DIR already has a default alias '~', no need to set it again.");
+            return info!("HOME_DIR already has a default alias '~', no need to set it again.");
         }
         return Ok((alias.to_string(), origin.to_string()));
     } else {
-        err_warn!(
+        warn!(
             "Alias config string must take the form of 'xxx=/a/b'. Got '{}'",
             alias_entry
         )

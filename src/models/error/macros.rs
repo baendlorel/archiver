@@ -18,7 +18,7 @@ macro_rules! err_fatal_from_str {
 
 #[macro_export]
 /// 创建一个fatal级别的ArchiverError的Result返回，支持字符串模板
-macro_rules! err_fatal {
+macro_rules! fatal {
     ($($arg:tt)*) => {
         Err($crate::err_fatal_from_str!($($arg)*))
     };
@@ -42,7 +42,7 @@ macro_rules! err_info_from_str {
 
 #[macro_export]
 /// 创建一个info级别的ArchiverError的Result返回，支持字符串模板
-macro_rules! err_info {
+macro_rules! info {
     ($($arg:tt)*) => {
         Err($crate::err_info_from_str!($($arg)*))
     };
@@ -66,7 +66,7 @@ macro_rules! err_warn_from_str {
 
 #[macro_export]
 /// 创建一个warn级别的ArchiverError的Result返回，支持字符串模板
-macro_rules! err_warn {
+macro_rules! warn {
     ($($arg:tt)*) => {
         Err($crate::err_warn_from_str!($($arg)*))
     };
@@ -95,7 +95,7 @@ macro_rules! uoe_result {
 }
 
 #[macro_export]
-/// 包裹一个Option对象，让其在触发expect的时候可以附带代码位置
+/// 包裹Option对象，让其在触发expect的时候可以附带代码位置
 macro_rules! uoe_option {
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|| {
@@ -112,19 +112,16 @@ macro_rules! uoe_option {
 }
 
 #[macro_export]
-/// 包裹一个不是ArchiverError的Result对象，手动添加stack
-macro_rules! wrap_err_fatal {
+/// 包裹错误并手动添加stack，支持
+/// - 不是ArchiverError的Result对象
+/// - Option对象（需第二个参数message）
+macro_rules! as_fatal {
     ($o:expr) => {
         match $o {
             Ok(val) => Ok(val),
             Err(e) => Err($crate::err_fatal_from_str!("{}", e.to_string())),
         }
     };
-}
-
-#[macro_export]
-/// 包裹一个Option对象，手动添加stack
-macro_rules! wrap_option_err_fatal {
     ($o:expr, $e:expr) => {
         match $o {
             Some(val) => Ok(val),

@@ -1,4 +1,4 @@
-use crate::{err_info, wrap_err_fatal, wrap_result};
+use crate::{as_fatal, info, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::fs;
@@ -46,7 +46,7 @@ pub fn find(id: u32) -> Result<(ListEntry, usize, PathBuf), ArchiverError> {
         }
     }
 
-    err_info!("id:{} cannot be found", id)
+    info!("id:{} cannot be found", id)
 }
 
 pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
@@ -56,7 +56,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
         return Ok(());
     }
 
-    let content = wrap_err_fatal!(fs::read_to_string(list_file_path))?;
+    let content = as_fatal!(fs::read_to_string(list_file_path))?;
 
     let mut list: Vec<ListRow> = vec![];
     let mut counter = 0;
@@ -65,7 +65,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
             continue; // 跳过空行
         }
 
-        match wrap_err_fatal!(serde_json::from_str::<ListEntry>(line)) {
+        match as_fatal!(serde_json::from_str::<ListEntry>(line)) {
             Ok(entry) => {
                 // 展示条件为全部展示，或者展示已恢复的，或者展示未恢复的
                 // * all || (restored && entry.is_restored) || (!restored && !entry.is_restored)

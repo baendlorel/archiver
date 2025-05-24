@@ -1,4 +1,4 @@
-use crate::{err_warn, wrap_err_fatal, wrap_result};
+use crate::{warn, as_fatal, wrap_result};
 
 use chrono::Datelike;
 
@@ -10,13 +10,13 @@ use crate::{
 
 pub fn toggle(status: &str) -> Result<(), ArchiverError> {
     if status != "on" && status != "off" {
-        return err_warn!(
+        return warn!(
             "Status of auto check update must be 'on' or 'off', but got '{}'",
             status
         );
     }
 
-    let mut config = wrap_err_fatal!(sl::load())?;
+    let mut config = as_fatal!(sl::load())?;
     config.auto_check_update = status.to_string();
     wrap_result!(sl::save(&config))?;
 

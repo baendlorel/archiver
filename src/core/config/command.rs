@@ -1,7 +1,7 @@
 use std::process::exit;
 
 use crate::{
-    err_info,
+    info,
     misc::{CONFIG_VALID_STMT, mark},
     models::error::ArchiverError,
 };
@@ -47,20 +47,20 @@ pub fn parse_command(statement: &Option<Vec<String>>) -> ConfigCommand {
             }
 
             // split后不止一项，但现有的配置语句一定是要参数的，所以不成立，返回
-            return err_info!("got no value");
+            return info!("got no value");
         }
 
         // * 进入配置语句解析环节
         // 配置语句（目前）必须是2个词的，第一个词是<item>.<dirv>，第二个是<value>
         if stmt.len() != 2 {
-            return err_info!("statement must contain 2 words exactly");
+            return info!("statement must contain 2 words exactly");
         }
 
         // 解析<item>.<dirv>
         let item_dirv = stmt[0].split_once(".");
         if item_dirv.is_none() {
             // 只输入了配置项的名字，打印所有配置项
-            return err_info!("missing directive");
+            return info!("missing directive");
         }
 
         let item_dirv = item_dirv.unwrap();
@@ -79,15 +79,15 @@ pub fn parse_command(statement: &Option<Vec<String>>) -> ConfigCommand {
                     add: None,
                     remove: Some(arg.to_string()),
                 }), // config::remove_alias(arg),
-                _ => return err_info!("invalid directive, must be `add`/`remove`"),
+                _ => return info!("invalid directive, must be `add`/`remove`"),
             },
             "auto-check-update" => match dirv {
                 "set" => Ok(ConfigCommand::AutoCheckUpdate {
                     set: arg.to_string(),
                 }), // config::auto_check_update(arg),
-                _ => return err_info!("invalid directive, must be `set`"),
+                _ => return info!("invalid directive, must be `set`"),
             },
-            _ => return err_info!("unsupported config item"),
+            _ => return info!("unsupported config item"),
         }
     };
 

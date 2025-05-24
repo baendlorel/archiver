@@ -1,4 +1,4 @@
-use crate::{wrap_err_fatal, wrap_option_err_fatal};
+use crate::as_fatal;
 
 use chrono::{Datelike, Local, Months, NaiveDate, NaiveDateTime};
 
@@ -67,18 +67,18 @@ pub fn to_dt_string(date_time: &NaiveDateTime) -> String {
 /// 将字符串转化为无时区日期
 /// - 格式: 20250101
 pub fn parse_compact_ymd(ymd: &str) -> Result<NaiveDate, ArchiverError> {
-    wrap_err_fatal!(NaiveDate::parse_from_str(ymd, "%Y%m%d"))
+    as_fatal!(NaiveDate::parse_from_str(ymd, "%Y%m%d"))
 }
 
 /// 找到这个月的最后一天
 pub fn to_last_date(date: &NaiveDate) -> Result<NaiveDate, ArchiverError> {
     // 第一个unwrap可以直接使用
-    let first_date = wrap_option_err_fatal!(date.with_day(1), "Failed to get first date")?;
-    let next_month = wrap_option_err_fatal!(
+    let first_date = as_fatal!(date.with_day(1), "Failed to get first date")?;
+    let next_month = as_fatal!(
         first_date.checked_add_months(Months::new(1)),
         "Fail to add month"
     )?;
 
-    let last_date = wrap_option_err_fatal!(next_month.pred_opt(), "Fail to get pred date")?;
+    let last_date = as_fatal!(next_month.pred_opt(), "Fail to get pred date")?;
     Ok(last_date)
 }

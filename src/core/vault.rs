@@ -1,4 +1,4 @@
-use crate::{err_info, uoe_option, uoe_result, wrap_result};
+use crate::{info, uoe_option, uoe_result, wrap_result};
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -36,7 +36,7 @@ pub fn get_name(id: u32) -> String {
 pub fn use_by_name(name: &str) -> Result<(), ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_none() {
-        return err_info!("Vault '{}' not found", name);
+        return info!("Vault '{}' not found", name);
     }
 
     // 更新current_vault_id
@@ -52,7 +52,7 @@ pub fn use_by_name(name: &str) -> Result<(), ArchiverError> {
 pub fn create(name: &str, remark: &Option<String>) -> Result<Vault, ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_some() {
-        return err_info!("Vault with the same name '{}' already exists", name);
+        return info!("Vault with the same name '{}' already exists", name);
     }
 
     let vault = Vault::new(name, remark.clone());
@@ -74,7 +74,7 @@ pub fn display() {
 pub fn remove(name: &str) -> Result<(), ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_none() {
-        return err_info!("Vault '{}' not found", name);
+        return info!("Vault '{}' not found", name);
     }
 
     // todo 下面将vault标记为删除

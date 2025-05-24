@@ -1,4 +1,4 @@
-use crate::wrap_err_fatal;
+use crate::as_fatal;
 
 use serde::{Serialize, de::DeserializeOwned};
 use std::{fs, io::Write, path::Path};
@@ -11,10 +11,10 @@ where
     T: ?Sized + Serialize + DeserializeOwned + SerdeJson,
 {
     // 序列化为JSON
-    let json_line = wrap_err_fatal!(entry.to_json_line())?;
+    let json_line = as_fatal!(entry.to_json_line())?;
 
     // 以追加模式打开文件
-    let mut file = wrap_err_fatal!(
+    let mut file = as_fatal!(
         fs::OpenOptions::new()
             .create(true)
             .append(true)
@@ -22,7 +22,7 @@ where
     )?;
 
     // 写入
-    wrap_err_fatal!(file.write_all(format!("{}\n", json_line).as_bytes()))?;
+    as_fatal!(file.write_all(format!("{}\n", json_line).as_bytes()))?;
     Ok(())
 }
 
@@ -36,7 +36,7 @@ where
     }
 
     // 读取文件内容
-    let content = wrap_err_fatal!(fs::read_to_string(file_path))?;
+    let content = as_fatal!(fs::read_to_string(file_path))?;
 
     let mut list: Vec<T> = vec![];
     for line in content.lines() {
@@ -63,11 +63,11 @@ where
 {
     let mut content: Vec<String> = vec![];
     for entry in list {
-        let l = wrap_err_fatal!(entry.to_json_line())?;
+        let l = as_fatal!(entry.to_json_line())?;
         content.push(l);
     }
 
-    wrap_err_fatal!(fs::write(
+    as_fatal!(fs::write(
         file_path,
         format!("{}\n", content.join("\n")).as_bytes()
     ))?;

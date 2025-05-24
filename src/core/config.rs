@@ -17,9 +17,7 @@ pub fn display(config_item: &Option<String>) {
 }
 
 pub fn add_alias(arg: &str) {
-    let oper = OperType::Config {
-        option: "alias.add".to_string(),
-    };
+    let oper = OperType::Config("alias.add".to_string());
     match alias::set_alias(&arg) {
         Ok(_) => {
             let msg = format!("Alias '{}' is set successfully.", arg);
@@ -30,9 +28,7 @@ pub fn add_alias(arg: &str) {
 }
 
 pub fn remove_alias(arg: &str) {
-    let oper = OperType::Config {
-        option: "alias.remove".to_string(),
-    };
+    let oper = OperType::Config("alias.remove".to_string());
 
     match alias::remove_alias(&arg) {
         Ok(_) => {
@@ -44,9 +40,7 @@ pub fn remove_alias(arg: &str) {
 }
 
 pub fn auto_check_update(arg: &str) {
-    let oper = OperType::Config {
-        option: "auto-check-update".to_string(),
-    };
+    let oper = OperType::Config("auto-check-update".to_string());
 
     match auto_check_update::toggle(&arg) {
         Ok(_) => {

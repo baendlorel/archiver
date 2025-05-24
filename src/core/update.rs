@@ -1,4 +1,4 @@
-use crate::{err_info, log_if_err, uoe_result};
+use crate::{info, log_if_err, uoe_result};
 
 use std::fs;
 use std::os::unix::process::CommandExt;
@@ -70,14 +70,14 @@ pub fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     let output = match output {
         Ok(o) => o,
         Err(e) => {
-            return err_info!("curl failed: {}", e);
+            return info!("curl failed: {}", e);
         }
     };
 
     let json = match String::from_utf8(output.stdout) {
         Ok(s) => s,
         Err(e) => {
-            return err_info!("output decode failed: {}", e.to_string());
+            return info!("output decode failed: {}", e.to_string());
         }
     };
 
@@ -89,7 +89,7 @@ pub fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
         .unwrap_or("");
 
     if latest_version.is_empty() {
-        return err_info!("Failed to parse latest version from GitHub releases");
+        return info!("Failed to parse latest version from GitHub releases");
     }
 
     let latest = Version::from(latest_version);
