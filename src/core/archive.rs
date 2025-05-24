@@ -1,4 +1,4 @@
-use crate::{as_fatal, info, uoe_option, warn, wrap_result};
+use crate::{as_fatal, info, must_some, warn, wrap_result};
 
 use std::{
     ffi::{OsStr, OsString},
@@ -40,9 +40,9 @@ pub fn put(target: &str) -> Result<u32, ArchiverError> {
 
     // 必须无损转换OsString
     let target_dir =
-        uoe_option!(target_path.parent(), "Fail to get target directory").force_to_string();
+        must_some!(target_path.parent(), "Fail to get target directory").force_to_string();
 
-    let target_name: &OsStr = uoe_option!(target_path.file_name(), "Fail to get target name");
+    let target_name: &OsStr = must_some!(target_path.file_name(), "Fail to get target name");
 
     // 必须无损转换OsString
     let target_name_str = force_no_loss_string(target_name);

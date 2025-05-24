@@ -1,4 +1,4 @@
-use crate::uoe_result;
+use crate::must_ok;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -33,7 +33,7 @@ macro_rules! ensure_dir {
         once_cell::sync::Lazy::new(|| {
             let path = $e;
             if !path.exists() {
-                crate::uoe_result!(
+                $crate::must_ok!(
                     fs::create_dir_all(&path),
                     format!("Failed to create directory: {}", path.force_to_string())
                 );
@@ -48,23 +48,23 @@ macro_rules! ensure_dir {
 /// 用户文件夹
 #[cfg(feature = "dev")]
 pub static HOME_DIR: Lazy<PathBuf> =
-    Lazy::new(|| uoe_result!(std::env::current_dir(), "Failed to get current directory"));
+    Lazy::new(|| must_ok!(std::env::current_dir(), "Failed to get current directory"));
 
 /// 用户文件夹
 #[cfg(not(feature = "dev"))]
 pub static HOME_DIR: Lazy<PathBuf> =
-    Lazy::new(|| crate::uoe_option!(dirs::home_dir(), "Failed to get home directory"));
+    Lazy::new(|| crate::must_some!(dirs::home_dir(), "Failed to get home directory"));
 
 /// 当前工作目录
 pub static CWD: Lazy<PathBuf> =
-    Lazy::new(|| uoe_result!(std::env::current_dir(), "Failed to get current directory"));
+    Lazy::new(|| must_ok!(std::env::current_dir(), "Failed to get current directory"));
 
 /// 程序主目录
 pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let path = HOME_DIR.join(consts::ROOT);
     // 检查路径是否存在，不存在则创建
     if !path.exists() {
-        uoe_result!(fs::create_dir_all(&path), "Failed to create root directory");
+        must_ok!(fs::create_dir_all(&path), "Failed to create root directory");
     }
     path
 });
@@ -92,8 +92,8 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     if !path.exists() {
         let config = ArchiverConfig::default();
         // 不能使用config::save，因为此函数会用到CONFIG_FILE_PATH导致循环引用
-        let json_str = uoe_result!(config.to_formatted_string(), "");
-        uoe_result!(fs::write(&path, json_str), "");
+        let json_str = must_ok!(config.to_formatted_string(), "");
+        must_ok!(fs::write(&path, json_str), "");
         return path;
     }
 
@@ -114,11 +114,11 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let path = ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE);
     if !path.exists() {
-        let json = uoe_result!(
+        let json = must_ok!(
             AutoIncr::default().to_formatted_string(),
             "Failed to serialize AutoIncr"
         );
-        uoe_result!(
+        must_ok!(
             fs::write(&path, json),
             "Failed to create auto increment file"
         );
@@ -146,12 +146,12 @@ pub static VAULTS_FILE_PATH: Lazy<PathBuf> =
 /// - 专门给下面的apply_alias函数使用
 /// - 该表存放在配置文件中
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
-    let content = uoe_result!(
+    let content = must_ok!(
         fs::read_to_string(CONFIG_FILE_PATH.as_path()),
         "Cannot read config file"
     );
 
-    let config = uoe_result!(
+    let config = must_ok!(
         serde_json::from_str::<ArchiverConfig>(&content),
         "Cannot parse config file"
     );
@@ -252,14 +252,14 @@ pub fn get_years_desc() -> Vec<i32> {
 /// 获取所有库的list路径
 /// - 该函数会遍历VAULTS_DIR下的所有文件夹
 pub fn get_all_list_paths() -> Vec<PathBuf> {
-    let entries: fs::ReadDir = uoe_result!(
+    let entries: fs::ReadDir = must_ok!(
         fs::read_dir(VAULTS_DIR.as_path()),
         "Failed get_lists_of_all_vaults"
     );
 
     entries
         .map(|entry| {
-            let entry = uoe_result!(entry, "Failed to read entry");
+            let entry = must_ok!(entry, "Failed to read entry");
             entry.path()
         })
         .collect()
@@ -268,7 +268,7 @@ pub fn get_all_list_paths() -> Vec<PathBuf> {
 pub fn get_default_vault_path() -> PathBuf {
     let path = VAULTS_DIR.join(consts::DEFAULT_VAULT);
     if !path.exists() {
-        uoe_result!(
+        must_ok!(
             fs::create_dir_all(&path),
             "Failed to create DEFAULT_VAULT directory"
         );

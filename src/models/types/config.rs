@@ -1,4 +1,4 @@
-use crate::uoe_result;
+use crate::must_ok;
 
 use chrono::NaiveDate;
 use once_cell::sync::Lazy;
@@ -93,12 +93,12 @@ impl ArchiverConfig {
 }
 
 pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
-    let content = uoe_result!(
+    let content = must_ok!(
         fs::read_to_string(paths::CONFIG_FILE_PATH.as_path()),
         "Cannot read config file"
     );
 
-    uoe_result!(
+    must_ok!(
         serde_json::from_str::<ArchiverConfig>(&content),
         "Cannot parse config file"
     )

@@ -1,4 +1,4 @@
-use crate::{info, log_if_err, uoe_result};
+use crate::{info, log_if_err, must_ok};
 
 use std::fs;
 use std::os::unix::process::CommandExt;
@@ -101,7 +101,7 @@ pub fn reinstall() {
     let script_path = paths::ROOT_DIR.join("archiver-installer.sh");
 
     if script_path.exists() {
-        uoe_result!(fs::remove_file(&script_path), "Fail to remove old script");
+        must_ok!(fs::remove_file(&script_path), "Fail to remove old script");
         println!(
             "{} old script: '{}' removed",
             mark::succ(),

@@ -1,4 +1,4 @@
-use crate::{warn, uoe_option};
+use crate::{must_some, warn};
 
 use chrono::NaiveDateTime;
 
@@ -28,8 +28,8 @@ pub fn normalize_range(
         let d_b = dt::to_last_date(&d_a)?;
 
         // 这里and_hms_opt不会错，要也是dt的parse有错,所以使用uoe_option宏
-        let dt_a = uoe_option!(d_a.and_hms_opt(0, 0, 0), "Failed to get dt_a");
-        let dt_b = uoe_option!(d_b.and_hms_opt(23, 59, 59), "Failed to get dt_b");
+        let dt_a = must_some!(d_a.and_hms_opt(0, 0, 0), "Failed to get dt_a");
+        let dt_b = must_some!(d_b.and_hms_opt(23, 59, 59), "Failed to get dt_b");
         return Ok((dt_a, dt_b));
     }
 
@@ -44,7 +44,7 @@ pub fn normalize_range(
         } else {
             let d = dt::parse_compact_ymd(&format!("{}01", a_str))?;
             // 这里and_hms_opt不会错，要也是dt的parse有错,所以使用uoe_option宏
-            uoe_option!(d.and_hms_opt(0, 0, 0), "Failed to create start dt")
+            must_some!(d.and_hms_opt(0, 0, 0), "Failed to create start dt")
         };
 
         let dt_b = if b_str == "*" {
@@ -53,7 +53,7 @@ pub fn normalize_range(
             let d = dt::parse_compact_ymd(&format!("{}01", b_str))?;
             let dt = dt::to_last_date(&d)?;
             // 这里and_hms_opt不会错，要也是dt的parse有错,所以使用uoe_option宏
-            uoe_option!(dt.and_hms_opt(23, 59, 59), "Failed to create end dt")
+            must_some!(dt.and_hms_opt(23, 59, 59), "Failed to create end dt")
         };
 
         if dt_a > dt_b {

@@ -73,8 +73,10 @@ macro_rules! warn {
 }
 
 #[macro_export]
-/// 包裹一个Result对象，让其在触发expect报错的时候可以附带代码位置
-macro_rules! uoe_result {
+/// 包裹不允许失败的Result对象
+/// - 以unwrap_or_else处理
+/// - 为Err会直接panic
+macro_rules! must_ok {
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|error| {
             panic!(
@@ -95,8 +97,10 @@ macro_rules! uoe_result {
 }
 
 #[macro_export]
-/// 包裹Option对象，让其在触发expect的时候可以附带代码位置
-macro_rules! uoe_option {
+/// 包裹不允许为None的Option对象
+/// - 以unwrap_or_else处理
+/// - 为None会直接panic
+macro_rules! must_some {
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|| {
             panic!(
@@ -112,8 +116,8 @@ macro_rules! uoe_option {
 }
 
 #[macro_export]
-/// 包裹错误并手动添加stack，支持
-/// - 不是ArchiverError的Result对象
+/// 包裹Result或Option，并叠加stack，支持：
+/// - 不含ArchiverError的Result对象
 /// - Option对象（需第二个参数message）
 macro_rules! as_fatal {
     ($o:expr) => {
@@ -131,7 +135,7 @@ macro_rules! as_fatal {
 }
 
 #[macro_export]
-/// 包裹一个Result<_,ArchiverError>对象，继承其stack
+/// 包裹Result<_,ArchiverError>，叠加stack
 macro_rules! wrap_result {
     ($o:expr) => {
         match $o {
@@ -155,7 +159,7 @@ macro_rules! wrap_result {
 }
 
 #[macro_export]
-/// 展示一个ArchiverError的错误，但只是看看，没关系，继续执行后面的
+/// 展示一个ArchiverError的错误，但只是看看，依然继续执行后面的
 macro_rules! log_if_err {
     ($e:expr) => {
         $e.map_err(|e| e.display()).ok()

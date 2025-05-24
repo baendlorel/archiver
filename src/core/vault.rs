@@ -1,4 +1,4 @@
-use crate::{info, uoe_option, uoe_result, wrap_result};
+use crate::{info, must_ok, must_some, wrap_result};
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ use crate::{
 };
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
-    let vaults = uoe_result!(
+    let vaults = must_ok!(
         jsonl::load::<Vault>(&paths::VAULTS_FILE_PATH),
         "Failed to load vaults data"
     );
@@ -25,7 +25,7 @@ static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
 
 /// 根据vault_id获取vault名字，用于log、list等展示
 pub fn get_name(id: u32) -> String {
-    let vault = uoe_option!(
+    let vault = must_some!(
         VAULT_MAP.get(&id),
         format!("Vault with id:{} not found", id)
     );

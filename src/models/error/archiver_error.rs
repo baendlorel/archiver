@@ -1,6 +1,6 @@
 use owo_colors::OwoColorize;
 
-pub enum Level {
+pub enum ArchiverErrorLevel {
     Fatal,
     Warn,
     Info,
@@ -11,18 +11,18 @@ const FATAL: &str = "!"; // \u{2757};
 const WARN: &str = "⚠";
 const INFO: &str = "i"; // \u{2139}
 
-impl Level {
+impl ArchiverErrorLevel {
     pub fn to_string_styled(&self) -> String {
         match self {
-            Level::Info => format!("{} {}", INFO, "Info")
+            ArchiverErrorLevel::Info => format!("{} {}", INFO, "Info")
                 .cyan()
                 .underline()
                 .to_string(),
-            Level::Warn => format!("{} {}", WARN, "Warn")
+            ArchiverErrorLevel::Warn => format!("{} {}", WARN, "Warn")
                 .yellow()
                 .underline()
                 .to_string(),
-            Level::Fatal => format!("{} {}", FATAL, "Fatal")
+            ArchiverErrorLevel::Fatal => format!("{} {}", FATAL, "Fatal")
                 .red()
                 .underline()
                 .to_string(),
@@ -31,9 +31,9 @@ impl Level {
 
     pub fn to_string(&self) -> String {
         match self {
-            Level::Info => format!("{}", "Info"),
-            Level::Warn => format!("{}", "Warn"),
-            Level::Fatal => format!("{}", "Fatal"),
+            ArchiverErrorLevel::Info => format!("{}", "Info"),
+            ArchiverErrorLevel::Warn => format!("{}", "Warn"),
+            ArchiverErrorLevel::Fatal => format!("{}", "Fatal"),
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct StackFrame {
 }
 
 pub struct ArchiverError {
-    pub level: Level,
+    pub level: ArchiverErrorLevel,
     pub message: String,
     pub stack: Vec<StackFrame>,
 }
@@ -57,7 +57,7 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            level: Level::Info,
+            level: ArchiverErrorLevel::Info,
         }
     }
 
@@ -65,7 +65,7 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            level: Level::Warn,
+            level: ArchiverErrorLevel::Warn,
         }
     }
 
@@ -73,7 +73,7 @@ impl ArchiverError {
         Self {
             message,
             stack,
-            level: Level::Fatal,
+            level: ArchiverErrorLevel::Fatal,
         }
     }
 
@@ -106,7 +106,7 @@ impl ArchiverError {
     /// - 生产环境下，仅fatal报错展示stack信息
     fn to_log(&self) -> String {
         match self.level {
-            Level::Fatal => format!("{}\n{}", self.message, self.get_stack_string()),
+            ArchiverErrorLevel::Fatal => format!("{}\n{}", self.message, self.get_stack_string()),
             _ => self.message.clone(),
         }
     }
@@ -133,7 +133,7 @@ impl ArchiverError {
     /// - 生产环境下，仅fatal报错包含stack信息
     pub fn to_string(&self) -> String {
         match self.level {
-            Level::Fatal => {
+            ArchiverErrorLevel::Fatal => {
                 let stack_info = self.get_stack_string();
                 return format!(
                     "{} - {}\n{}",
