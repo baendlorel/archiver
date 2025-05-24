@@ -7,7 +7,7 @@ pub trait JsonSerde: Sized + Serialize + DeserializeOwned {
     }
 
     /// 把json转换为好看格式的字符串
-    fn to_json_string(&self) -> serde_json::Result<String> {
+    fn to_formatted_string(&self) -> serde_json::Result<String> {
         serde_json::to_string_pretty(self)
     }
 

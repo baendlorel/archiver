@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn save(auto_incr: &AutoIncr) -> Result<(), ArchiverError> {
-    let json = wrap_err_fatal!(auto_incr.to_json_string())?;
+    let json = wrap_err_fatal!(auto_incr.to_formatted_string())?;
     wrap_err_fatal!(fs::write(paths::AUTO_INCR_FILE_PATH.as_path(), json))?;
     Ok(())
 }

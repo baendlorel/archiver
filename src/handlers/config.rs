@@ -10,7 +10,7 @@ pub mod auto_check_update;
 mod display;
 mod sl;
 
-pub use sl::load;
+pub use sl::{load, save};
 
 pub fn handler(statement: &Option<Vec<String>>) {
     // 输入arv config，后面没了，就会进入此分支

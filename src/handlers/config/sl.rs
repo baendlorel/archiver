@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub fn save(config: &ArchiverConfig) -> Result<(), ArchiverError> {
-    let json = wrap_err_fatal!(config.to_json_string())?;
+    let json = wrap_err_fatal!(config.to_formatted_string())?;
     wrap_err_fatal!(fs::write(paths::CONFIG_FILE_PATH.as_path(), json))?;
     Ok(())
 }

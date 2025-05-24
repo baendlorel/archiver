@@ -22,15 +22,35 @@ mod consts {
 
     // 特定文件
     pub const LIST_FILE: &str = "list.jsonl";
+    pub const VAULTS_FILE: &str = "vaults.jsonl";
     pub const AUTO_INCR_FILE: &str = "auto-incr.json";
     pub const CONFIG_FILE: &str = "config.json";
 }
+
+/// 确保文件夹路径存在的宏，仅在本文件范围使用
+macro_rules! ensure_dir {
+    ($e:expr) => {
+        once_cell::sync::Lazy::new(|| {
+            let path = $e;
+            if !path.exists() {
+                crate::uoe_result!(
+                    fs::create_dir_all(&path),
+                    format!("Failed to create directory: {}", path.force_to_string())
+                );
+            }
+            path
+        })
+    };
+}
+
+// # 常用路径
 
 /// 用户文件夹
 #[cfg(feature = "dev")]
 pub static HOME_DIR: Lazy<PathBuf> =
     Lazy::new(|| uoe_result!(std::env::current_dir(), "Failed to get current directory"));
 
+/// 用户文件夹
 #[cfg(not(feature = "dev"))]
 pub static HOME_DIR: Lazy<PathBuf> =
     Lazy::new(|| crate::uoe_option!(dirs::home_dir(), "Failed to get home directory"));
@@ -50,62 +70,58 @@ pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
 });
 
 /// 日志目录
-pub static LOGS_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(consts::LOGS_DIR);
-    if !path.exists() {
-        uoe_result!(
-            fs::create_dir_all(&path),
-            "Failed to create logs_dir directory"
-        );
-    }
-    path
-});
+pub static LOGS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::LOGS_DIR));
 
 /// 配置目录
-pub static CORE_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(consts::CORE_DIR);
-    if !path.exists() {
-        uoe_result!(
-            fs::create_dir_all(&path),
-            "Failed to create CORE_DIR directory"
-        );
-    }
-    path
-});
+pub static CORE_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::CORE_DIR));
 
 /// 归档的文件/文件夹存放的地方
-pub static VAULTS_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(consts::VAULTS_DIR);
-    if !path.exists() {
-        uoe_result!(
-            fs::create_dir_all(&path),
-            "Failed to create VAULTS_DIR directory"
-        );
-    }
-    path
-});
+pub static VAULTS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::VAULTS_DIR));
 
 /// 归档的记录存放的地方
-pub static LIST_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(consts::LIST_DIR);
-    if !path.exists() {
-        uoe_result!(
-            fs::create_dir_all(&path),
-            "Failed to create LIST_DIR directory"
-        );
-    }
-    path
-});
+pub static LIST_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::LIST_DIR));
 
+/// 配置文件路径
+/// - 该文件存放在CORE_DIR下
+/// - 如果文件不存在，则创建一个默认的配置文件。因为配置文件总要读取，必须存在
+/// - 如果是目录，则panic
 pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let path = CORE_DIR.join(consts::CONFIG_FILE);
-    // 从CORE_DIR读取说明CORE_DIR一定存在，下面只看配置文件是否存在
+    // 从CORE_DIR读取确保了CORE_DIR一定存在
+    // 下面只看配置文件是否存在
     if !path.exists() {
         let config = ArchiverConfig::default();
         // 不能使用config::save，因为此函数会用到CONFIG_FILE_PATH导致循环引用
-        let json_str = uoe_result!(serde_json::to_string_pretty(&config), "");
+        let json_str = uoe_result!(config.to_formatted_string(), "");
         uoe_result!(fs::write(&path, json_str), "");
         return path;
+    }
+
+    if path.is_dir() {
+        panic!(
+            "'{}' should be a json file, but got a directory",
+            path.force_to_string()
+        );
+    }
+
+    path
+});
+
+/// 自增主键文件路径
+/// - 该文件存放在CORE_DIR下
+/// - 如果文件不存在，则创建一个默认的
+/// - 如果是目录，则panic
+pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let path = ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE);
+    if !path.exists() {
+        let json = uoe_result!(
+            AutoIncr::default().to_formatted_string(),
+            "Failed to serialize AutoIncr"
+        );
+        uoe_result!(
+            fs::write(&path, json),
+            "Failed to create auto increment file"
+        );
     }
 
     if path.is_dir() {
@@ -122,23 +138,13 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 pub static LIST_FILE_PATH: Lazy<PathBuf> =
     Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::LIST_FILE));
 
-/// 自增主键文件路径
-pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE);
-    if !path.exists() {
-        let json = uoe_result!(
-            AutoIncr::default().to_json_string(),
-            "Failed to serialize AutoIncr"
-        );
-        uoe_result!(
-            fs::write(&path, json),
-            "Failed to create auto increment file"
-        );
-    }
-    path
-});
+/// 库列表文件路径
+pub static VAULTS_FILE_PATH: Lazy<PathBuf> =
+    Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::VAULTS_FILE));
 
 /// 别名映射表
+/// - 专门给下面的apply_alias函数使用
+/// - 该表存放在配置文件中
 static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     let content = uoe_result!(
         fs::read_to_string(CONFIG_FILE_PATH.as_path()),
@@ -159,6 +165,8 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
 
     map
 });
+
+// # 与路径相关的函数
 
 /// 将alias应用到一串路径字符串里
 pub fn apply_alias(path_str: &str) -> String {
@@ -249,7 +257,3 @@ pub fn get_default_vault_path() -> PathBuf {
 }
 
 // todo 这里要添加config的默认vault_id，就能直接获取不需要id了
-pub fn get_list_of_vault(id: u32) -> PathBuf {
-    let path = LIST_DIR.join(id.to_string());
-    path
-}

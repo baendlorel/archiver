@@ -283,11 +283,11 @@ macro_rules! wrap_result {
                     col: column!(),
                     module_path: module_path!(),
                 });
-                return Err($crate::models::error::ArchiverError {
+                Err($crate::models::error::ArchiverError {
                     message: e.message,
                     stack,
                     level: e.level,
-                });
+                })
             }
         }
     };
