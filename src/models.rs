@@ -1,5 +1,8 @@
 pub mod error;
 pub mod types;
 
-// trait
-pub mod json_serde;
+/// json序列化
+pub mod serde_json;
+
+/// NaiveDateTime序列化
+pub mod serde_ndt;

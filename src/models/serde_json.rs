@@ -1,6 +1,6 @@
 use serde::{Serialize, de::DeserializeOwned};
 
-pub trait JsonSerde: Sized + Serialize + DeserializeOwned {
+pub trait SerdeJson: Sized + Serialize + DeserializeOwned {
     /// 从json字符串转换为对象
     fn from_json_string(s: &str) -> serde_json::Result<Self> {
         serde_json::from_str(s)
@@ -18,4 +18,4 @@ pub trait JsonSerde: Sized + Serialize + DeserializeOwned {
 }
 
 // blanket impl for all Serialize + DeserializeOwned types
-impl<T> JsonSerde for T where T: Sized + Serialize + DeserializeOwned {}
+impl<T> SerdeJson for T where T: Sized + Serialize + DeserializeOwned {}

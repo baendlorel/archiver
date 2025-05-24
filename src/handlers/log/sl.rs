@@ -50,7 +50,7 @@ pub fn save(
     Ok(())
 }
 
-pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
+pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool), ArchiverError> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();
 
@@ -93,16 +93,17 @@ pub fn load(range: &Option<String>) -> Result<(), ArchiverError> {
     }
 
     // 反着加进来的，还得反着输出
-    logs.iter().rev().for_each(|l| println!("{}", l));
+    // logs.iter().rev().for_each(|l| println!("{}", l));
 
     // 如果是随便看看而且到达最大值，那么提示可以看更多
-    if casual && logs.len() == MAX_CASUAL_COUNT {
-        println!("Recent {} logs displayed.", MAX_CASUAL_COUNT);
-    }
+    let reach_casual_limit = casual && logs.len() == MAX_CASUAL_COUNT;
+    // if casual && logs.len() == MAX_CASUAL_COUNT {
+    //     println!("Recent {} logs displayed.", MAX_CASUAL_COUNT);
+    // }
 
     if logs.len() == 0 {
         println!("No logs found");
     }
 
-    Ok(())
+    Ok((logs, reach_casual_limit))
 }

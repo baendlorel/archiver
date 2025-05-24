@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use super::ForceToString;
 use crate::models::{
-    json_serde::JsonSerde,
+    serde_json::SerdeJson,
     types::{ArchiverConfig, AutoIncr},
 };
 
