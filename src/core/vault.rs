@@ -32,8 +32,8 @@ pub fn get_name(id: u32) -> String {
     vault.name.clone()
 }
 
-/// 修改现在的 vault
-fn use_vault(name: &str) -> Result<(), ArchiverError> {
+/// 修改当前使用的 vault
+pub fn use_by_name(name: &str) -> Result<(), ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_none() {
         return err_info!("Vault '{}' not found", name);
@@ -49,22 +49,35 @@ fn use_vault(name: &str) -> Result<(), ArchiverError> {
 }
 
 /// 创建一个新的 vault，不能重名
-fn create_vault(name: &str, remark: &Option<String>) -> Result<(), ArchiverError> {
+pub fn create(name: &str, remark: &Option<String>) -> Result<Vault, ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_some() {
         return err_info!("Vault with the same name '{}' already exists", name);
     }
 
-    let next_id = auto_incr::vault_id::next();
-    let vault = Vault {
-        id: next_id,
-        name: name.to_string(),
-        remark: remark.clone().unwrap_or("".to_string()),
-        created_at: dt::now_dt_string(),
-    };
-
+    let vault = Vault::new(name, remark.clone());
     wrap_result!(jsonl::append(&vault, &paths::VAULTS_FILE_PATH))?;
 
     // 此处不需要VAULTS.push(vault)，因为创建结束后就退出了
+    Ok(vault)
+}
+
+pub fn display() {
+    VAULT_MAP.iter().for_each(|(id, vault)| {
+        println!(
+            "{} {} {} {}",
+            id, vault.name, vault.remark, vault.created_at
+        );
+    });
+}
+
+pub fn remove(name: &str) -> Result<(), ArchiverError> {
+    let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
+    if vault.is_none() {
+        return err_info!("Vault '{}' not found", name);
+    }
+
+    // todo 下面将vault标记为删除
+
     Ok(())
 }

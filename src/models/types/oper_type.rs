@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 pub enum OperType {
     Put,
     Restore,
-    Config { option: String },
+    Config(String),
+    Vault(String),
 }
 
 /// 为OperationType实现转换为字符串的方法
@@ -15,14 +16,16 @@ impl OperType {
         match self {
             OperType::Put => "put".yellow().to_string(),
             OperType::Restore => "rst".cyan().to_string(),
-            OperType::Config { option } => format!("{} {}", "cfg".bright_purple(), option),
+            OperType::Config(action) => format!("{} {}", "cfg".bright_purple(), action),
+            OperType::Vault(action) => format!("{} {}", "vlt".bright_purple(), action),
         }
     }
     pub fn len(&self) -> usize {
         match self {
             OperType::Put => 3,
             OperType::Restore => 3,
-            OperType::Config { option } => 3 + 1 + option.len(), // e.g. cfg_alias.add
+            OperType::Config(action) => 3 + 1 + action.len(), // e.g. cfg_alias.add
+            OperType::Vault(action) => 3 + 1 + action.len(),  // e.g. cfg_alias.add
         }
     }
 }

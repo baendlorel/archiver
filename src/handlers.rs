@@ -4,12 +4,54 @@ use owo_colors::OwoColorize;
 use std::cmp::Ordering;
 
 use crate::{
+    cli::VaultAction,
     core::{archive, config, list, log, update, vault},
     misc::mark,
     models::types::OperType,
 };
 
-pub fn vault(name: &Option<String>) {}
+pub fn vault(action: &VaultAction) {
+    match action {
+        VaultAction::Create { name, remark } => {
+            let oper = OperType::Vault(format!("create {}", name));
+            match vault::create(name, remark) {
+                Ok(vault) => {
+                    let msg = format!(
+                        "Vault '{}' is successfully created, vault id:{}",
+                        name, vault.id
+                    );
+                    log::succ(&oper, name, Some(vault.id), &msg);
+                }
+                Err(e) => log::err(&oper, name, None, e),
+            }
+        }
+        VaultAction::List => vault::display(),
+        VaultAction::Use { name } => {
+            let oper = OperType::Vault(format!("use {}", name));
+            match vault::use_by_name(name) {
+                Ok(_) => {
+                    let msg = format!("Vault '{}' is successfully set as current vault", name);
+                    log::succ(&oper, name, None, &msg);
+                }
+                Err(e) => {
+                    log::err(&oper, name, None, e);
+                }
+            }
+        }
+        VaultAction::Remove { name } => {
+            let oper = OperType::Vault(format!("remove {}", name));
+            match vault::remove(name) {
+                Ok(_) => {
+                    let msg = format!("Vault '{}' is successfully removed", name);
+                    log::succ(&oper, name, None, &msg);
+                }
+                Err(e) => {
+                    log::err(&oper, name, None, e);
+                }
+            }
+        }
+    }
+}
 
 pub fn put(targets: &[String]) {
     let oper = OperType::Put;

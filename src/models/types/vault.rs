@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::{core::auto_incr, misc::dt};
+
 #[derive(Serialize, Deserialize)]
 pub struct Vault {
     /// 库的id，会自增
@@ -13,4 +15,26 @@ pub struct Vault {
 
     /// 库的创建时间
     pub created_at: String,
+
+    /// 库状态
+    pub status: VaultStatus,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum VaultStatus {
+    Valid,
+    Removed,
+    Hidden,
+}
+
+impl Vault {
+    pub fn new(name: &str, remark: Option<String>) -> Self {
+        Vault {
+            id: auto_incr::vault_id::next(),
+            name: name.to_string(),
+            remark: remark.unwrap_or("".to_string()),
+            created_at: dt::now_dt_string(),
+            status: VaultStatus::Valid,
+        }
+    }
 }

@@ -27,7 +27,9 @@ pub enum ArchiverCommand {
         ids: Vec<u32>,
     },
 
-    /// todo vault命令：vault use, vault create, vault remove, vault list
+    /// Vault management
+    #[command(subcommand)]
+    Vault(VaultAction),
 
     /// Show the list of archived objects
     #[command(visible_aliases = ["l", "ls"])]
@@ -58,4 +60,32 @@ pub enum ArchiverCommand {
 
     #[command(visible_aliases = ["u", "up"])]
     Update,
+}
+
+#[derive(Subcommand)]
+pub enum VaultAction {
+    /// Use a vault by name
+    Use {
+        #[arg(value_name = "name", required = true)]
+        name: String,
+    },
+
+    /// Create a new vault
+    Create {
+        #[arg(value_name = "name", required = true)]
+        name: String,
+
+        /// Optional remark for the vault
+        #[arg(short, long)]
+        remark: Option<String>,
+    },
+
+    /// Remove a vault by name
+    Remove {
+        #[arg(value_name = "name", required = true)]
+        name: String,
+    },
+
+    /// List all vaults
+    List,
 }
