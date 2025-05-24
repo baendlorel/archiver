@@ -17,7 +17,7 @@ fn default_auto_check_update() -> String {
 }
 
 fn default_last_check_update_date() -> NaiveDate {
-    dt::now_naive_d()
+    dt::now_d()
 }
 
 fn default_alias() -> Vec<AliasEntry> {
@@ -54,7 +54,7 @@ impl ArchiverConfig {
         Self {
             current_vault_id: 0,
             auto_check_update: "on".to_string(),
-            last_check_update_date: dt::now_naive_d(),
+            last_check_update_date: dt::now_d(),
             alias: vec![],
         }
     }

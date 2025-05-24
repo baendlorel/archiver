@@ -1,8 +1,9 @@
+use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    misc::{mark, paths},
+    misc::{dt, mark, paths},
     models::types::field_style::Grey,
 };
 
@@ -11,12 +12,12 @@ use super::OperType;
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
-    pub time: String,    // 操作时间
-    pub is_succ: bool,   // 是否成功
-    pub oper: OperType,  // 操作类型
-    pub arg: String,     // 操作参数
-    pub remark: String,  // 备注
-    pub id: Option<u32>, // archive id，如果有的话
+    pub time: NaiveDateTime, // 操作时间
+    pub is_succ: bool,       // 是否成功
+    pub oper: OperType,      // 操作类型
+    pub arg: String,         // 操作参数
+    pub remark: String,      // 备注
+    pub id: Option<u32>,     // archive id，如果有的话
 }
 
 /// 为remark换行的缩进准备的常量
@@ -25,6 +26,8 @@ pub struct LogEntry {
 const INVARIANT_PADDING: usize = 9;
 impl LogEntry {
     pub fn to_log(&self) -> String {
+        let time = dt::to_dt_string(&self.time);
+
         let status = if self.is_succ {
             //  ✓ 和 ✗
             mark::succ()
@@ -36,8 +39,7 @@ impl LogEntry {
             "(no remark)".grey()
         } else {
             let r = paths::apply_alias(&self.remark);
-            let padding_count =
-                self.time.len() + INVARIANT_PADDING + self.oper.len() + self.arg.len();
+            let padding_count = time.len() + INVARIANT_PADDING + self.oper.len() + self.arg.len();
             // let replacer = format!(
             //     "\n{}{}{}{}{}{}",
             //     "t".repeat(self.time.len()),
@@ -63,7 +65,7 @@ impl LogEntry {
 
         format!(
             "{} {} - {} {} - {} {}",
-            self.time.grey(),
+            time.grey(),
             status,
             self.oper.to_padded_str(),
             self.arg,

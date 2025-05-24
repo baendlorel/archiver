@@ -60,7 +60,7 @@ fn create_vault(name: &str, remark: &Option<String>) -> Result<(), ArchiverError
         id: next_id,
         name: name.to_string(),
         remark: remark.clone().unwrap_or("".to_string()),
-        created_at: dt::now_str(),
+        created_at: dt::now_dt_string(),
     };
 
     wrap_result!(jsonl::append(&vault, &paths::VAULTS_FILE_PATH))?;

@@ -25,7 +25,7 @@ pub fn toggle(status: &str) -> Result<(), ArchiverError> {
 
 /// 超过特定时间再检查更新
 pub fn overdue(config: &ArchiverConfig) -> bool {
-    let today = dt::now_naive_d();
+    let today = dt::now_d();
     let last = &config.last_check_update_date;
 
     let months_passed =
@@ -36,7 +36,7 @@ pub fn overdue(config: &ArchiverConfig) -> bool {
 }
 
 pub fn refresh(config: &mut ArchiverConfig) -> Result<(), ArchiverError> {
-    config.last_check_update_date = dt::now_naive_d();
+    config.last_check_update_date = dt::now_d();
     wrap_result!(sl::save(&config))?;
     Ok(())
 }

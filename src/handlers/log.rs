@@ -3,8 +3,7 @@ use crate::misc::mark;
 use crate::models::error::ArchiverError;
 use crate::models::types::OperType;
 
-mod parse_range;
-use parse_range::parse_range;
+mod parser;
 mod sl;
 
 pub fn handler(range: &Option<String>) {

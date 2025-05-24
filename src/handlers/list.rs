@@ -23,7 +23,7 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
         target,
         is_dir,
         dir,
-        time: dt::now_str(),
+        time: dt::now_dt_string(),
         is_restored: false,
     };
 
