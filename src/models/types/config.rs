@@ -1,12 +1,12 @@
 use crate::uoe_result;
 
-use chrono::{Local, NaiveDate};
+use chrono::NaiveDate;
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use std::{fs, vec};
 
-use crate::misc::paths;
+use crate::misc::{dt, paths};
 
 fn default_current_vault_id() -> u32 {
     0
@@ -17,7 +17,7 @@ fn default_auto_check_update() -> String {
 }
 
 fn default_last_check_update_date() -> NaiveDate {
-    Local::now().date_naive()
+    dt::now_naive_d()
 }
 
 fn default_alias() -> Vec<AliasEntry> {
@@ -54,7 +54,7 @@ impl ArchiverConfig {
         Self {
             current_vault_id: 0,
             auto_check_update: "on".to_string(),
-            last_check_update_date: Local::now().date_naive(),
+            last_check_update_date: dt::now_naive_d(),
             alias: vec![],
         }
     }

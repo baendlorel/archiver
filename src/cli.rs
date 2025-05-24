@@ -27,7 +27,7 @@ pub enum ArvCmd {
         ids: Vec<u32>,
     },
 
-    /// todo   是不是加一个命令叫use vault？
+    /// todo vault命令：vault use, vault create, vault remove, vault list
 
     /// Show the list of archived objects
     #[command(visible_aliases = ["l", "ls"])]

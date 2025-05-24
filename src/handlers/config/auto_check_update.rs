@@ -1,9 +1,12 @@
 use crate::{err_warn, wrap_err_fatal, wrap_result};
 
-use chrono::{Datelike, Local};
+use chrono::Datelike;
 
 use super::sl;
-use crate::models::{error::ArchiverError, types::ArchiverConfig};
+use crate::{
+    misc::dt,
+    models::{error::ArchiverError, types::ArchiverConfig},
+};
 
 pub fn toggle(status: &str) -> Result<(), ArchiverError> {
     if status != "on" && status != "off" {
@@ -22,7 +25,7 @@ pub fn toggle(status: &str) -> Result<(), ArchiverError> {
 
 /// 超过特定时间再检查更新
 pub fn overdue(config: &ArchiverConfig) -> bool {
-    let today = Local::now().date_naive();
+    let today = dt::now_naive_d();
     let last = &config.last_check_update_date;
 
     let months_passed =
@@ -33,7 +36,7 @@ pub fn overdue(config: &ArchiverConfig) -> bool {
 }
 
 pub fn refresh(config: &mut ArchiverConfig) -> Result<(), ArchiverError> {
-    config.last_check_update_date = Local::now().date_naive();
+    config.last_check_update_date = dt::now_naive_d();
     wrap_result!(sl::save(&config))?;
     Ok(())
 }

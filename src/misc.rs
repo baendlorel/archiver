@@ -1,4 +1,5 @@
 pub mod auto_incr;
+pub mod dt;
 pub mod jsonl;
 pub mod paths;
 

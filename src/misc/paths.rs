@@ -223,12 +223,12 @@ pub fn apply_alias(path_str: &str) -> String {
 }
 
 /// 根据年份获取日志文件路径
-pub fn get_log_path(year: u32) -> PathBuf {
+pub fn get_log_path(year: i32) -> PathBuf {
     LOGS_DIR.join(format!("{}.jsonl", year))
 }
 
 /// 获取logs文件夹下所有日志的年份，从大到小排列
-pub fn get_years_desc() -> Vec<u32> {
+pub fn get_years_desc() -> Vec<i32> {
     let mut years = Vec::new();
     if let Ok(entries) = fs::read_dir(&*LOGS_DIR) {
         for entry in entries.flatten() {
@@ -238,7 +238,7 @@ pub fn get_years_desc() -> Vec<u32> {
                     .to_string_lossy()
                     .to_string()
                     .trim_end_matches(".jsonl")
-                    .parse::<u32>()
+                    .parse::<i32>()
                 {
                     years.push(year);
                 }
@@ -275,5 +275,3 @@ pub fn get_default_vault_path() -> PathBuf {
     }
     path
 }
-
-// todo 这里要添加config的默认vault_id，就能直接获取不需要id了

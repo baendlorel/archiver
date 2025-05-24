@@ -1,11 +1,10 @@
 use crate::{err_info, log_if_err, wrap_err_fatal, wrap_result};
 
-use chrono::Local;
 use owo_colors::OwoColorize;
 use std::fs;
 use std::path::PathBuf;
 
-use crate::misc::{jsonl, paths};
+use crate::misc::{dt, jsonl, paths};
 use crate::models::{
     error::ArchiverError,
     types::{CONFIG, ListEntry, ListRow, ListRowColWidth},
@@ -24,7 +23,7 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
         target,
         is_dir,
         dir,
-        time: Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+        time: dt::now_str(),
         is_restored: false,
     };
 
