@@ -270,6 +270,17 @@ macro_rules! wrap_err_fatal {
 }
 
 #[macro_export]
+/// 包裹一个Option对象，手动添加stack
+macro_rules! wrap_option_err_fatal {
+    ($o:expr, $e:expr) => {
+        match $o {
+            Some(val) => Ok(val),
+            None => Err($crate::err_fatal_from_str!("{}", $e.to_string())),
+        }
+    };
+}
+
+#[macro_export]
 /// 包裹一个Result<_,ArchiverError>对象，继承其stack
 macro_rules! wrap_result {
     ($o:expr) => {
