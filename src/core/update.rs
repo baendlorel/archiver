@@ -1,6 +1,5 @@
 use crate::{err_info, log_if_err, uoe_result};
 
-use owo_colors::OwoColorize;
 use std::fs;
 use std::os::unix::process::CommandExt;
 use std::{cmp::Ordering, process::Command}; // for exec
@@ -15,30 +14,6 @@ use super::config::{auto_check_update, load};
 const GITHUB_API_URL: &str = "https://api.github.com/repos/baendlorel/archiver/releases/latest";
 const SCRIPT_URL: &str =
     "https://github.com/baendlorel/archiver/releases/download/scripts/archiver-installer.sh";
-
-/// 检查是否有新版本可用（从 GitHub Releases 获取）
-pub fn handler() {
-    // 获取当前版本
-    let (current, latest) = match prepare_versions() {
-        Ok(v) => v,
-        Err(e) => {
-            e.display();
-            return;
-        }
-    };
-
-    println!("Current version: {}", current.to_string().cyan());
-    println!("Latest  release: {}", latest.to_string().green());
-
-    match latest.cmp(&current) {
-        Ordering::Greater => {
-            println!("{} New version available! Now updating...", mark::warn());
-            update();
-        }
-        Ordering::Equal => println!("{} You are using the latest version.", mark::succ()),
-        Ordering::Less => println!("{} How could you use a newer version?", mark::warn()),
-    }
-}
 
 /// 和上面的区别在于版本相同时静默
 pub fn auto_check() {
@@ -56,7 +31,7 @@ pub fn auto_check() {
     }
 
     // 一个月看一次
-    if !auto_check_update::overdue(&config) {
+    if !auto_check_update::time_passed(&config) {
         return;
     }
 
@@ -82,7 +57,7 @@ pub fn auto_check() {
     log_if_err!(auto_check_update::refresh(&mut config));
 }
 
-fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
+pub fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     let current = Version::from(env!("CARGO_PKG_VERSION"));
     // 通过 GitHub API 获取最新 release
     let output = Command::new("curl")
@@ -121,7 +96,7 @@ fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
     Ok((current, latest))
 }
 
-fn update() {
+pub fn reinstall() {
     // 1. 下载脚本
     let script_path = paths::ROOT_DIR.join("archiver-installer.sh");
 

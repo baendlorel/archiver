@@ -24,7 +24,7 @@ pub fn toggle(status: &str) -> Result<(), ArchiverError> {
 }
 
 /// 超过特定时间再检查更新
-pub fn overdue(config: &ArchiverConfig) -> bool {
+pub fn time_passed(config: &ArchiverConfig) -> bool {
     let today = dt::now_d();
     let last = &config.last_check_update_date;
 

@@ -1,4 +1,4 @@
-use crate::{err_info, log_if_err, wrap_err_fatal, wrap_result};
+use crate::{err_info, wrap_err_fatal, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::fs;
@@ -9,10 +9,6 @@ use crate::models::{
     error::ArchiverError,
     types::{CONFIG, ListEntry, ListRow, ListRowColWidth},
 };
-
-pub fn handler(all: bool, restored: bool) {
-    log_if_err!(print_list(all, restored));
-}
 
 pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ArchiverError> {
     // 自动纳入当前使用的vault
@@ -53,7 +49,7 @@ pub fn find(id: u32) -> Result<(ListEntry, usize, PathBuf), ArchiverError> {
     err_info!("id:{} cannot be found", id)
 }
 
-fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
+pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     let list_file_path = paths::LIST_FILE_PATH.as_path();
     if !list_file_path.exists() {
         println!("No archived object yet");

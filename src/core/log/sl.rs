@@ -12,7 +12,9 @@ use crate::{
     },
 };
 
-const MAX_CASUAL_COUNT: usize = 15;
+/// 在不加range直接arv log的时候，只输出最近这么多条
+/// 避免日志太多
+const CASUAL_LIMIT: usize = 15;
 
 pub fn save(
     oper: &OperType,
@@ -50,7 +52,7 @@ pub fn save(
     Ok(())
 }
 
-pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool), ArchiverError> {
+pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool, usize), ArchiverError> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();
 
@@ -79,31 +81,25 @@ pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool), ArchiverError
 
         let cur_logs = jsonl::load::<LogEntry>(&log_file_path)?;
 
-        for l in cur_logs {
+        for l in cur_logs.iter().rev() {
             if l.time < a || l.time > b {
                 continue; // 跳过不在范围内的日期
             }
             logs.push(l.to_log());
             // 如果没设置范围，只是随便看看日志，那么不要打得太多
             // 同时在load和log_content使用方可生效
-            if casual && logs.len() >= MAX_CASUAL_COUNT {
+            if casual && logs.len() >= CASUAL_LIMIT {
                 break 'year_loop;
             }
         }
     }
 
-    // 反着加进来的，还得反着输出
-    // logs.iter().rev().for_each(|l| println!("{}", l));
-
     // 如果是随便看看而且到达最大值，那么提示可以看更多
-    let reach_casual_limit = casual && logs.len() == MAX_CASUAL_COUNT;
-    // if casual && logs.len() == MAX_CASUAL_COUNT {
-    //     println!("Recent {} logs displayed.", MAX_CASUAL_COUNT);
-    // }
+    let reach_casual_limit = casual && logs.len() == CASUAL_LIMIT;
 
     if logs.len() == 0 {
         println!("No logs found");
     }
 
-    Ok((logs, reach_casual_limit))
+    Ok((logs, reach_casual_limit, CASUAL_LIMIT))
 }

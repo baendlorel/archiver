@@ -6,11 +6,11 @@ use crate::misc;
 #[command(name="Archiver", author=env!("CARGO_PKG_AUTHORS"), version=concat!("v", env!("CARGO_PKG_VERSION"), " by ", env!("CARGO_PKG_AUTHORS")), about="ReadMe: https://github.com/baendlorel/archiver/blob/main/README.md", long_about = None)]
 pub struct Args {
     #[command(subcommand)]
-    pub command: Option<ArvCmd>,
+    pub command: Option<ArchiverCommand>,
 }
 
 #[derive(Subcommand)]
-pub enum ArvCmd {
+pub enum ArchiverCommand {
     /// Archive a file/directory by its name
     #[command(visible_aliases = ["p"])]
     Put {

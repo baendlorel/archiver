@@ -2,11 +2,12 @@ use clap::{CommandFactory, Parser};
 use owo_colors::OwoColorize;
 
 mod cli;
+mod core;
 mod handlers;
 mod misc;
 mod models;
 
-use cli::{Args, ArvCmd};
+use cli::{ArchiverCommand as AC, Args};
 
 fn main() {
     let args: Args = Args::parse();
@@ -16,12 +17,12 @@ fn main() {
 
 fn apply_command(args: &Args) {
     match &args.command {
-        Some(ArvCmd::Put { targets }) => handlers::put::handler(&targets),
-        Some(ArvCmd::Restore { ids }) => handlers::restore::handler(&ids),
-        Some(ArvCmd::List { all, restored }) => handlers::list::handler(*all, *restored),
-        Some(ArvCmd::Log { range }) => handlers::log::handler(range),
-        Some(ArvCmd::Config { statement }) => handlers::config::handler(&statement),
-        Some(ArvCmd::Update) => handlers::update::handler(),
+        Some(AC::Put { targets }) => handlers::put(&targets),
+        Some(AC::Restore { ids }) => handlers::restore(&ids),
+        Some(AC::List { all, restored }) => handlers::list(*all, *restored),
+        Some(AC::Log { range }) => handlers::log(range),
+        Some(AC::Config { statement }) => handlers::config(&statement),
+        Some(AC::Update) => handlers::update(),
         None => {
             println!("{}", "Please enter your command".yellow());
             // 打印帮助信息
@@ -38,17 +39,17 @@ fn apply_command(args: &Args) {
 
 fn auto_check_update(args: &Args) {
     let need_checking = match &args.command {
-        Some(ArvCmd::Update) => false,
-        Some(ArvCmd::List {
+        Some(AC::Update) => false,
+        Some(AC::List {
             all: _,
             restored: _,
         }) => false,
-        Some(ArvCmd::Log { range: _ }) => false,
+        Some(AC::Log { range: _ }) => false,
         None => false,
         _ => true,
     };
 
     if need_checking {
-        handlers::update::auto_check();
+        core::update::auto_check();
     }
 }

@@ -2,7 +2,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use super::field_style::Grey;
-use crate::{handlers::vault, misc::paths};
+use crate::misc::paths;
 
 #[derive(Serialize, Deserialize)]
 pub struct ListEntry {
@@ -54,7 +54,7 @@ impl ListEntry {
     }
 
     pub fn to_row(&self) -> ListRow {
-        let vault_name = vault::get_name(self.vault_id);
+        let vault_name = crate::core::vault::get_name(self.vault_id);
 
         let is_restored = if self.is_restored {
             "(R)".fg_rgb::<255, 165, 0>().to_string()

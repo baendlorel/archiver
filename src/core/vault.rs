@@ -3,9 +3,9 @@ use crate::{err_info, uoe_option, uoe_result, wrap_result};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-use super::config;
+use super::{auto_incr, config};
 use crate::{
-    misc::{auto_incr, dt, jsonl, paths},
+    misc::{dt, jsonl, paths},
     models::{error::ArchiverError, types::Vault},
 };
 

@@ -21,6 +21,7 @@ pub mod mark {
     }
 }
 
+/// 写在这里是因为cli处也要用
 pub const CONFIG_HELP_TEXT: &str = r#"Show configs:
   arv config           # show all configs
   arv config <item>    # show the specified config item
@@ -32,6 +33,7 @@ e.g.
   alias.remove <alias>
   auto-check-update.set on/off"#;
 
+/// 写在这里是因为cli处也要用
 pub const CONFIG_VALID_STMT: Lazy<String> = Lazy::new(|| {
     let valid_stmt = r#"
   alias.add <alias>    # <alias> is like `my=/dir/temp`
