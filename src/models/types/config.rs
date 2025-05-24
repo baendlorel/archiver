@@ -1,8 +1,12 @@
-use std::vec;
+use crate::uoe_result;
 
 use chrono::{Local, NaiveDate};
+use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
+use std::{fs, vec};
+
+use crate::misc::paths;
 
 fn default_current_vault_id() -> u32 {
     0
@@ -87,5 +91,17 @@ impl ArchiverConfig {
         }
     }
 }
+
+pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
+    let content = uoe_result!(
+        fs::read_to_string(paths::CONFIG_FILE_PATH.as_path()),
+        "Cannot read config file"
+    );
+
+    uoe_result!(
+        serde_json::from_str::<ArchiverConfig>(&content),
+        "Cannot parse config file"
+    )
+});
 
 pub const CONFIG_ITEMS: [&str; 2] = ["alias", "auto-check-update"];

@@ -14,7 +14,7 @@ pub fn handler(targets: &[String]) {
         println!("Putting '{}' into archive", target);
         match archive(&target) {
             Ok(id) => {
-                let msg = format!("'{}' is successfully archived, id: {}", target, id);
+                let msg = format!("'{}' is successfully archived, id:{}", target, id);
                 log::succ(&oper, target, Some(id), &msg);
             }
             Err(e) => log::err(&oper, target, None, e),
@@ -64,10 +64,7 @@ fn archive(target: &str) -> Result<u32, ArchiverError> {
     let archived_path = vault_path.join(next_id.to_string());
 
     wrap_err_fatal!(fs::rename(&target_path, archived_path))?;
-
     wrap_result!(list::insert(next_id, target_name_str, is_dir, target_dir))?;
-
-    auto_incr::archive_id::update(next_id);
 
     Ok(next_id)
 }

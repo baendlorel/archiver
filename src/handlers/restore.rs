@@ -16,7 +16,7 @@ use crate::models::{
 pub fn handler(ids: &[u32]) {
     let oper = OperType::Restore;
     for id in ids {
-        println!("Restoring id: {}", id.magenta());
+        println!("Restoring id:{}", id.magenta());
         match restore(*id) {
             Ok(entry) => {
                 let msg = format!(
@@ -32,8 +32,7 @@ pub fn handler(ids: &[u32]) {
 }
 
 fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
-    let mut target_line_index: u32 = 0;
-    let entry = wrap_result!(list::find(id, &mut target_line_index))?;
+    let (entry, line_index, list_path) = wrap_result!(list::find(id))?;
     if entry.is_restored {
         return err_info!(
             "id:{} has already been restored to '{}'",
@@ -45,7 +44,7 @@ fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     let target_name = OsString::from(&entry.target);
     let dir = PathBuf::from(OsString::from(&entry.dir));
     let target_path = dir.join(target_name);
-    let archive_path = paths::ROOT_DIR.join(id.to_string());
+    let archive_path = paths::get_archived_path(id, entry.vault_id);
 
     // 要检查archive里面的文件和系统外面的路径是否都存在
     // 还要检查复制后是否会导致文件覆盖
@@ -58,7 +57,7 @@ fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
 
     if !archive_path.exists() {
         return err_info!(
-            "The archive file id: {} does not exist",
+            "The archive file id:{} does not exist",
             archive_path.force_to_string()
         );
     }
@@ -70,6 +69,28 @@ fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     }
 
     wrap_err_fatal!(fs::rename(archive_path, target_path))?;
-    wrap_result!(list::mark_as_restored(target_line_index))?;
+    wrap_result!(mark_as_restored(line_index, &list_path))?;
     Ok(entry)
+}
+
+/// 只会在目标已经被restored之后调用
+fn mark_as_restored(line_index: usize, list_path: &std::path::Path) -> Result<(), ArchiverError> {
+    // 读取整个文件
+    let content = wrap_err_fatal!(fs::read_to_string(&list_path))?;
+
+    let mut lines: Vec<&str> = content.lines().collect();
+    let target_line = lines[line_index];
+    let modified_line = {
+        // 把这条记录标记为restored
+        let mut entry = wrap_err_fatal!(serde_json::from_str::<ListEntry>(target_line))?;
+        entry.is_restored = true;
+        wrap_err_fatal!(serde_json::to_string(&entry))?
+    };
+
+    lines[line_index] = modified_line.as_str();
+
+    // 将内容写回文件
+    wrap_err_fatal!(fs::write(&list_path, lines.join("\n") + "\n"))?;
+
+    Ok(())
 }

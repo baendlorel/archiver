@@ -8,7 +8,7 @@ mod vault;
 mod version;
 
 pub use auto_incr::AutoIncr;
-pub use config::{AliasEntry, ArchiverConfig, CONFIG_ITEMS};
+pub use config::{AliasEntry, ArchiverConfig, CONFIG, CONFIG_ITEMS};
 pub use list_entry::{ListEntry, ListRow, ListRowColWidth};
 pub use log_entry::LogEntry;
 pub use oper_type::OperType;

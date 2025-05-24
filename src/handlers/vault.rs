@@ -1,4 +1,4 @@
-use crate::{err_info, uoe_result, wrap_result};
+use crate::{err_info, uoe_option, uoe_result, wrap_result};
 
 use chrono::Local;
 use once_cell::sync::Lazy;
@@ -17,13 +17,17 @@ static VAULTS: Lazy<Vec<Vault>> = Lazy::new(|| {
 });
 
 /// 根据vault_id获取vault名字，用于log、list等展示
-fn get_name(id: u32) -> Result<String, ArchiverError> {
-    let vault = VAULTS.iter().find(|v| v.id == id);
+pub fn get_name(id: u32) -> String {
+    let vault = uoe_option!(
+        VAULTS.iter().find(|v| v.id == id),
+        format!("Vault with id:{} not found", id)
+    );
 
-    match vault {
-        Some(v) => Ok(v.name.clone()),
-        None => err_info!("Vault with id {} not found", id),
-    }
+    // match vault {
+    //     Some(v) => Ok(v.name.clone()),
+    //     None => err_info!("Vault with id {} not found", id),
+    // }
+    vault.name.clone()
 }
 
 /// 修改现在的 vault

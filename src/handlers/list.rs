@@ -1,14 +1,14 @@
-use crate::models::json_serde::JsonSerde;
 use crate::{err_info, log_if_err, wrap_err_fatal, wrap_result};
 
 use chrono::Local;
 use owo_colors::OwoColorize;
 use std::fs;
+use std::path::PathBuf;
 
 use crate::misc::{jsonl, paths};
 use crate::models::{
     error::ArchiverError,
-    types::{ListEntry, ListRow, ListRowColWidth},
+    types::{CONFIG, ListEntry, ListRow, ListRowColWidth},
 };
 
 pub fn handler(all: bool, restored: bool) {
@@ -16,8 +16,11 @@ pub fn handler(all: bool, restored: bool) {
 }
 
 pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ArchiverError> {
+    // 自动纳入当前使用的vault
+    let vault_id = CONFIG.current_vault_id;
     let archive_entry = ListEntry {
         id,
+        vault_id,
         target,
         is_dir,
         dir,
@@ -33,44 +36,22 @@ pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), 
 }
 
 /// 查找某个id的归档记录，用在restore上
-pub fn find(id: u32, target_line_index: &mut u32) -> Result<ListEntry, ArchiverError> {
-    let list_file_path = paths::get_list_of_vault(0);
-    let list = wrap_result!(jsonl::load::<ListEntry>(&list_file_path))?;
+/// - 由于archive_id全局唯一，所以此处需要搜索所有的vault
+pub fn find(id: u32) -> Result<(ListEntry, usize, PathBuf), ArchiverError> {
+    let list_paths = paths::get_all_list_paths();
 
-    for entry in list {
-        *target_line_index += 1;
-
-        if entry.id == id {
-            // 因为第一行加得太早，这里得减去多加了的
-            *target_line_index -= 1;
-            return Ok(entry);
+    for list_path in list_paths {
+        let mut line_index: usize = 0;
+        let list = wrap_result!(jsonl::load::<ListEntry>(&list_path))?;
+        for entry in list {
+            if entry.id == id {
+                return Ok((entry, line_index, list_path));
+            }
+            line_index += 1;
         }
     }
 
     err_info!("id:{} cannot be found", id)
-}
-
-/// 只会在目标已经被restored之后调用
-pub fn mark_as_restored(target_line_index: u32) -> Result<(), ArchiverError> {
-    let list_file_path = paths::get_list_of_vault(0);
-    // 读取整个文件
-    let content = wrap_err_fatal!(fs::read_to_string(&list_file_path))?;
-
-    let mut lines: Vec<&str> = content.lines().collect();
-    let target_line = lines[target_line_index as usize];
-    let modified_line = {
-        // 把这条记录标记为restored
-        let mut entry = wrap_err_fatal!(serde_json::from_str::<ListEntry>(target_line))?;
-        entry.is_restored = true;
-        wrap_err_fatal!(serde_json::to_string(&entry))?
-    };
-
-    lines[target_line_index as usize] = modified_line.as_str();
-
-    // 将内容写回文件
-    wrap_err_fatal!(fs::write(&list_file_path, lines.join("\n") + "\n"))?;
-
-    Ok(())
 }
 
 fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
@@ -113,32 +94,37 @@ fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
     // 字段名称
     let field_time = "Archived At";
     let field_id = "ID";
+    let field_vault_name = "Vault";
     let field_target = "Item";
     let field_dir = "Directory";
 
-    let mut max_width = ListRowColWidth {
+    let mut w = ListRowColWidth {
         time: field_time.len(),
+        vault_name: field_vault_name.len(),
         id: field_id.len(),
         target: field_target.len(),
         dir: field_dir.len(),
     };
 
     for row in list.iter() {
-        max_width.time = max_width.time.max(row._width.time);
-        max_width.id = max_width.id.max(row._width.id);
-        max_width.target = max_width.target.max(row._width.target);
-        max_width.dir = max_width.dir.max(row._width.dir);
+        w.time = w.time.max(row._width.time);
+        w.vault_name = w.vault_name.max(row._width.vault_name);
+        w.id = w.id.max(row._width.id);
+        w.target = w.target.max(row._width.target);
+        w.dir = w.dir.max(row._width.dir);
     }
 
     println!(
         "{}",
         format!(
-            "{field_time}{} {field_id}{} {field_target}{} {field_dir}{}",
-            " ".repeat(max_width.time - field_time.len()),
-            " ".repeat(max_width.id - field_id.len()),
-            " ".repeat(max_width.target - field_target.len()),
-            " ".repeat(max_width.dir - field_dir.len()),
+            "{field_time}{} {field_vault_name}{} {field_id}{} {field_target}{} {field_dir}{}",
+            " ".repeat(w.time - field_time.len()),
+            " ".repeat(w.vault_name - field_vault_name.len()),
+            " ".repeat(w.id - field_id.len()),
+            " ".repeat(w.target - field_target.len()),
+            " ".repeat(w.dir - field_dir.len()),
             field_time = field_time,
+            field_vault_name = field_vault_name,
             field_id = field_id,
             field_target = field_target,
             field_dir = field_dir,
@@ -149,11 +135,13 @@ fn print_list(all: bool, restored: bool) -> Result<(), ArchiverError> {
 
     for row in list.iter() {
         println!(
-            "{time}{} {id}{} {target}{} {dir}",
-            " ".repeat(max_width.time - row._width.time),
-            " ".repeat(max_width.id - row._width.id),
-            " ".repeat(max_width.target - row._width.target),
+            "{time}{} {vault_name}{} {id}{} {target}{} {dir}",
+            " ".repeat(w.time - row._width.time),
+            " ".repeat(w.vault_name - row._width.vault_name),
+            " ".repeat(w.id - row._width.id),
+            " ".repeat(w.target - row._width.target),
             time = row.time,
+            vault_name = row.vault_name,
             id = row.id,
             target = row.target,
             dir = row.dir,
