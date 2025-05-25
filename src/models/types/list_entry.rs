@@ -6,7 +6,7 @@ use super::{CONFIG, field_style::CustomColors};
 use crate::{
     core::{auto_incr, vault},
     misc::{dt, paths},
-    models::serde_ndt,
+    models::serde_custom::{boolean, naive_date_time},
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -23,11 +23,11 @@ pub struct ListEntry {
     pub target: String,
 
     /// 是否已经恢复
-    #[serde(rename = "is_r")]
+    #[serde(rename = "is_r", with = "boolean")]
     pub is_restored: bool,
 
     /// 归档目标是否为文件夹
-    #[serde(rename = "is_d")]
+    #[serde(rename = "is_d", with = "boolean")]
     pub is_dir: bool,
 
     /// 归档目标的原始路径
@@ -35,7 +35,7 @@ pub struct ListEntry {
     pub dir: String,
 
     /// 归档时间
-    #[serde(rename = "adt", with = "serde_ndt")]
+    #[serde(rename = "adt", with = "naive_date_time")]
     pub archived_at: NaiveDateTime,
 }
 

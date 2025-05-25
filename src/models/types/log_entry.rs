@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     misc::{dt, mark, paths},
-    models::{serde_ndt, types::field_style::CustomColors},
+    models::{
+        serde_custom::{boolean, naive_date_time},
+        types::field_style::CustomColors,
+    },
 };
 
 use super::OperType;
@@ -12,10 +15,10 @@ use super::OperType;
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
-    #[serde(rename = "odt", with = "serde_ndt")]
+    #[serde(rename = "odt", with = "naive_date_time")]
     pub opered_at: NaiveDateTime, // 操作时间
 
-    #[serde(rename = "s")]
+    #[serde(rename = "s", with = "boolean")]
     pub is_succ: bool, // 是否成功
 
     #[serde(rename = "o")]

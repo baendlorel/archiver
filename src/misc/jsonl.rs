@@ -3,7 +3,7 @@ use crate::as_fatal;
 use serde::{Serialize, de::DeserializeOwned};
 use std::{fs, io::Write, path::Path};
 
-use crate::models::{error::ArchiverError, serde_json::SerdeJson};
+use crate::models::{error::ArchiverError, serde_custom::SerdeJson};
 
 /// 给jsonl文件末尾追加一行
 pub fn append<T>(entry: &T, file_path: &Path) -> Result<(), ArchiverError>
