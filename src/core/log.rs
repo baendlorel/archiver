@@ -20,7 +20,7 @@ pub fn succ(
     log_if_err!(sl::save(oper, arg, true, archive_id, vault_id, None));
 }
 
-pub fn err(oper: &OperType, arg: &str, e: ArchiverError) {
+pub fn fail(oper: &OperType, arg: &str, e: ArchiverError) {
     e.display();
     log_if_err!(sl::save(oper, arg, false, None, None, Some(e.to_string())));
 }

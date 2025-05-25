@@ -1,11 +1,11 @@
-use crate::log_if_err;
+use crate::{err_info, err_warn, log_if_err};
 
 use owo_colors::OwoColorize;
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::HashSet};
 
 use crate::{
     cli::VaultAction,
-    core::{archive, config, list, log, update, vault},
+    core::{archive, config, log, update, vault},
     misc::mark,
     models::types::OperType,
 };
@@ -27,7 +27,7 @@ pub fn vault(action: &VaultAction) {
                     let arg = log::format_arg::vault::create(name, *use_at_once, remark);
                     log::succ(&oper, &arg, None, Some(vault.id), &msg);
                 }
-                Err(e) => log::err(&oper, name, e),
+                Err(e) => log::fail(&oper, name, e),
             }
         }
         VaultAction::List => vault::display(),
@@ -39,7 +39,7 @@ pub fn vault(action: &VaultAction) {
                     log::succ(&oper, name, None, Some(vault_id), &msg);
                 }
                 Err(e) => {
-                    log::err(&oper, name, e);
+                    log::fail(&oper, name, e);
                 }
             }
         }
@@ -51,7 +51,7 @@ pub fn vault(action: &VaultAction) {
                     log::succ(&oper, name, None, Some(vault_id), &msg);
                 }
                 Err(e) => {
-                    log::err(&oper, name, e);
+                    log::fail(&oper, name, e);
                 }
             }
         }
@@ -60,7 +60,9 @@ pub fn vault(action: &VaultAction) {
 
 pub fn put(targets: &[String], message: &Option<String>) {
     let oper = OperType::Put;
-    for target in targets {
+    // 去重以防止重复操作同一目标
+    let set: HashSet<String> = targets.iter().cloned().collect();
+    for target in set {
         println!("Putting '{}' into archive", target);
         match archive::put(&target, message) {
             Ok(entry) => {
@@ -71,9 +73,9 @@ pub fn put(targets: &[String], message: &Option<String>) {
                     vault::get_name(entry.vault_id),
                     entry.message,
                 );
-                log::succ(&oper, target, Some(entry.id), Some(entry.vault_id), &msg);
+                log::succ(&oper, &target, Some(entry.id), Some(entry.vault_id), &msg);
             }
-            Err(e) => log::err(&oper, target, e),
+            Err(e) => log::fail(&oper, &target, e),
         };
     }
     println!("Use `arv list` to check the archived list");
@@ -81,9 +83,11 @@ pub fn put(targets: &[String], message: &Option<String>) {
 
 pub fn restore(ids: &[u32]) {
     let oper = OperType::Restore;
-    for id in ids {
+    // 去重以防止重复操作同一目标
+    let set: HashSet<u32> = ids.iter().cloned().collect();
+    for id in set {
         println!("Restoring id:{}", id);
-        match archive::restore(*id) {
+        match archive::restore(id) {
             Ok(entry) => {
                 let msg = format!(
                     "id:{} (vlt:{}) is successfully restored to '{}'",
@@ -99,27 +103,59 @@ pub fn restore(ids: &[u32]) {
                     &msg,
                 );
             }
-            Err(e) => log::err(&oper, &id.to_string(), e),
+            Err(e) => log::fail(&oper, &id.to_string(), e),
         }
     }
 }
 
 pub fn move_to(ids: &[u32], to: &str) {
     let oper = OperType::Move;
-    match archive::move_to(ids, to) {
-        Ok((count, total)) => {
-            let msg = format!(
-                "{}/{} entries are successfully moved to vault '{}'",
-                count, total, to
-            );
-            log::succ(&oper, &to.to_string(), None, None, &msg);
+    // 去重以防止重复操作同一目标
+    let vault_id = match vault::find_by_name(to) {
+        Some(v) => v.id,
+        None => {
+            log::fail(&oper, &to.to_string(), err_warn!("Vault not found"));
+            return;
         }
-        Err(e) => log::err(&oper, &to.to_string(), e),
+    };
+    let full_list = match archive::sl::load() {
+        Ok(list) => list,
+        Err(e) => {
+            log::fail(&oper, &to.to_string(), e);
+            return;
+        }
+    };
+
+    let set: HashSet<u32> = ids.iter().cloned().collect();
+    let mut count = 0;
+
+    for entry in full_list {
+        if !set.contains(&entry.id) || entry.vault_id != vault_id {
+            continue; // 跳过不在ids中的id
+        }
+        match archive::move_to(ids, to) {
+            Ok(_) => {
+                count += 1;
+                let msg = format!("id:{} is moved to '{}'", entry.id, to);
+                log::succ(&oper, &to.to_string(), None, None, &msg);
+            }
+            Err(e) => log::fail(&oper, &to.to_string(), e),
+        }
+    }
+
+    // 如果没有任何对象被移动，输出错误信息
+    if count == 0 {
+        let e = err_info!("No satisfied archived object found");
+        log::fail(&oper, &to.to_string(), e);
+    } else if count > 1 {
+        // 当移动了超过1条记录，则写一条总结日志
+        let msg = format!("{}/{} archived objects moved to '{}'", count, set.len(), to);
+        log::succ(&oper, &to.to_string(), None, None, &msg);
     }
 }
 
 pub fn list(all: bool, restored: bool) {
-    log_if_err!(list::display(all, restored));
+    log_if_err!(archive::list::display(all, restored));
 }
 
 pub fn log(range: &Option<String>) {

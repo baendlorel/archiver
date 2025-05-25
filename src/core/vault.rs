@@ -92,6 +92,7 @@ pub fn display() {
     });
 }
 
+// todo 删除一个vault
 /// 根据名字删除一个vault
 /// - 其中的归档对象会被转移到default库
 pub fn remove(name: &str) -> Result<u32, ArchiverError> {
@@ -100,8 +101,6 @@ pub fn remove(name: &str) -> Result<u32, ArchiverError> {
         return info!("Vault '{}' not found", name);
     }
     let vault = vault.unwrap();
-
-    // todo 到底要不要允许删除？
 
     Ok(vault.id)
 }

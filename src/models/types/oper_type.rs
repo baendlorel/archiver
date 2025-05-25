@@ -1,11 +1,12 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
+// todo 感觉这里是重复代码，可能应该impl在archivercommander里面
 /// 操作类型枚举
 #[derive(Serialize, Deserialize, Clone)]
 pub enum OperType {
-    Put,
-    Restore,
+    Put,     // 支持多个目标
+    Restore, // 支持多个ID
     Config(String),
     Vault(String),
     Move,
