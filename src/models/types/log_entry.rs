@@ -24,7 +24,7 @@ pub struct LogEntry {
 /// 为remark换行的缩进准备的常量
 /// 由此公式算得：字段间空格数量+状态字符数量+短横线两个
 /// 当前为 5+1+3
-const INVARIANT_PADDING: usize = 9;
+// const INVARIANT_PADDING: usize = 9;
 impl LogEntry {
     pub fn to_log(&self) -> String {
         let time = dt::to_dt_string(&self.time);
@@ -40,7 +40,7 @@ impl LogEntry {
             "(no remark)".grey()
         } else {
             let r = paths::apply_alias(&self.remark);
-            let padding_count = time.len() + INVARIANT_PADDING + self.oper.len() + self.arg.len();
+            // let padding_count = time.len() + INVARIANT_PADDING + self.oper.len() + self.arg.len();
             // let replacer = format!(
             //     "\n{}{}{}{}{}{}",
             //     "t".repeat(self.time.len()),
@@ -50,8 +50,9 @@ impl LogEntry {
             //     "a".repeat(self.arg.len()),
             //     " ".repeat(3),
             // );
-            let replacer = format!("\n{}", " ".repeat(padding_count));
-            r.replace("\n", replacer.as_str()).grey()
+            // let replacer = format!("\n{}", " ".repeat(padding_count));
+            // r.replace("\n", replacer.as_str()).grey()
+            r.replace("\n", "\\n").grey()
         };
 
         let id = if let Some(id) = self.id {

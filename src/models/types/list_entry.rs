@@ -6,6 +6,7 @@ use super::{CONFIG, field_style::CustomColors};
 use crate::{
     core::{auto_incr, vault},
     misc::{dt, paths},
+    models::serde_ndt,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -29,6 +30,7 @@ pub struct ListEntry {
     pub dir: String,
 
     /// 归档时间
+    #[serde(with = "serde_ndt")]
     pub time: NaiveDateTime,
 }
 
@@ -72,24 +74,14 @@ impl ListEntry {
     }
 
     pub fn to_row(&self) -> ListRow {
-        let time = dt::to_dt_string(&self.time);
-
-        let target = if self.is_dir {
-            format!("{}{}", self.target.blue(), std::path::MAIN_SEPARATOR)
-        } else {
-            self.target.to_string()
-        };
-
-        let dir = paths::apply_alias(&self.dir);
-
         ListRow {
-            time,
+            time: dt::to_dt_string(&self.time),
             id: self.id.to_string(),
             vault_name: vault::get_name(self.vault_id),
-            target,
+            target: self.target.to_string(),
             is_dir: self.is_dir,
             is_restored: self.is_restored,
-            dir,
+            dir: paths::apply_alias(&self.dir),
         }
     }
 }
@@ -99,8 +91,8 @@ impl ListRow {
         let target_len = {
             let base = self.target.len();
             let rst = if self.is_restored { 3 } else { 0 };
-            let dirslash = if self.is_dir { 1 } else { 0 };
-            base + rst + dirslash
+            let slash = if self.is_dir { 1 } else { 0 };
+            base + rst + slash
         };
 
         ListColumnLen {
@@ -117,7 +109,11 @@ impl ListRow {
 
         let target = format!(
             "{}{}{}",
-            self.target,
+            if self.is_dir {
+                self.target.blue().to_string()
+            } else {
+                self.target.to_string()
+            },
             if self.is_restored {
                 "(R)".orange()
             } else {
