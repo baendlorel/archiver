@@ -20,33 +20,33 @@ pub fn vault(action: &VaultAction) {
                         "Vault '{}' is successfully created, vault id:{}",
                         name, vault.id
                     );
-                    log::succ(&oper, name, Some(vault.id), &msg);
+                    log::succ(&oper, name, None, Some(vault.id), &msg);
                 }
-                Err(e) => log::err(&oper, name, None, e),
+                Err(e) => log::err(&oper, name, e),
             }
         }
         VaultAction::List => vault::display(),
         VaultAction::Use { name } => {
             let oper = OperType::Vault(format!("use {}", name));
             match vault::use_by_name(name) {
-                Ok(_) => {
+                Ok(vault_id) => {
                     let msg = format!("Vault '{}' is successfully set as current vault", name);
-                    log::succ(&oper, name, None, &msg);
+                    log::succ(&oper, name, None, Some(vault_id), &msg);
                 }
                 Err(e) => {
-                    log::err(&oper, name, None, e);
+                    log::err(&oper, name, e);
                 }
             }
         }
         VaultAction::Remove { name } => {
             let oper = OperType::Vault(format!("remove {}", name));
             match vault::remove(name) {
-                Ok(_) => {
+                Ok(vault_id) => {
                     let msg = format!("Vault '{}' is successfully removed", name);
-                    log::succ(&oper, name, None, &msg);
+                    log::succ(&oper, name, None, Some(vault_id), &msg);
                 }
                 Err(e) => {
-                    log::err(&oper, name, None, e);
+                    log::err(&oper, name, e);
                 }
             }
         }
@@ -58,11 +58,16 @@ pub fn put(targets: &[String]) {
     for target in targets {
         println!("Putting '{}' into archive", target);
         match archive::put(&target) {
-            Ok(id) => {
-                let msg = format!("'{}' is successfully archived, id:{}", target, id);
-                log::succ(&oper, target, Some(id), &msg);
+            Ok(entry) => {
+                let msg = format!(
+                    "'{}' is successfully archived, id:{} (vlt:{})",
+                    target,
+                    entry.id,
+                    vault::get_name(entry.vault_id)
+                );
+                log::succ(&oper, target, Some(entry.id), Some(entry.vault_id), &msg);
             }
-            Err(e) => log::err(&oper, target, None, e),
+            Err(e) => log::err(&oper, target, e),
         };
     }
     println!("Use `arv list` to check the archived list");
@@ -71,17 +76,24 @@ pub fn put(targets: &[String]) {
 pub fn restore(ids: &[u32]) {
     let oper = OperType::Restore;
     for id in ids {
-        println!("Restoring id:{}", id.magenta());
+        println!("Restoring id:{}", id);
         match archive::restore(*id) {
             Ok(entry) => {
                 let msg = format!(
-                    "id:{} is successfully restored to '{}'",
-                    id.magenta(),
+                    "id:{} (vlt:{}) is successfully restored to '{}'",
+                    entry.id,
+                    vault::get_name(entry.vault_id),
                     entry.get_target_path_string()
                 );
-                log::succ(&oper, &id.to_string(), Some(*id), &msg);
+                log::succ(
+                    &oper,
+                    &id.to_string(),
+                    Some(entry.id),
+                    Some(entry.vault_id),
+                    &msg,
+                );
             }
-            Err(e) => log::err(&oper, &id.to_string(), Some(*id), e),
+            Err(e) => log::err(&oper, &id.to_string(), e),
         }
     }
 }

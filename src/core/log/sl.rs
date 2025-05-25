@@ -20,7 +20,8 @@ pub fn save(
     oper: &OperType,
     arg: &str,
     is_succ: bool,
-    id: Option<u32>,
+    archive_id: Option<u32>,
+    vault_id: Option<u32>,
     remark: Option<String>,
 ) -> Result<(), ArchiverError> {
     // 获取日志文件路径
@@ -40,12 +41,13 @@ pub fn save(
 
     // 准备日志内容
     let log_entry = LogEntry {
-        time: dt::now_dt(),
+        opered_at: dt::now_dt(),
         is_succ,
         oper: oper.clone(),
         arg: arg.to_string(),
         remark: normalized_remark,
-        id,
+        archive_id,
+        vault_id,
     };
 
     wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
@@ -82,7 +84,7 @@ pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool, usize), Archiv
         let cur_logs = jsonl::load::<LogEntry>(&log_file_path)?;
 
         for l in cur_logs.iter().rev() {
-            if l.time < a || l.time > b {
+            if l.opered_at < a || l.opered_at > b {
                 continue; // 跳过不在范围内的日期
             }
             logs.push(l.to_log());

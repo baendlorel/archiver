@@ -15,29 +15,34 @@ pub struct ListEntry {
     pub id: u32,
 
     /// 库id
+    #[serde(rename = "vid")]
     pub vault_id: u32,
 
     /// 归档目标名，可能是文件名或文件夹名
+    #[serde(rename = "t")]
     pub target: String,
 
     /// 是否已经恢复
+    #[serde(rename = "is_r")]
     pub is_restored: bool,
 
     /// 归档目标是否为文件夹
+    #[serde(rename = "is_d")]
     pub is_dir: bool,
 
     /// 归档目标的原始路径
+    #[serde(rename = "d")]
     pub dir: String,
 
     /// 归档时间
-    #[serde(with = "serde_ndt")]
-    pub time: NaiveDateTime,
+    #[serde(rename = "adt", with = "serde_ndt")]
+    pub archived_at: NaiveDateTime,
 }
 
 /// 专门输出表格用的
 /// todo 改成全部字段，然后to_styled方法，入参是字段间隔，回参是上色后的样子
 pub struct ListRow {
-    pub time: String,
+    pub archived_at: String,
     pub vault_name: String,
     pub id: String,
     pub target: String,
@@ -47,7 +52,7 @@ pub struct ListRow {
 }
 
 pub struct ListColumnLen {
-    pub time: usize,
+    pub archived_at: usize,
     pub vault_name: usize,
     pub id: usize,
     pub target: usize,
@@ -62,7 +67,7 @@ impl ListEntry {
             target,
             is_dir,
             dir,
-            time: dt::now_dt(),
+            archived_at: dt::now_dt(),
             is_restored: false,
         }
     }
@@ -75,7 +80,7 @@ impl ListEntry {
 
     pub fn to_row(&self) -> ListRow {
         ListRow {
-            time: dt::to_dt_string(&self.time),
+            archived_at: dt::to_dt_string(&self.archived_at),
             id: self.id.to_string(),
             vault_name: vault::get_name(self.vault_id),
             target: self.target.to_string(),
@@ -96,7 +101,7 @@ impl ListRow {
         };
 
         ListColumnLen {
-            time: self.time.len(),
+            archived_at: self.archived_at.len(),
             vault_name: self.vault_name.len(),
             id: self.id.len(),
             target: target_len,
@@ -128,8 +133,8 @@ impl ListRow {
 
         format!(
             "{}{} {}{} {}{} {}{} {}",
-            self.time.grey(),
-            " ".repeat(max_len.time - cl.time),
+            self.archived_at.grey(),
+            " ".repeat(max_len.archived_at - cl.archived_at),
             self.vault_name.bright_blue(),
             " ".repeat(max_len.vault_name - cl.vault_name),
             self.id.magenta(),

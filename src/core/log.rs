@@ -7,14 +7,20 @@ use crate::models::types::OperType;
 mod parser;
 mod sl;
 
-pub fn succ(oper: &OperType, arg: &str, id: Option<u32>, msg: &String) {
+pub fn succ(
+    oper: &OperType,
+    arg: &str,
+    archive_id: Option<u32>,
+    vault_id: Option<u32>,
+    msg: &String,
+) {
     println!("{} {}", mark::succ(), msg);
-    log_if_err!(sl::save(oper, arg, true, id, None));
+    log_if_err!(sl::save(oper, arg, true, archive_id, vault_id, None));
 }
 
-pub fn err(oper: &OperType, arg: &str, id: Option<u32>, e: ArchiverError) {
+pub fn err(oper: &OperType, arg: &str, e: ArchiverError) {
     e.display();
-    log_if_err!(sl::save(oper, arg, false, id, Some(e.to_string())));
+    log_if_err!(sl::save(oper, arg, false, None, None, Some(e.to_string())));
 }
 
 pub fn display(range: &Option<String>) -> Result<(), ArchiverError> {

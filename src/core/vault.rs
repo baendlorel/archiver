@@ -34,7 +34,7 @@ pub fn get_name(id: u32) -> String {
 }
 
 /// 修改当前使用的 vault
-pub fn use_by_name(name: &str) -> Result<(), ArchiverError> {
+pub fn use_by_name(name: &str) -> Result<u32, ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_none() {
         return info!("Vault '{}' not found", name);
@@ -46,7 +46,7 @@ pub fn use_by_name(name: &str) -> Result<(), ArchiverError> {
     config.current_vault_id = *id;
     wrap_result!(config::save(&config))?;
 
-    Ok(())
+    Ok(*id)
 }
 
 /// 创建一个新的 vault，不能重名
@@ -72,13 +72,14 @@ pub fn display() {
     });
 }
 
-pub fn remove(name: &str) -> Result<(), ArchiverError> {
+pub fn remove(name: &str) -> Result<u32, ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_none() {
         return info!("Vault '{}' not found", name);
     }
+    let (id, vault) = vault.unwrap();
 
     // todo 下面将vault标记为删除
 
-    Ok(())
+    Ok(*id)
 }

@@ -21,9 +21,9 @@ pub fn add_alias(arg: &str) {
     match alias::set_alias(&arg) {
         Ok(_) => {
             let msg = format!("Alias '{}' is set successfully.", arg);
-            log::succ(&oper, arg, None, &msg);
+            log::succ(&oper, arg, None, None, &msg);
         }
-        Err(e) => log::err(&oper, arg, None, e),
+        Err(e) => log::err(&oper, arg, e),
     }
 }
 
@@ -33,9 +33,9 @@ pub fn remove_alias(arg: &str) {
     match alias::remove_alias(&arg) {
         Ok(_) => {
             let msg = format!("Alias '{}' is removed successfully.", arg);
-            log::succ(&oper, arg, None, &msg);
+            log::succ(&oper, arg, None, None, &msg);
         }
-        Err(e) => log::err(&oper, arg, None, e),
+        Err(e) => log::err(&oper, arg, e),
     }
 }
 
@@ -45,8 +45,8 @@ pub fn auto_check_update(arg: &str) {
     match auto_check_update::toggle(&arg) {
         Ok(_) => {
             let msg = format!("Auto check update is set to '{}'.", arg);
-            log::succ(&oper, arg, None, &msg);
+            log::succ(&oper, arg, None, None, &msg);
         }
-        Err(e) => log::err(&oper, arg, None, e),
+        Err(e) => log::err(&oper, arg, e),
     }
 }

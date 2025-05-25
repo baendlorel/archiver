@@ -13,8 +13,8 @@ use crate::{
 
 /// 将归档记录插入到列表中
 /// - 自动生成部分字段
-pub fn insert(entry: ListEntry) -> Result<(), ArchiverError> {
-    wrap_result!(jsonl::append(&entry, paths::LIST_FILE_PATH.as_path()))?;
+pub fn insert(entry: &ListEntry) -> Result<(), ArchiverError> {
+    wrap_result!(jsonl::append(entry, paths::LIST_FILE_PATH.as_path()))?;
     Ok(())
 }
 
@@ -67,14 +67,14 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
 
     // 下面开始输出对好了空格的列表
     // 字段名称
-    let field_time = "Archived At";
+    let field_archived_at = "Archived At";
     let field_id = "ID";
     let field_vault_name = "Vault";
     let field_target = "Item";
     let field_dir = "Directory";
 
     let mut col_len = ListColumnLen {
-        time: field_time.len(),
+        archived_at: field_archived_at.len(),
         vault_name: field_vault_name.len(),
         id: field_id.len(),
         target: field_target.len(),
@@ -83,7 +83,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
 
     for row in list.iter() {
         let cur = row.get_len();
-        col_len.time = col_len.time.max(cur.time);
+        col_len.archived_at = col_len.archived_at.max(cur.archived_at);
         col_len.vault_name = col_len.vault_name.max(cur.vault_name);
         col_len.id = col_len.id.max(cur.id);
         col_len.target = col_len.target.max(cur.target);
@@ -93,13 +93,13 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     println!(
         "{}",
         format!(
-            "{field_time}{} {field_vault_name}{} {field_id}{} {field_target}{} {field_dir}{}",
-            " ".repeat(col_len.time - field_time.len()),
+            "{field_archived_at}{} {field_vault_name}{} {field_id}{} {field_target}{} {field_dir}{}",
+            " ".repeat(col_len.archived_at - field_archived_at.len()),
             " ".repeat(col_len.vault_name - field_vault_name.len()),
             " ".repeat(col_len.id - field_id.len()),
             " ".repeat(col_len.target - field_target.len()),
             " ".repeat(col_len.dir - field_dir.len()),
-            field_time = field_time,
+            field_archived_at = field_archived_at,
             field_vault_name = field_vault_name,
             field_id = field_id,
             field_target = field_target,

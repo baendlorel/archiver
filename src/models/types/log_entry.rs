@@ -12,13 +12,26 @@ use super::OperType;
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
-    #[serde(with = "serde_ndt")]
-    pub time: NaiveDateTime, // 操作时间
-    pub is_succ: bool,   // 是否成功
-    pub oper: OperType,  // 操作类型
-    pub arg: String,     // 操作参数
-    pub remark: String,  // 备注
-    pub id: Option<u32>, // archive id，如果有的话
+    #[serde(rename = "odt", with = "serde_ndt")]
+    pub opered_at: NaiveDateTime, // 操作时间
+
+    #[serde(rename = "s")]
+    pub is_succ: bool, // 是否成功
+
+    #[serde(rename = "o")]
+    pub oper: OperType, // 操作类型
+
+    #[serde(rename = "a")]
+    pub arg: String, // 操作参数
+
+    #[serde(rename = "r")]
+    pub remark: String, // 备注
+
+    #[serde(rename = "aid")]
+    pub archive_id: Option<u32>, // archive id，如果有的话
+
+    #[serde(rename = "vid")]
+    pub vault_id: Option<u32>, // archive id，如果有的话
 }
 
 /// 为remark换行的缩进准备的常量
@@ -27,7 +40,7 @@ pub struct LogEntry {
 // const INVARIANT_PADDING: usize = 9;
 impl LogEntry {
     pub fn to_log(&self) -> String {
-        let time = dt::to_dt_string(&self.time);
+        let time = dt::to_dt_string(&self.opered_at);
 
         let status = if self.is_succ {
             //  ✓ 和 ✗
@@ -55,24 +68,34 @@ impl LogEntry {
             r.replace("\n", "\\n").grey()
         };
 
-        let id = if let Some(id) = self.id {
-            if self.oper == OperType::Put {
-                format!("-> {}", id.magenta())
-            } else {
-                "".to_string()
+        let archive_id = if let Some(archive_id) = self.archive_id {
+            match self.oper {
+                OperType::Put => format!("-> {}", archive_id.magenta()),
+                _ => "".to_string(),
+            }
+        } else {
+            "".to_string()
+        };
+
+        let vault_id = if let Some(vault_id) = self.vault_id {
+            match self.oper {
+                OperType::Put => format!("(vlt:{})", vault_id.bright_blue()),
+                OperType::Vault(_) => format!("(vlt:{})", vault_id.bright_blue()),
+                _ => "".to_string(),
             }
         } else {
             "".to_string()
         };
 
         format!(
-            "{} {} - {} {} - {} {}",
+            "{} {} - {} {} - {} {}{}",
             time.grey(),
             status,
             self.oper.to_padded_str(),
             self.arg,
             remark,
-            id,
+            archive_id,
+            vault_id,
         )
     }
 }

@@ -12,7 +12,7 @@ use crate::{
     models::{error::ArchiverError, types::ListEntry},
 };
 
-pub fn put(target: &str) -> Result<u32, ArchiverError> {
+pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd: std::path::PathBuf = paths::CWD.clone();
     let target_path = as_fatal!(cwd.join(target).canonicalize())?;
@@ -53,15 +53,14 @@ pub fn put(target: &str) -> Result<u32, ArchiverError> {
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
 
     // 新建实例
-    let new_entry = ListEntry::new(target_name_str, is_dir, target_dir);
-    let new_id = new_entry.id; // 提前记录好id否则insert后就被消耗了
-    let archived_path = vault_path.join(new_id.to_string());
+    let entry = ListEntry::new(target_name_str, is_dir, target_dir);
+    let archived_path = vault_path.join(entry.id.to_string());
 
     // 先移动再插表
     as_fatal!(fs::rename(&target_path, archived_path))?;
-    wrap_result!(list::insert(new_entry))?;
+    wrap_result!(list::insert(&entry))?;
 
-    Ok(new_id)
+    Ok(entry)
 }
 
 /// 目标路径如果满足下列情况之一，不允许put
