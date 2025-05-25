@@ -17,9 +17,10 @@ fn main() {
 
 fn apply_command(args: &Args) {
     match &args.command {
-        Some(AC::Put { targets }) => handlers::put(&targets),
+        Some(AC::Put { targets, message }) => handlers::put(&targets, message),
         Some(AC::Restore { ids }) => handlers::restore(&ids),
         Some(AC::Vault(action)) => handlers::vault(&action),
+        Some(AC::Move { ids, to }) => handlers::list(*all, *restored),
         Some(AC::List { all, restored }) => handlers::list(*all, *restored),
         Some(AC::Log { range }) => handlers::log(range),
         Some(AC::Config { statement }) => handlers::config(&statement),

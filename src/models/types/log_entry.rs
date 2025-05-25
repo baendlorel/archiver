@@ -15,7 +15,7 @@ use super::OperType;
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
-    #[serde(rename = "odt", with = "naive_date_time")]
+    #[serde(rename = "oat", with = "naive_date_time")]
     pub opered_at: NaiveDateTime, // 操作时间
 
     #[serde(rename = "s", with = "boolean")]
@@ -74,20 +74,20 @@ impl LogEntry {
         let archive_id = if let Some(archive_id) = self.archive_id {
             match self.oper {
                 OperType::Put => format!("-> {}", archive_id.magenta()),
-                _ => "".to_string(),
+                _ => String::new(),
             }
         } else {
-            "".to_string()
+            String::new()
         };
 
         let vault_id = if let Some(vault_id) = self.vault_id {
             match self.oper {
                 OperType::Put => format!("(vlt:{})", vault_id.bright_blue()),
                 OperType::Vault(_) => format!("(vlt:{})", vault_id.bright_blue()),
-                _ => "".to_string(),
+                _ => String::new(),
             }
         } else {
-            "".to_string()
+            String::new()
         };
 
         format!(

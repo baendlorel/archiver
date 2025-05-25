@@ -14,7 +14,7 @@ use crate::{
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ListEntry {
     /// 归档时间
-    #[serde(rename = "adt", with = "naive_date_time")]
+    #[serde(rename = "aat", with = "naive_date_time")]
     pub archived_at: NaiveDateTime,
 
     /// 是否已经恢复
@@ -39,6 +39,14 @@ pub struct ListEntry {
     /// 归档目标的原始路径
     #[serde(rename = "d")]
     pub dir: String,
+
+    /// 信息，可以写为什么归档
+    #[serde(rename = "m")]
+    pub message: String,
+
+    /// 备注
+    #[serde(rename = "r")]
+    pub remark: String,
 }
 
 /// 专门输出表格用的
@@ -61,15 +69,20 @@ pub struct ListColumnLen {
 }
 
 impl ListEntry {
-    pub fn new(target: String, is_dir: bool, dir: String) -> Self {
+    pub fn new(target: String, is_dir: bool, dir: String, message: String) -> Self {
         Self {
-            id: auto_incr::archive_id::next(),
-            vault_id: CONFIG.current_vault_id,
+            // 这些是传入参数
             target,
             is_dir,
             dir,
+            message,
+
+            // 这些是自动获取
+            id: auto_incr::archive_id::next(),
+            vault_id: CONFIG.current_vault_id,
             archived_at: dt::now_dt(),
             is_restored: false,
+            remark: String::new(),
         }
     }
 
@@ -123,12 +136,12 @@ impl ListRow {
             if self.is_restored {
                 "(R)".orange()
             } else {
-                "".to_string()
+                String::new()
             },
             if self.is_dir {
                 std::path::MAIN_SEPARATOR.to_string()
             } else {
-                "".to_string()
+                String::new()
             }
         );
 

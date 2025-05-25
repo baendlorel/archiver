@@ -43,11 +43,11 @@ pub fn vault(action: &VaultAction) {
                 }
             }
         }
-        VaultAction::Close { name } => {
-            let oper = OperType::Vault(format!("close {}", name));
-            match vault::close(name) {
+        VaultAction::Remove { name } => {
+            let oper = OperType::Vault(format!("remove {}", name));
+            match vault::remove(name) {
                 Ok(vault_id) => {
-                    let msg = format!("Vault '{}' is successfully closed", name);
+                    let msg = format!("Vault '{}' is successfully removed", name);
                     log::succ(&oper, name, None, Some(vault_id), &msg);
                 }
                 Err(e) => {
@@ -58,17 +58,18 @@ pub fn vault(action: &VaultAction) {
     }
 }
 
-pub fn put(targets: &[String]) {
+pub fn put(targets: &[String], message: &Option<String>) {
     let oper = OperType::Put;
     for target in targets {
         println!("Putting '{}' into archive", target);
-        match archive::put(&target) {
+        match archive::put(&target, message) {
             Ok(entry) => {
                 let msg = format!(
-                    "'{}' is successfully archived, id:{} (vlt:{})",
+                    "'{}' is successfully archived, id:{} (vlt:{}), message: {}",
                     target,
                     entry.id,
-                    vault::get_name(entry.vault_id)
+                    vault::get_name(entry.vault_id),
+                    entry.message,
                 );
                 log::succ(&oper, target, Some(entry.id), Some(entry.vault_id), &msg);
             }

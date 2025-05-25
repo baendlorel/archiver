@@ -14,9 +14,13 @@ pub enum ArchiverCommand {
     /// Archive a file/directory by its name
     #[command(visible_aliases = ["p"])]
     Put {
-        /// The file/directory names to be archived.
+        /// The file/directory names to be archived
         #[arg(value_name = "targets", required = true)]
         targets: Vec<String>, // 改成 Vec<String>
+
+        /// The reason why you archive it
+        #[arg(short, long)]
+        message: Option<String>,
     },
 
     /// Restore an archived object by its file/directory name or id
@@ -25,6 +29,18 @@ pub enum ArchiverCommand {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
         ids: Vec<u32>,
+    },
+
+    /// Move archived objects to a new vault
+    #[command(visible_aliases = ["m", "mov"])]
+    Move {
+        /// id of the target to be restored. Can be obtained by command `arv list`
+        #[arg(value_name = "ids", required = true)]
+        ids: Vec<u32>,
+
+        /// To which vault
+        #[arg[short, long, required = true]]
+        to: String,
     },
 
     /// Vault management
@@ -46,12 +62,13 @@ pub enum ArchiverCommand {
     /// Show the log of archiving operations
     #[command(visible_alias = "lg")]
     Log {
-        /// YYYYMM (from yyyymm to now), YYYYMM-YYYYMM, *-YYYYMM
+        /// YYYYMM (display logs of this month), YYYYMM-YYYYMM
         #[arg(value_name = "time-range")]
         range: Option<String>,
     },
 
     // todo config也要像vault一样改为子命令比较好
+    // todo config增加配置list列表项的功能
     /// Set or show configurations, use `arv config -h` to see more
     #[command(visible_aliases = ["c", "cfg"])]
     Config {
@@ -86,8 +103,8 @@ pub enum VaultAction {
         u: bool,
     },
 
-    /// Close a vault by name, this will not delete the vault, just stop using it
-    Close {
+    /// Remove a vault by name
+    Remove {
         #[arg(value_name = "name", required = true)]
         name: String,
     },

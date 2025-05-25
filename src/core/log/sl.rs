@@ -33,10 +33,10 @@ pub fn save(
             if is_succ {
                 full_path.force_to_string()
             } else {
-                remark.unwrap_or("".to_string())
+                remark.unwrap_or(String::new())
             }
         }
-        _ => remark.unwrap_or("".to_string()),
+        _ => remark.unwrap_or(String::new()),
     };
 
     // 准备日志内容

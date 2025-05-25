@@ -24,6 +24,14 @@ static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     vault_map
 });
 
+pub fn find_by_name(name: &str) -> Option<Vault> {
+    if let Some((_, vault)) = VAULT_MAP.iter().find(|(_, vault)| vault.name == name) {
+        Some(vault.clone())
+    } else {
+        None
+    }
+}
+
 /// 根据vault_id获取vault名字，用于log、list等展示
 pub fn get_name(id: u32) -> String {
     let vault = must_some!(
@@ -35,18 +43,18 @@ pub fn get_name(id: u32) -> String {
 
 /// 修改当前使用的 vault
 pub fn use_by_name(name: &str) -> Result<u32, ArchiverError> {
-    let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
+    let vault = find_by_name(name);
     if vault.is_none() {
         return info!("Vault '{}' not found", name);
     }
 
     // 更新current_vault_id
-    let (id, _) = vault.unwrap();
+    let id = vault.unwrap().id;
     let mut config = wrap_result!(config::load())?;
-    config.current_vault_id = *id;
+    config.current_vault_id = id;
     wrap_result!(config::save(&config))?;
 
-    Ok(*id)
+    Ok(id)
 }
 
 /// 创建一个新的 vault，不能重名
@@ -55,7 +63,7 @@ pub fn create(
     use_at_once: bool,
     remark: &Option<String>,
 ) -> Result<Vault, ArchiverError> {
-    let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
+    let vault = find_by_name(name);
     if vault.is_some() {
         return info!("Vault with the same name '{}' already exists", name);
     }
@@ -84,14 +92,16 @@ pub fn display() {
     });
 }
 
-pub fn close(name: &str) -> Result<u32, ArchiverError> {
-    let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
+/// 根据名字删除一个vault
+/// - 其中的归档对象会被转移到default库
+pub fn remove(name: &str) -> Result<u32, ArchiverError> {
+    let vault = find_by_name(name);
     if vault.is_none() {
         return info!("Vault '{}' not found", name);
     }
-    let (id, _vault) = vault.unwrap();
+    let vault = vault.unwrap();
 
     // todo 到底要不要允许删除？
 
-    Ok(*id)
+    Ok(vault.id)
 }

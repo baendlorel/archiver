@@ -6,13 +6,13 @@ use std::{
     path::PathBuf,
 };
 
-use super::list;
+use super::{list, vault};
 use crate::{
     misc::{ForceToString, paths},
     models::{error::ArchiverError, types::ListEntry},
 };
 
-pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
+pub fn put(target: &str, message: &Option<String>) -> Result<ListEntry, ArchiverError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd: std::path::PathBuf = paths::CWD.clone();
     let target_path = as_fatal!(cwd.join(target).canonicalize())?;
@@ -52,7 +52,12 @@ pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
 
     // 新建实例
-    let entry = ListEntry::new(target_name_str, is_dir, target_dir);
+    let message: String = if let Some(m) = message {
+        m.clone()
+    } else {
+        String::new()
+    };
+    let entry = ListEntry::new(target_name_str, is_dir, target_dir, message);
     let archived_path = paths::get_archived_path(entry.id, entry.vault_id);
 
     // 先移动再插表
@@ -85,7 +90,7 @@ fn is_unallowed_path(target_path: &PathBuf) -> bool {
 }
 
 pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
-    let (mut list, index) = wrap_result!(list::find(id))?;
+    let (mut list, index) = wrap_result!(list::find_one(id))?;
     let entry = &list[index];
     if entry.is_restored {
         return info!(
@@ -129,4 +134,20 @@ pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     wrap_result!(jsonl::save(&list, paths::LIST_FILE_PATH.as_path()))?;
 
     Ok(list[index].clone())
+}
+
+pub fn move_to(ids: &[u32], to: &str) -> Result<u32, ArchiverError> {
+    let mut targets = wrap_result!(list::find(ids))?;
+    let vault = match vault::find_by_name(to) {
+        Some(vault) => vault,
+        None => {
+            return warn!("Vault '{}' not found", to);
+        }
+    };
+
+    targets
+        .iter_mut()
+        .for_each(|entry| entry.vault_id = vault.id);
+
+    Ok(0)
 }

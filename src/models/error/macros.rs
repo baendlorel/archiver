@@ -1,7 +1,9 @@
-// todo 缩减、归并宏
-#[macro_export]
+/// 此处的宏无法再缩减，err_fatal在下面还有其他地方用
+/// 故同理，另外两个warn/info宏也无法再缩减
+
 /// 创建一个fatal级别的ArchiverError，支持字符串模板
-macro_rules! err_fatal_from_str {
+#[macro_export]
+macro_rules! err_fatal {
     ($($arg:tt)*) => {
         $crate::models::error::ArchiverError::fatal(
             format!($($arg)*),
@@ -15,17 +17,17 @@ macro_rules! err_fatal_from_str {
     };
 }
 
-#[macro_export]
 /// 创建一个fatal级别的ArchiverError的Result返回，支持字符串模板
+#[macro_export]
 macro_rules! fatal {
     ($($arg:tt)*) => {
         Err($crate::err_fatal_from_str!($($arg)*))
     };
 }
 
-#[macro_export]
 /// 创建一个info级别的ArchiverError，支持字符串模板
-macro_rules! err_info_from_str {
+#[macro_export]
+macro_rules! err_info {
     ($($arg:tt)*) => {
         $crate::models::error::ArchiverError::info(
             format!($($arg)*),
@@ -39,17 +41,17 @@ macro_rules! err_info_from_str {
     };
 }
 
-#[macro_export]
 /// 创建一个info级别的ArchiverError的Result返回，支持字符串模板
+#[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
-        Err($crate::err_info_from_str!($($arg)*))
+        Err($crate::err_info!($($arg)*))
     };
 }
 
-#[macro_export]
 /// 创建一个warn级别的ArchiverError，支持字符串模板
-macro_rules! err_warn_from_str {
+#[macro_export]
+macro_rules! err_warn {
     ($($arg:tt)*) => {
         $crate::models::error::ArchiverError::warn(
             format!($($arg)*),
@@ -63,18 +65,18 @@ macro_rules! err_warn_from_str {
     };
 }
 
-#[macro_export]
 /// 创建一个warn级别的ArchiverError的Result返回，支持字符串模板
+#[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {
-        Err($crate::err_warn_from_str!($($arg)*))
+        Err($crate::err_warn!($($arg)*))
     };
 }
 
-#[macro_export]
 /// 包裹不允许失败的Result对象
 /// - 以unwrap_or_else处理
 /// - 为Err会直接panic
+#[macro_export]
 macro_rules! must_ok {
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|error| {
@@ -82,7 +84,7 @@ macro_rules! must_ok {
                 "{} {}{}\n at {} {}:{}",
                 crate::misc::mark::fail(),
                 if $s.is_empty() {
-                    "".to_string()
+                    String::new()
                 } else {
                     format!("{}\n", $s)
                 },
@@ -95,10 +97,10 @@ macro_rules! must_ok {
     };
 }
 
-#[macro_export]
 /// 包裹不允许为None的Option对象
 /// - 以unwrap_or_else处理
 /// - 为None会直接panic
+#[macro_export]
 macro_rules! must_some {
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|| {
@@ -114,27 +116,27 @@ macro_rules! must_some {
     };
 }
 
-#[macro_export]
 /// 包裹Result或Option，并叠加stack，支持：
 /// - 不含ArchiverError的Result对象
 /// - Option对象（需第二个参数message）
+#[macro_export]
 macro_rules! as_fatal {
     ($o:expr) => {
         match $o {
             Ok(val) => Ok(val),
-            Err(e) => Err($crate::err_fatal_from_str!("{}", e.to_string())),
+            Err(e) => Err($crate::err_fatal!("{}", e.to_string())),
         }
     };
     ($o:expr, $e:expr) => {
         match $o {
             Some(val) => Ok(val),
-            None => Err($crate::err_fatal_from_str!("{}", $e.to_string())),
+            None => Err($crate::err_fatal!("{}", $e.to_string())),
         }
     };
 }
 
-#[macro_export]
 /// 包裹Result<_,ArchiverError>，叠加stack
+#[macro_export]
 macro_rules! wrap_result {
     ($o:expr) => {
         match $o {
@@ -157,8 +159,8 @@ macro_rules! wrap_result {
     };
 }
 
-#[macro_export]
 /// 展示一个ArchiverError的错误，但只是看看，依然继续执行后面的
+#[macro_export]
 macro_rules! log_if_err {
     ($e:expr) => {
         $e.map_err(|e| e.display()).ok()

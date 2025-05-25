@@ -20,13 +20,26 @@ pub fn insert(entry: &ListEntry) -> Result<(), ArchiverError> {
 
 /// 查找某个id的归档记录，用在restore上
 /// - 由于archive_id全局唯一，所以此处需要搜索所有的vault
-pub fn find(id: u32) -> Result<(Vec<ListEntry>, usize), ArchiverError> {
+///
+/// 返回ListEntry列表和找到的index
+pub fn find_one(id: u32) -> Result<(Vec<ListEntry>, usize), ArchiverError> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
     let index = list.iter().position(|entry| entry.id == id);
     if let Some(index) = index {
         return Ok((list, index));
     }
     info!("id:{} cannot be found", id)
+}
+
+pub fn find(ids: &[u32]) -> Result<Vec<ListEntry>, ArchiverError> {
+    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+
+    let result = list
+        .into_iter()
+        .filter(|entry| ids.contains(&entry.id))
+        .collect();
+
+    Ok(result)
 }
 
 pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
