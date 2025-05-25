@@ -3,9 +3,9 @@ use crate::{info, must_ok, must_some, wrap_result};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-use super::{auto_incr, config};
+use super::config;
 use crate::{
-    misc::{dt, jsonl, paths},
+    misc::{jsonl, paths},
     models::{error::ArchiverError, types::Vault},
 };
 
@@ -16,6 +16,7 @@ static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     );
 
     let mut vault_map: HashMap<u32, Vault> = HashMap::new();
+    vault_map.insert(0, Vault::default()); // 默认vault
     for v in vaults {
         vault_map.insert(v.id, v);
     }

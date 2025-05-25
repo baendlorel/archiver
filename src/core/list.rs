@@ -2,50 +2,30 @@ use crate::{as_fatal, info, wrap_result};
 
 use owo_colors::OwoColorize;
 use std::fs;
-use std::path::PathBuf;
 
-use crate::misc::{dt, jsonl, paths};
-use crate::models::{
-    error::ArchiverError,
-    types::{CONFIG, ListEntry, ListRow, ListRowColWidth},
+use crate::{
+    misc::{jsonl, paths},
+    models::{
+        error::ArchiverError,
+        types::{ListColumnLen, ListEntry, ListRow},
+    },
 };
 
-pub fn insert(id: u32, target: String, is_dir: bool, dir: String) -> Result<(), ArchiverError> {
-    // 自动纳入当前使用的vault
-    let vault_id = CONFIG.current_vault_id;
-    let archive_entry = ListEntry {
-        id,
-        vault_id,
-        target,
-        is_dir,
-        dir,
-        time: dt::now_dt_string(),
-        is_restored: false,
-    };
-
-    wrap_result!(jsonl::append(
-        &archive_entry,
-        paths::LIST_FILE_PATH.as_path()
-    ))?;
+/// 将归档记录插入到列表中
+/// - 自动生成部分字段
+pub fn insert(entry: ListEntry) -> Result<(), ArchiverError> {
+    wrap_result!(jsonl::append(&entry, paths::LIST_FILE_PATH.as_path()))?;
     Ok(())
 }
 
 /// 查找某个id的归档记录，用在restore上
 /// - 由于archive_id全局唯一，所以此处需要搜索所有的vault
-pub fn find(id: u32) -> Result<(ListEntry, usize, PathBuf), ArchiverError> {
-    let list_paths = paths::get_all_list_paths();
-
-    for list_path in list_paths {
-        let mut line_index: usize = 0;
-        let list = wrap_result!(jsonl::load::<ListEntry>(&list_path))?;
-        for entry in list {
-            if entry.id == id {
-                return Ok((entry, line_index, list_path));
-            }
-            line_index += 1;
-        }
+pub fn find(id: u32) -> Result<(Vec<ListEntry>, usize), ArchiverError> {
+    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+    let index = list.iter().position(|entry| entry.id == id);
+    if let Some(index) = index {
+        return Ok((list, index));
     }
-
     info!("id:{} cannot be found", id)
 }
 
@@ -93,7 +73,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     let field_target = "Item";
     let field_dir = "Directory";
 
-    let mut w = ListRowColWidth {
+    let mut col_len = ListColumnLen {
         time: field_time.len(),
         vault_name: field_vault_name.len(),
         id: field_id.len(),
@@ -102,22 +82,23 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     };
 
     for row in list.iter() {
-        w.time = w.time.max(row._width.time);
-        w.vault_name = w.vault_name.max(row._width.vault_name);
-        w.id = w.id.max(row._width.id);
-        w.target = w.target.max(row._width.target);
-        w.dir = w.dir.max(row._width.dir);
+        let cur = row.get_len();
+        col_len.time = col_len.time.max(cur.time);
+        col_len.vault_name = col_len.vault_name.max(cur.vault_name);
+        col_len.id = col_len.id.max(cur.id);
+        col_len.target = col_len.target.max(cur.target);
+        col_len.dir = col_len.dir.max(cur.dir);
     }
 
     println!(
         "{}",
         format!(
             "{field_time}{} {field_vault_name}{} {field_id}{} {field_target}{} {field_dir}{}",
-            " ".repeat(w.time - field_time.len()),
-            " ".repeat(w.vault_name - field_vault_name.len()),
-            " ".repeat(w.id - field_id.len()),
-            " ".repeat(w.target - field_target.len()),
-            " ".repeat(w.dir - field_dir.len()),
+            " ".repeat(col_len.time - field_time.len()),
+            " ".repeat(col_len.vault_name - field_vault_name.len()),
+            " ".repeat(col_len.id - field_id.len()),
+            " ".repeat(col_len.target - field_target.len()),
+            " ".repeat(col_len.dir - field_dir.len()),
             field_time = field_time,
             field_vault_name = field_vault_name,
             field_id = field_id,
@@ -129,18 +110,19 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     );
 
     for row in list.iter() {
-        println!(
-            "{time}{} {vault_name}{} {id}{} {target}{} {dir}",
-            " ".repeat(w.time - row._width.time),
-            " ".repeat(w.vault_name - row._width.vault_name),
-            " ".repeat(w.id - row._width.id),
-            " ".repeat(w.target - row._width.target),
-            time = row.time,
-            vault_name = row.vault_name,
-            id = row.id,
-            target = row.target,
-            dir = row.dir,
-        );
+        println!("{}", row.to_styled(&col_len));
+        // println!(
+        //     "{time}{} {vault_name}{} {id}{} {target}{} {dir}",
+        //     " ".repeat(col_len.time - cur.time),
+        //     " ".repeat(col_len.vault_name - cur.vault_name),
+        //     " ".repeat(col_len.id - cur.id),
+        //     " ".repeat(col_len.target - cur.target),
+        //     time = row.time,
+        //     vault_name = row.vault_name,
+        //     id = row.id,
+        //     target = row.target,
+        //     dir = row.dir,
+        // );
     }
 
     Ok(())

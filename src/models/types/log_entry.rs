@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     misc::{dt, mark, paths},
-    models::{serde_ndt, types::field_style::Grey},
+    models::{serde_ndt, types::field_style::CustomColors},
 };
 
 use super::OperType;

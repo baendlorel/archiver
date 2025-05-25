@@ -1,4 +1,4 @@
-use crate::as_fatal;
+use crate::{as_fatal, must_ok, must_some};
 
 use chrono::{Datelike, Local, Months, NaiveDate, NaiveDateTime};
 
@@ -14,6 +14,16 @@ pub const MIN_D: NaiveDate = NaiveDate::MIN;
 
 #[allow(dead_code)]
 pub const MAX_D: NaiveDate = NaiveDate::MAX;
+
+/// 获取1970年1月1日的日期时间
+/// - 无时区
+pub fn start_dt() -> NaiveDateTime {
+    let d = must_ok!(
+        NaiveDate::parse_from_str("19700101", "%Y%m%d"),
+        "Failed to create start date"
+    );
+    must_some!(d.and_hms_opt(0, 0, 0), "Failed to create start date time")
+}
 
 // # 与当前时间有关的函数
 /// 获取当前日期时间字符串

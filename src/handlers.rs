@@ -77,7 +77,7 @@ pub fn restore(ids: &[u32]) {
                 let msg = format!(
                     "id:{} is successfully restored to '{}'",
                     id.magenta(),
-                    entry.get_target_path()
+                    entry.get_target_path_string()
                 );
                 log::succ(&oper, &id.to_string(), Some(*id), &msg);
             }

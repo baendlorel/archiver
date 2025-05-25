@@ -9,7 +9,7 @@ fn default_archive_id() -> u32 {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct AutoIncr {
+pub struct AutoIncrVars {
     #[serde(default = "default_vault_id")]
     /// 库的id，会自增
     pub vault_id: u32,
@@ -19,8 +19,8 @@ pub struct AutoIncr {
     pub archive_id: u32,
 }
 
-impl AutoIncr {
-    pub fn default() -> AutoIncr {
+impl AutoIncrVars {
+    pub fn default() -> AutoIncrVars {
         Self {
             vault_id: 0,
             archive_id: 0,

@@ -1,4 +1,4 @@
-use crate::{as_fatal, info, must_some, warn, wrap_result};
+use crate::{as_fatal, info, misc::jsonl, must_some, warn, wrap_result};
 
 use std::{
     ffi::{OsStr, OsString},
@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-use super::{auto_incr, list};
+use super::list;
 use crate::{
     misc::{ForceToString, force_no_loss_string, paths},
     models::{error::ArchiverError, types::ListEntry},
@@ -31,13 +31,14 @@ pub fn put(target: &str) -> Result<u32, ArchiverError> {
     }
 
     // & 路径相关性检测：不能归档归档器本身、其父目录、其子目录
-    if invalid_target(&target_path) {
+    if not_allowed_path(&target_path) {
         return warn!(
             "Target cannot be the archiver directory, its parent, or its inner object. Got '{}'",
             target
         );
     }
 
+    // 下面这段逻辑是否写在ListEntry::new()里？
     // 必须无损转换OsString
     let target_dir =
         must_some!(target_path.parent(), "Fail to get target directory").force_to_string();
@@ -47,27 +48,35 @@ pub fn put(target: &str) -> Result<u32, ArchiverError> {
     // 必须无损转换OsString
     let target_name_str = force_no_loss_string(target_name);
 
-    // 都没有异常，那么开始归档
+    // * 下面开始归档
+    // 准备字段
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
-    let next_id = auto_incr::archive_id::next();
-    let archived_path = vault_path.join(next_id.to_string());
 
+    // 新建实例
+    let new_entry = ListEntry::new(target_name_str, is_dir, target_dir);
+    let new_id = new_entry.id; // 提前记录好id否则insert后就被消耗了
+    let archived_path = vault_path.join(new_id.to_string());
+
+    // 先移动再插表
     as_fatal!(fs::rename(&target_path, archived_path))?;
-    wrap_result!(list::insert(next_id, target_name_str, is_dir, target_dir))?;
+    wrap_result!(list::insert(new_entry))?;
 
-    Ok(next_id)
+    Ok(new_id)
 }
 
-/// 属于Archiver自己的文件夹，以及其父文件夹，不允许put
-fn invalid_target(target_path: &PathBuf) -> bool {
+/// 目标路径如果满足下列情况之一，不允许put
+/// 1. 等于归档器本身
+/// 2. 以归档器路径开头的任何子路径
+/// 3. 等于归档器的父目录
+fn not_allowed_path(target_path: &PathBuf) -> bool {
     let root = paths::ROOT_DIR.as_path();
 
-    // 这句可以判定target是不是Archiver及其子目录
+    // 判定1、2
     if target_path.starts_with(root) {
         return true;
     }
 
-    // 这句可以判定target是不是Archiver的父目录
+    // 判定3
     for ancestor in root.ancestors() {
         if target_path == ancestor {
             return true;
@@ -78,12 +87,13 @@ fn invalid_target(target_path: &PathBuf) -> bool {
 }
 
 pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
-    let (entry, line_index, list_path) = wrap_result!(list::find(id))?;
+    let (mut list, index) = wrap_result!(list::find(id))?;
+    let entry = &list[index];
     if entry.is_restored {
         return info!(
             "id:{} has already been restored to '{}'",
             id,
-            entry.get_target_path()
+            entry.get_target_path_string()
         );
     }
 
@@ -114,29 +124,11 @@ pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
         as_fatal!(fs::create_dir_all(&dir))?;
     }
 
+    // 和put一样，先移动文件，再改表
     as_fatal!(fs::rename(archive_path, target_path))?;
-    wrap_result!(mark_as_restored(line_index, &list_path))?;
-    Ok(entry)
-}
+    // 标记为已恢复
+    list[index].is_restored = true;
+    wrap_result!(jsonl::save(&list, paths::LIST_FILE_PATH.as_path()))?;
 
-/// 只会在目标已经被restored之后调用
-fn mark_as_restored(line_index: usize, list_path: &std::path::Path) -> Result<(), ArchiverError> {
-    // 读取整个文件
-    let content = as_fatal!(fs::read_to_string(&list_path))?;
-
-    let mut lines: Vec<&str> = content.lines().collect();
-    let target_line = lines[line_index];
-    let modified_line = {
-        // 把这条记录标记为restored
-        let mut entry = as_fatal!(serde_json::from_str::<ListEntry>(target_line))?;
-        entry.is_restored = true;
-        as_fatal!(serde_json::to_string(&entry))?
-    };
-
-    lines[line_index] = modified_line.as_str();
-
-    // 将内容写回文件
-    as_fatal!(fs::write(&list_path, lines.join("\n") + "\n"))?;
-
-    Ok(())
+    Ok(list[index].clone())
 }

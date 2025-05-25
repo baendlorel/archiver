@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use super::ForceToString;
 use crate::models::{
     serde_json::SerdeJson,
-    types::{ArchiverConfig, AutoIncr},
+    types::{ArchiverConfig, AutoIncrVars},
 };
 
 mod consts {
@@ -115,7 +115,7 @@ pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let path = ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE);
     if !path.exists() {
         let json = must_ok!(
-            AutoIncr::default().to_formatted_string(),
+            AutoIncrVars::default().to_formatted_string(),
             "Failed to serialize AutoIncr"
         );
         must_ok!(

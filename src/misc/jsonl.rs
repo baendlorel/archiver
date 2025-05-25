@@ -57,7 +57,7 @@ where
 }
 
 /// 保存列表到jsonl文件
-pub fn save<T>(list: Vec<T>, file_path: &Path) -> Result<(), ArchiverError>
+pub fn save<T>(list: &[T], file_path: &Path) -> Result<(), ArchiverError>
 where
     T: ?Sized + Serialize + DeserializeOwned + SerdeJson,
 {
