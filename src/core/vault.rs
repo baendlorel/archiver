@@ -50,7 +50,11 @@ pub fn use_by_name(name: &str) -> Result<u32, ArchiverError> {
 }
 
 /// 创建一个新的 vault，不能重名
-pub fn create(name: &str, remark: &Option<String>) -> Result<Vault, ArchiverError> {
+pub fn create(
+    name: &str,
+    use_at_once: bool,
+    remark: &Option<String>,
+) -> Result<Vault, ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_some() {
         return info!("Vault with the same name '{}' already exists", name);
@@ -58,6 +62,14 @@ pub fn create(name: &str, remark: &Option<String>) -> Result<Vault, ArchiverErro
 
     let vault = Vault::new(name, remark.clone());
     wrap_result!(jsonl::append(&vault, &paths::VAULTS_FILE_PATH))?;
+
+    // 此函数可以用于创建
+    let _ = paths::get_vault_path(vault.id);
+
+    if use_at_once {
+        // 如果需要立即使用这个vault
+        wrap_result!(use_by_name(name))?;
+    }
 
     // 此处不需要VAULTS.push(vault)，因为创建结束后就退出了
     Ok(vault)
@@ -72,14 +84,14 @@ pub fn display() {
     });
 }
 
-pub fn remove(name: &str) -> Result<u32, ArchiverError> {
+pub fn close(name: &str) -> Result<u32, ArchiverError> {
     let vault = VAULT_MAP.iter().find(|(_, vault)| vault.name == name);
     if vault.is_none() {
         return info!("Vault '{}' not found", name);
     }
     let (id, _vault) = vault.unwrap();
 
-    // todo 下面将vault标记为删除
+    // todo 到底要不要允许删除？
 
     Ok(*id)
 }

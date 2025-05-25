@@ -28,7 +28,7 @@ pub enum ArchiverCommand {
     },
 
     /// Vault management
-    #[command(subcommand)]
+    #[command(subcommand, visible_aliases = ["v", "vlt"])]
     Vault(VaultAction),
 
     /// Show the list of archived objects
@@ -51,6 +51,7 @@ pub enum ArchiverCommand {
         range: Option<String>,
     },
 
+    // todo config也要像vault一样改为子命令比较好
     /// Set or show configurations, use `arv config -h` to see more
     #[command(visible_aliases = ["c", "cfg"])]
     Config {
@@ -72,20 +73,26 @@ pub enum VaultAction {
 
     /// Create a new vault
     Create {
+        /// Name of your new vault
         #[arg(value_name = "name", required = true)]
         name: String,
 
         /// Optional remark for the vault
         #[arg(short, long)]
         remark: Option<String>,
+
+        /// Use the new vault at once
+        #[arg(short)]
+        u: bool,
     },
 
-    /// Remove a vault by name
-    Remove {
+    /// Close a vault by name, this will not delete the vault, just stop using it
+    Close {
         #[arg(value_name = "name", required = true)]
         name: String,
     },
 
     /// List all vaults
+    #[command(visible_aliases = ["ls"])]
     List,
 }

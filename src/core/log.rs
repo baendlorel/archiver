@@ -7,6 +7,8 @@ use crate::models::types::OperType;
 mod parser;
 mod sl;
 
+pub mod format_arg;
+
 pub fn succ(
     oper: &OperType,
     arg: &str,

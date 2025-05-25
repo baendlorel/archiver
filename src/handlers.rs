@@ -12,22 +12,27 @@ use crate::{
 
 pub fn vault(action: &VaultAction) {
     match action {
-        VaultAction::Create { name, remark } => {
-            let oper = OperType::Vault(format!("create {}", name));
-            match vault::create(name, remark) {
+        VaultAction::Create {
+            name,
+            remark,
+            u: use_at_once,
+        } => {
+            let oper = OperType::Vault("create".to_string());
+            match vault::create(name, *use_at_once, remark) {
                 Ok(vault) => {
                     let msg = format!(
                         "Vault '{}' is successfully created, vault id:{}",
                         name, vault.id
                     );
-                    log::succ(&oper, name, None, Some(vault.id), &msg);
+                    let arg = log::format_arg::vault::create(name, *use_at_once, remark);
+                    log::succ(&oper, &arg, None, Some(vault.id), &msg);
                 }
                 Err(e) => log::err(&oper, name, e),
             }
         }
         VaultAction::List => vault::display(),
         VaultAction::Use { name } => {
-            let oper = OperType::Vault(format!("use {}", name));
+            let oper = OperType::Vault("use".to_string());
             match vault::use_by_name(name) {
                 Ok(vault_id) => {
                     let msg = format!("Vault '{}' is successfully set as current vault", name);
@@ -38,11 +43,11 @@ pub fn vault(action: &VaultAction) {
                 }
             }
         }
-        VaultAction::Remove { name } => {
-            let oper = OperType::Vault(format!("remove {}", name));
-            match vault::remove(name) {
+        VaultAction::Close { name } => {
+            let oper = OperType::Vault(format!("close {}", name));
+            match vault::close(name) {
                 Ok(vault_id) => {
-                    let msg = format!("Vault '{}' is successfully removed", name);
+                    let msg = format!("Vault '{}' is successfully closed", name);
                     log::succ(&oper, name, None, Some(vault_id), &msg);
                 }
                 Err(e) => {

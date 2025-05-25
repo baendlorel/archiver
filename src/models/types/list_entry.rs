@@ -42,7 +42,6 @@ pub struct ListEntry {
 }
 
 /// 专门输出表格用的
-/// todo 改成全部字段，然后to_styled方法，入参是字段间隔，回参是上色后的样子
 pub struct ListRow {
     pub archived_at: String,
     pub vault_name: String,

@@ -1,5 +1,4 @@
 // todo 缩减、归并宏
-
 #[macro_export]
 /// 创建一个fatal级别的ArchiverError，支持字符串模板
 macro_rules! err_fatal_from_str {
