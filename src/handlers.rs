@@ -104,6 +104,20 @@ pub fn restore(ids: &[u32]) {
     }
 }
 
+pub fn move_to(ids: &[u32], to: &str) {
+    let oper = OperType::Move;
+    match archive::move_to(ids, to) {
+        Ok((count, total)) => {
+            let msg = format!(
+                "{}/{} entries are successfully moved to vault '{}'",
+                count, total, to
+            );
+            log::succ(&oper, &to.to_string(), None, None, &msg);
+        }
+        Err(e) => log::err(&oper, &to.to_string(), e),
+    }
+}
+
 pub fn list(all: bool, restored: bool) {
     log_if_err!(list::display(all, restored));
 }

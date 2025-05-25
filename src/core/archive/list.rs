@@ -52,7 +52,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     let content = as_fatal!(fs::read_to_string(list_file_path))?;
 
     let mut list: Vec<ListRow> = vec![];
-    let mut counter = 0;
+    let mut count = 0;
     for line in content.lines() {
         if line.trim().is_empty() {
             continue; // 跳过空行
@@ -66,7 +66,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
 
                 // 设置了all的话，展示全部，否则只展示未恢复的对象
                 if display_condition {
-                    counter += 1;
+                    count += 1;
                     list.push(entry.to_row());
                 }
             }
@@ -74,7 +74,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
         }
     }
 
-    if counter == 0 {
+    if count == 0 {
         println!("No archived object found");
     }
 

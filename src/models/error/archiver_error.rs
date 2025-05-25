@@ -79,12 +79,12 @@ impl ArchiverError {
 
     fn get_stack_string(&self) -> String {
         let mut stack_info: Vec<String> = vec![];
-        let mut counter: u32 = 0;
+        let mut count: u32 = 0;
         for frame in &self.stack {
-            counter += 1;
+            count += 1;
             stack_info.push(format!(
                 "  {}.at {}:{}:{} {}",
-                counter,
+                count,
                 frame.file,
                 frame.line,
                 frame.col,

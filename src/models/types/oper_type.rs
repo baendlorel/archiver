@@ -8,6 +8,7 @@ pub enum OperType {
     Restore,
     Config(String),
     Vault(String),
+    Move,
 }
 
 /// 为OperationType实现转换为字符串的方法
@@ -18,6 +19,7 @@ impl OperType {
             OperType::Restore => "rst".cyan().to_string(),
             OperType::Config(action) => format!("{} {}", "cfg".bright_purple(), action),
             OperType::Vault(action) => format!("{} {}", "vlt".bright_purple(), action),
+            OperType::Move => "mov".bright_green().to_string(),
         }
     }
 }

@@ -32,7 +32,7 @@ pub enum ArchiverCommand {
     },
 
     /// Move archived objects to a new vault
-    #[command(visible_aliases = ["m", "mov"])]
+    #[command(visible_aliases = ["m", "mv", "mov"])]
     Move {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]

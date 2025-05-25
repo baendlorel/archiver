@@ -20,7 +20,7 @@ fn apply_command(args: &Args) {
         Some(AC::Put { targets, message }) => handlers::put(&targets, message),
         Some(AC::Restore { ids }) => handlers::restore(&ids),
         Some(AC::Vault(action)) => handlers::vault(&action),
-        Some(AC::Move { ids, to }) => handlers::list(*all, *restored),
+        Some(AC::Move { ids, to }) => handlers::move_to(ids, to),
         Some(AC::List { all, restored }) => handlers::list(*all, *restored),
         Some(AC::Log { range }) => handlers::log(range),
         Some(AC::Config { statement }) => handlers::config(&statement),
