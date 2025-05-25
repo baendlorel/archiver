@@ -77,7 +77,7 @@ pub fn remove(name: &str) -> Result<u32, ArchiverError> {
     if vault.is_none() {
         return info!("Vault '{}' not found", name);
     }
-    let (id, vault) = vault.unwrap();
+    let (id, _vault) = vault.unwrap();
 
     // todo 下面将vault标记为删除
 

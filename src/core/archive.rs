@@ -8,7 +8,7 @@ use std::{
 
 use super::list;
 use crate::{
-    misc::{ForceToString, force_no_loss_string, paths},
+    misc::{ForceToString, paths},
     models::{error::ArchiverError, types::ListEntry},
 };
 
@@ -16,7 +16,6 @@ pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd: std::path::PathBuf = paths::CWD.clone();
     let target_path = as_fatal!(cwd.join(target).canonicalize())?;
-    let vault_path = paths::get_default_vault_path();
 
     // 目标不存在则报错
     if !target_path.exists() {
@@ -31,7 +30,7 @@ pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
     }
 
     // & 路径相关性检测：不能归档归档器本身、其父目录、其子目录
-    if not_allowed_path(&target_path) {
+    if is_unallowed_path(&target_path) {
         return warn!(
             "Target cannot be the archiver directory, its parent, or its inner object. Got '{}'",
             target
@@ -46,7 +45,7 @@ pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
     let target_name: &OsStr = must_some!(target_path.file_name(), "Fail to get target name");
 
     // 必须无损转换OsString
-    let target_name_str = force_no_loss_string(target_name);
+    let target_name_str = target_name.force_to_string();
 
     // * 下面开始归档
     // 准备字段
@@ -54,7 +53,7 @@ pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
 
     // 新建实例
     let entry = ListEntry::new(target_name_str, is_dir, target_dir);
-    let archived_path = vault_path.join(entry.id.to_string());
+    let archived_path = paths::get_archived_path(entry.id, entry.vault_id);
 
     // 先移动再插表
     as_fatal!(fs::rename(&target_path, archived_path))?;
@@ -67,7 +66,7 @@ pub fn put(target: &str) -> Result<ListEntry, ArchiverError> {
 /// 1. 等于归档器本身
 /// 2. 以归档器路径开头的任何子路径
 /// 3. 等于归档器的父目录
-fn not_allowed_path(target_path: &PathBuf) -> bool {
+fn is_unallowed_path(target_path: &PathBuf) -> bool {
     let root = paths::ROOT_DIR.as_path();
 
     // 判定1、2

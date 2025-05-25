@@ -20,12 +20,4 @@ impl OperType {
             OperType::Vault(action) => format!("{} {}", "vlt".bright_purple(), action),
         }
     }
-    pub fn len(&self) -> usize {
-        match self {
-            OperType::Put => 3,
-            OperType::Restore => 3,
-            OperType::Config(action) => 3 + 1 + action.len(), // e.g. cfg_alias.add
-            OperType::Vault(action) => 3 + 1 + action.len(),  // e.g. cfg_alias.add
-        }
-    }
 }

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use super::ForceToString;
 use crate::models::{
-    serde_json::SerdeJson,
+    serde_custom::SerdeJson,
     types::{ArchiverConfig, AutoIncrVars},
 };
 
@@ -17,7 +17,6 @@ mod consts {
     pub const LOGS_DIR: &str = "logs";
     pub const CORE_DIR: &str = "core";
     pub const VAULTS_DIR: &str = "vaults";
-    pub const LIST_DIR: &str = "list";
     pub const DEFAULT_VAULT: &str = "0";
 
     // 特定文件
@@ -77,9 +76,6 @@ pub static CORE_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::CORE_DIR)
 
 /// 归档的文件/文件夹存放的地方
 pub static VAULTS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::VAULTS_DIR));
-
-/// 归档的记录存放的地方
-pub static LIST_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::LIST_DIR));
 
 /// 配置文件路径
 /// - 该文件存放在CORE_DIR下
@@ -168,14 +164,6 @@ static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
 
 // # 与路径相关的函数
 
-/// 根据归档id和vault_id获取归档对象的路径
-pub fn get_archived_path(archive_id: u32, vault_id: u32) -> PathBuf {
-    let path = VAULTS_DIR
-        .join(vault_id.to_string())
-        .join(archive_id.to_string());
-    path
-}
-
 /// 将alias应用到一串路径字符串里
 pub fn apply_alias(path_str: &str) -> String {
     use std::path::MAIN_SEPARATOR;
@@ -249,29 +237,21 @@ pub fn get_years_desc() -> Vec<i32> {
     years
 }
 
-/// 获取所有库的list路径
-/// - 该函数会遍历VAULTS_DIR下的所有文件夹
-pub fn get_all_list_paths() -> Vec<PathBuf> {
-    let entries: fs::ReadDir = must_ok!(
-        fs::read_dir(VAULTS_DIR.as_path()),
-        "Failed get_lists_of_all_vaults"
-    );
-
-    entries
-        .map(|entry| {
-            let entry = must_ok!(entry, "Failed to read entry");
-            entry.path()
-        })
-        .collect()
-}
-
-pub fn get_default_vault_path() -> PathBuf {
-    let path = VAULTS_DIR.join(consts::DEFAULT_VAULT);
+pub fn get_vault_path(vault_id: u32) -> PathBuf {
+    let path = VAULTS_DIR.join(vault_id.to_string());
     if !path.exists() {
         must_ok!(
             fs::create_dir_all(&path),
-            "Failed to create DEFAULT_VAULT directory"
+            format!("Failed to create VAULTS_DIR for vid:{} directory", vault_id)
         );
     }
+    path
+}
+
+/// 根据归档id和vault_id获取归档对象的路径
+pub fn get_archived_path(archive_id: u32, vault_id: u32) -> PathBuf {
+    let path = VAULTS_DIR
+        .join(vault_id.to_string())
+        .join(archive_id.to_string());
     path
 }

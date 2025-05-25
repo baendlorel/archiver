@@ -4,7 +4,7 @@ use std::fs;
 
 use crate::{
     misc::paths,
-    models::{error::ArchiverError, serde_json::SerdeJson, types::AutoIncrVars},
+    models::{error::ArchiverError, serde_custom::SerdeJson, types::AutoIncrVars},
 };
 
 pub fn save(auto_incr: &AutoIncrVars) -> Result<(), ArchiverError> {

@@ -9,18 +9,13 @@ use crate::{
     models::serde_custom::{boolean, naive_date_time},
 };
 
+/// 归档列表的条目
+/// - 这样的字段排序是为了序列化的时候jsonl文件也可以是这个顺序
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ListEntry {
-    /// 归档ID，后续使用这个来restore
-    pub id: u32,
-
-    /// 库id
-    #[serde(rename = "vid")]
-    pub vault_id: u32,
-
-    /// 归档目标名，可能是文件名或文件夹名
-    #[serde(rename = "t")]
-    pub target: String,
+    /// 归档时间
+    #[serde(rename = "adt", with = "naive_date_time")]
+    pub archived_at: NaiveDateTime,
 
     /// 是否已经恢复
     #[serde(rename = "is_r", with = "boolean")]
@@ -30,13 +25,20 @@ pub struct ListEntry {
     #[serde(rename = "is_d", with = "boolean")]
     pub is_dir: bool,
 
+    /// 库id
+    #[serde(rename = "vid")]
+    pub vault_id: u32,
+
+    /// 归档ID，后续使用这个来restore
+    pub id: u32,
+
+    /// 归档目标名，可能是文件名或文件夹名
+    #[serde(rename = "t")]
+    pub target: String,
+
     /// 归档目标的原始路径
     #[serde(rename = "d")]
     pub dir: String,
-
-    /// 归档时间
-    #[serde(rename = "adt", with = "naive_date_time")]
-    pub archived_at: NaiveDateTime,
 }
 
 /// 专门输出表格用的
