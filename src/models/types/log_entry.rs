@@ -42,6 +42,10 @@ pub struct LogEntry {
 /// 当前为 5+1+3
 // const INVARIANT_PADDING: usize = 9;
 impl LogEntry {
+    // todo 对于可以多重输入的命令的日志，改由处理函数返回LogEntry数组，然后外部println
+    pub fn succ() -> Self {}
+    pub fn fail() -> Self {}
+
     pub fn to_log(&self) -> String {
         let time = dt::to_dt_string(&self.opered_at);
 

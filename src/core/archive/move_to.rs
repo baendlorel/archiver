@@ -1,31 +1,16 @@
-use crate::{warn, wrap_result};
+use crate::as_fatal;
 
 use std::collections::HashSet;
+use std::fs;
 
 use super::sl;
 use crate::core::vault;
 use crate::models::error::ArchiverError;
+use crate::models::types::ListEntry;
 
-pub fn move_to(ids: &[u32], to: &str) -> Result<(usize, usize), ArchiverError> {
-    let vault = match vault::find_by_name(to) {
-        Some(vault) => vault,
-        None => {
-            return warn!("Vault '{}' not found", to);
-        }
-    };
+// todo 所有多重输入，为了反复根据id查询，可能应该把sl::load改为返回HashMap<u32, ListEntry>，同时配套save入参
+pub fn do_the_move(entry: &ListEntry, vault_id: u32) -> Result<(), ArchiverError> {
+    as_fatal!(fs::rename(from, to));
 
-    let mut full_list = wrap_result!(sl::load())?;
-    let mut count: usize = 0;
-
-    // todo 所有多重输入的都需要用set去重
-    let id_set: HashSet<u32> = ids.iter().cloned().collect();
-
-    full_list.iter_mut().for_each(|entry| {
-        if id_set.contains(&entry.id) && entry.vault_id != vault.id {
-            entry.vault_id = vault.id;
-            count += 1;
-        }
-    });
-
-    Ok((count, id_set.len()))
+    Ok(())
 }

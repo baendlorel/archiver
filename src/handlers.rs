@@ -1,4 +1,4 @@
-use crate::{err_info, err_warn, log_if_err};
+use crate::{err_info, err_warn, log_if_err, must_ok};
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
@@ -118,7 +118,7 @@ pub fn move_to(ids: &[u32], to: &str) {
             return;
         }
     };
-    let full_list = match archive::sl::load() {
+    let mut full_list = match archive::sl::load() {
         Ok(list) => list,
         Err(e) => {
             log::fail(&oper, &to.to_string(), e);
@@ -129,13 +129,14 @@ pub fn move_to(ids: &[u32], to: &str) {
     let set: HashSet<u32> = ids.iter().cloned().collect();
     let mut count = 0;
 
-    for entry in full_list {
+    for entry in full_list.iter_mut() {
         if !set.contains(&entry.id) || entry.vault_id != vault_id {
             continue; // 跳过不在ids中的id
         }
-        match archive::move_to(ids, to) {
+        match archive::do_the_move(&entry, vault_id) {
             Ok(_) => {
                 count += 1;
+                entry.vault_id = vault_id; // 更新目标vault_id
                 let msg = format!("id:{} is moved to '{}'", entry.id, to);
                 log::succ(&oper, &to.to_string(), None, None, &msg);
             }
@@ -147,7 +148,12 @@ pub fn move_to(ids: &[u32], to: &str) {
     if count == 0 {
         let e = err_info!("No satisfied archived object found");
         log::fail(&oper, &to.to_string(), e);
-    } else if count > 1 {
+        return;
+    }
+
+    must_ok!(archive::sl::save(&full_list), "");
+
+    if count > 1 {
         // 当移动了超过1条记录，则写一条总结日志
         let msg = format!("{}/{} archived objects moved to '{}'", count, set.len(), to);
         log::succ(&oper, &to.to_string(), None, None, &msg);
