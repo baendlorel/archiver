@@ -1,16 +1,11 @@
-use crate::{
-    cli::{AliasAction, AutoCheckUpdateAction, ConfigAction},
-    err_info, err_warn, log_if_err, must_ok,
-};
+use crate::{err_info, err_warn, log_if_err, must_ok};
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
 
-use crate::{
-    cli::VaultAction,
-    core::{archive, config, log, update, vault},
-    misc::mark,
-};
+use crate::cli::{AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction};
+use crate::core::{archive, config, log, update, vault};
+use crate::misc::{CustomColors, mark};
 
 pub fn vault(action: &VaultAction) {
     match action {
@@ -21,8 +16,9 @@ pub fn vault(action: &VaultAction) {
         } => match vault::create(name, *use_at_once, remark) {
             Ok(vault) => {
                 let msg = format!(
-                    "Vault '{}' is successfully created, vault id:{}",
-                    name, vault.id
+                    "Vault '{}' is successfully created, vault id: {}",
+                    name,
+                    vault.id.colored_vault()
                 );
                 log::succ(None, Some(vault.id), &msg);
             }
@@ -58,7 +54,7 @@ pub fn put(targets: &[String], message: &Option<String>) {
         match archive::put(&target, message) {
             Ok(entry) => {
                 let msg = format!(
-                    "'{}' is successfully archived, id:{} (vlt:{}), message: {}",
+                    "'{}' is successfully archived (id: {}, vault: {}), message: {}",
                     target,
                     entry.id,
                     vault::get_name(entry.vault_id),
@@ -76,13 +72,13 @@ pub fn restore(ids: &[u32]) {
     // 去重以防止重复操作同一目标
     let set: HashSet<u32> = ids.iter().cloned().collect();
     for id in set {
-        println!("Restoring id:{}", id);
+        println!("Restoring id: {}", id.colored_archive_id());
         match archive::restore(id) {
             Ok(entry) => {
                 let msg = format!(
-                    "id:{} (vlt:{}) is successfully restored to '{}'",
-                    entry.id,
-                    vault::get_name(entry.vault_id),
+                    "(id: {}, vault: {}) is successfully restored to '{}'",
+                    entry.id.colored_archive_id(),
+                    vault::get_name(entry.vault_id).colored_vault(),
                     entry.get_target_path_string()
                 );
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
@@ -120,8 +116,9 @@ pub fn move_to(ids: &[u32], to: &str) {
             Ok(_) => {
                 count += 1;
                 entry.vault_id = vault_id; // 更新目标vault_id
-                let msg = format!("id:{} is moved to '{}'", entry.id, to);
-                log::succ(None, None, &msg);
+                // & 很遗憾这里不适合用彩色的id，否则会使得日志里面也有多余的彩色字符
+                let msg = format!("id: {} is moved to '{}'", entry.id, to);
+                log::succ(Some(entry.id), Some(entry.vault_id), &msg);
             }
             Err(e) => log::fail(e),
         }

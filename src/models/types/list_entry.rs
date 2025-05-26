@@ -2,12 +2,10 @@ use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use super::{CONFIG, field_style::CustomColors};
-use crate::{
-    core::{auto_incr, vault},
-    misc::{dt, paths},
-    models::serde_custom::{boolean, naive_date_time},
-};
+use super::CONFIG;
+use crate::core::{auto_incr, vault};
+use crate::misc::{CustomColors, dt, paths};
+use crate::models::serde_custom::{boolean, naive_date_time};
 
 /// 归档列表的条目
 /// - 这样的字段排序是为了序列化的时候jsonl文件也可以是这个顺序
@@ -123,13 +121,13 @@ impl ListRow {
         }
     }
 
-    pub fn to_styled(&self, max_len: &ListColumnLen) -> String {
+    pub fn to_display(&self, max_len: &ListColumnLen) -> String {
         let cl = self.get_len();
 
         let target = format!(
             "{}{}{}",
             if self.is_dir {
-                self.target.blue().to_string()
+                self.target.colored_dir().to_string()
             } else {
                 self.target.to_string()
             },
@@ -149,9 +147,9 @@ impl ListRow {
             "{}{} {}{} {}{} {}{} {}",
             self.archived_at.bright_black(),
             " ".repeat(max_len.archived_at - cl.archived_at),
-            self.vault_name.bright_blue(),
+            self.vault_name.colored_vault(),
             " ".repeat(max_len.vault_name - cl.vault_name),
-            self.id.magenta(),
+            self.id.colored_archive_id(),
             " ".repeat(max_len.id - cl.id),
             target,
             " ".repeat(max_len.target - cl.target),

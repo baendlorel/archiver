@@ -2,13 +2,11 @@ use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
+use super::Operation;
 use crate::cli::short;
 use crate::core::vault;
-use crate::misc::{dt, mark, paths};
+use crate::misc::{CustomColors, dt, mark, paths};
 use crate::models::serde_custom::{boolean, naive_date_time};
-use crate::models::types::field_style::CustomColors;
-
-use super::Operation;
 
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
@@ -70,26 +68,19 @@ impl LogEntry {
             String::new()
         };
 
-        // let remark = if self.remark.is_empty() {
-        //     if vault_name.is_empty() && archive_id.is_empty() {
-        //         "(no remark)".to_string()
-        //     } else {
-        //         String::new()
-        //     }
-        // } else {
-        //     let r = paths::apply_alias(&self.remark);
-        //     r.replace("\n", "\\n").to_string()
-        // };
-
         let remark = paths::apply_alias(&self.remark)
             .replace("\n", "\\n")
             .to_string();
 
         let avid = match (archive_id.is_empty(), vault_name.is_empty()) {
             (true, true) => String::new(),
-            (false, true) => format!("(aid:{})", archive_id.magenta()),
-            (true, false) => format!("(vlt:{})", vault_name.blue()),
-            (false, false) => format!("(aid:{}, vlt:{})", archive_id.magenta(), vault_name.blue()),
+            (false, true) => format!("({})", archive_id.colored_archive_id()),
+            (true, false) => format!("({})", vault_name.colored_vault()),
+            (false, false) => format!(
+                "({}, {})",
+                archive_id.colored_archive_id(),
+                vault_name.colored_vault()
+            ),
         };
 
         // 下面处理remark、archive_id和vault_name的显示

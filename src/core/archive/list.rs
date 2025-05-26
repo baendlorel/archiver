@@ -28,7 +28,7 @@ pub fn find_one(id: u32) -> Result<(Vec<ListEntry>, usize), ArchiverError> {
     if let Some(index) = index {
         return Ok((list, index));
     }
-    info!("id:{} cannot be found", id)
+    info!("id: {} cannot be found", id)
 }
 
 pub fn find(ids: &[u32]) -> Result<Vec<ListEntry>, ArchiverError> {
@@ -123,19 +123,7 @@ pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
     );
 
     for row in list.iter() {
-        println!("{}", row.to_styled(&col_len));
-        // println!(
-        //     "{time}{} {vault_name}{} {id}{} {target}{} {dir}",
-        //     " ".repeat(col_len.time - cur.time),
-        //     " ".repeat(col_len.vault_name - cur.vault_name),
-        //     " ".repeat(col_len.id - cur.id),
-        //     " ".repeat(col_len.target - cur.target),
-        //     time = row.time,
-        //     vault_name = row.vault_name,
-        //     id = row.id,
-        //     target = row.target,
-        //     dir = row.dir,
-        // );
+        println!("{}", row.to_display(&col_len));
     }
 
     Ok(())

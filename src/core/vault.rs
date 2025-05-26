@@ -4,10 +4,9 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
 use super::config;
-use crate::{
-    misc::{jsonl, paths},
-    models::{error::ArchiverError, types::Vault},
-};
+use crate::misc::{CustomColors, jsonl, paths};
+use crate::models::error::ArchiverError;
+use crate::models::types::{DEFAULT_VAULT_NAME, Vault};
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     let vaults = must_ok!(
@@ -36,7 +35,7 @@ pub fn find_by_name(name: &str) -> Option<Vault> {
 pub fn get_name(id: u32) -> String {
     let vault = must_some!(
         VAULT_MAP.get(&id),
-        format!("Vault with id:{} not found", id)
+        format!("vault_id: {} not found", id.colored_vault())
     );
     vault.name.clone()
 }
@@ -63,9 +62,18 @@ pub fn create(
     use_at_once: bool,
     remark: &Option<String>,
 ) -> Result<Vault, ArchiverError> {
-    let vault = find_by_name(name);
-    if vault.is_some() {
-        return info!("Vault with the same name '{}' already exists", name);
+    if let Some(vault) = find_by_name(name) {
+        if vault.name == DEFAULT_VAULT_NAME {
+            // 如果是默认库，则不允许创建同名库
+            return info!(
+                "'{}' means default vault, please choose another name",
+                DEFAULT_VAULT_NAME
+            );
+        }
+        return info!(
+            "Vault named '{}' already exists, please choose another name",
+            name
+        );
     }
 
     let vault = Vault::new(name, remark.clone());

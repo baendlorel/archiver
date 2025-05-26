@@ -32,11 +32,16 @@ pub enum VaultStatus {
     Hidden,
 }
 
+/// 默认仓库的名字，确定了以后更新就不太好改了
+/// - 此符号是Copilot、deepseek、GPT三位AI都推荐的
+///     - 它是从这些符号中胜出的`-`，`+`，`#`，`$`，`=`，`@`
+pub const DEFAULT_VAULT_NAME: &str = "@";
+
 impl Vault {
     pub fn default() -> Self {
         Vault {
             id: 0,
-            name: "default".to_string(),
+            name: DEFAULT_VAULT_NAME.to_string(),
             remark: String::new(),
             created_at: dt::start_dt(),
             status: VaultStatus::Valid,

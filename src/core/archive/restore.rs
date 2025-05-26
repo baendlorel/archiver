@@ -13,7 +13,7 @@ pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
     let entry = &list[index];
     if entry.is_restored {
         return info!(
-            "id:{} has already been restored to '{}'",
+            "id: {} has already been restored to '{}'",
             id,
             entry.get_target_path_string()
         );
@@ -35,7 +35,7 @@ pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
 
     if !archive_path.exists() {
         return info!(
-            "The archive file id:{} does not exist",
+            "The archive file id: {} does not exist",
             archive_path.force_to_string()
         );
     }

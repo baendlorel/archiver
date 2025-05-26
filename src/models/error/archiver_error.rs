@@ -53,28 +53,26 @@ pub struct ArchiverError {
 }
 
 impl ArchiverError {
-    pub fn info(message: String, stack: Vec<StackFrame>) -> Self {
+    fn new(level: ArchiverErrorLevel, message: String, stack: Vec<StackFrame>) -> Self {
+        // 听从建议，给每个错误信息加上句号
+        let message = format!("{}.", message.trim_end_matches("."));
         Self {
+            level,
             message,
             stack,
-            level: ArchiverErrorLevel::Info,
         }
+    }
+
+    pub fn info(message: String, stack: Vec<StackFrame>) -> Self {
+        Self::new(ArchiverErrorLevel::Info, message, stack)
     }
 
     pub fn warn(message: String, stack: Vec<StackFrame>) -> Self {
-        Self {
-            message,
-            stack,
-            level: ArchiverErrorLevel::Warn,
-        }
+        Self::new(ArchiverErrorLevel::Warn, message, stack)
     }
 
     pub fn fatal(message: String, stack: Vec<StackFrame>) -> Self {
-        Self {
-            message,
-            stack,
-            level: ArchiverErrorLevel::Fatal,
-        }
+        Self::new(ArchiverErrorLevel::Fatal, message, stack)
     }
 
     fn get_stack_string(&self) -> String {
