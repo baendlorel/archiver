@@ -21,7 +21,6 @@ pub fn vault(action: &VaultAction) {
                     "Vault '{}' is successfully created, vault id:{}",
                     name, vault.id
                 );
-                let arg = log::format_arg::vault::create(name, *use_at_once, remark);
                 log::succ(None, Some(vault.id), &msg);
             }
             Err(e) => log::fail(e),

@@ -4,7 +4,7 @@ use clap::Subcommand;
 use serde_json::Value;
 use std::{collections::HashMap, vec};
 
-use super::vault_action::VaultAction;
+use super::{main, vault_action::VaultAction};
 use crate::{misc, models::types::Operation};
 
 #[derive(Subcommand)]
@@ -22,7 +22,7 @@ pub enum ArchiverCommand {
     },
 
     /// Restore an archived object by its file/directory name or id
-    #[command(visible_aliases = ["r", "res", "rst"])]
+    #[command(visible_aliases = ["r", main::RESTORE])]
     Restore {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
@@ -30,7 +30,7 @@ pub enum ArchiverCommand {
     },
 
     /// Move archived objects to a new vault
-    #[command(visible_aliases = ["m", "mv", "mov"])]
+    #[command(visible_aliases = ["m", "mv", main::MOVE])]
     Move {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
@@ -42,11 +42,11 @@ pub enum ArchiverCommand {
     },
 
     /// Vault management
-    #[command(subcommand, visible_aliases = ["v", "vlt"])]
+    #[command(subcommand, visible_aliases = ["v", main::VAULT])]
     Vault(VaultAction),
 
     /// Show the list of archived objects
-    #[command(visible_aliases = ["l", "ls"])]
+    #[command(visible_aliases = ["l", main::LIST])]
     List {
         /// Show all archived objects
         #[arg[short, long, group = "list_options"]]
@@ -58,7 +58,7 @@ pub enum ArchiverCommand {
     },
 
     /// Show the log of archiving operations
-    #[command(visible_alias = "lg")]
+    #[command(visible_alias = main::LOG)]
     Log {
         /// YYYYMM (display logs of this month), YYYYMM-YYYYMM
         #[arg(value_name = "time-range")]
@@ -67,13 +67,13 @@ pub enum ArchiverCommand {
 
     // todo config也要像vault一样改为子命令比较好
     /// Set or show configurations, use `arv config -h` to see more
-    #[command(visible_aliases = ["c", "cfg"])]
+    #[command(visible_aliases = ["c", main::CONFIG])]
     Config {
         #[arg(num_args = 0..=10, long_help=misc::CONFIG_HELP_TEXT,group = "config_options")]
         statement: Option<Vec<String>>,
     },
 
-    #[command(visible_aliases = ["u", "up"])]
+    #[command(visible_aliases = ["u", main::UPDATE])]
     Update,
 }
 
@@ -87,15 +87,15 @@ impl ArchiverCommand {
                 } else {
                     map![]
                 };
-                Operation::simple("put", targets.clone(), opts)
+                Operation::simple(main::PUT, targets.clone(), opts)
             }
             ArchiverCommand::Restore { ids } => Operation::simple(
-                "rst",
+                main::RESTORE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
                 map![],
             ),
             ArchiverCommand::Move { ids, to } => Operation::simple(
-                "mov",
+                main::MOVE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
                 map!["to".to_string() => Value::String(to.clone())],
             ),
@@ -116,12 +116,12 @@ impl ArchiverCommand {
                 } else {
                     vec![]
                 };
-                Operation::simple("log", args, map![])
+                Operation::simple(main::LOG, args, map![])
             }
-            ArchiverCommand::Config { statement } => {
-                Operation::new("cfg", "", vec![], HashMap::new())
+            ArchiverCommand::Config { statement: _ } => {
+                Operation::new(main::CONFIG, "", vec![], HashMap::new())
             }
-            ArchiverCommand::Update => Operation::simple("upd", vec![], HashMap::new()),
+            ArchiverCommand::Update => Operation::simple(main::UPDATE, vec![], HashMap::new()),
         }
     }
 }

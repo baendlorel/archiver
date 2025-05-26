@@ -4,7 +4,7 @@ use chrono::Datelike;
 use std::u32;
 
 use super::parser;
-use crate::cli::FULL_CMD;
+use crate::cli::{FULL_CMD, main};
 use crate::misc::{ForceToString, dt, jsonl, mark, paths};
 use crate::models::{error::ArchiverError, types::LogEntry};
 
@@ -23,7 +23,7 @@ pub fn save(
 
     let oper = FULL_CMD.to_operation();
 
-    let normalized_remark = if oper.main == "put" && is_succ {
+    let normalized_remark = if oper.main == main::PUT && is_succ {
         let full_paths: Vec<String> = oper
             .args
             .iter()
