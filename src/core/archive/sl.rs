@@ -1,4 +1,4 @@
-use crate::{as_fatal, wrap_result};
+use crate::wrap_result;
 
 use crate::misc::{jsonl, paths};
 use crate::models::{error::ArchiverError, types::ListEntry};

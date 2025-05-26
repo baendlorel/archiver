@@ -4,8 +4,8 @@ use clap::Subcommand;
 use serde_json::Value;
 use std::{collections::HashMap, vec};
 
-use super::{main, vault_action::VaultAction};
-use crate::{misc, models::types::Operation};
+use super::{config_action::ConfigAction, short, vault_action::VaultAction};
+use crate::models::types::Operation;
 
 #[derive(Subcommand)]
 pub enum ArchiverCommand {
@@ -22,7 +22,7 @@ pub enum ArchiverCommand {
     },
 
     /// Restore an archived object by its file/directory name or id
-    #[command(visible_aliases = ["r", main::RESTORE])]
+    #[command(visible_aliases = ["r", short::main::RESTORE])]
     Restore {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
@@ -30,7 +30,7 @@ pub enum ArchiverCommand {
     },
 
     /// Move archived objects to a new vault
-    #[command(visible_aliases = ["m", "mv", main::MOVE])]
+    #[command(visible_aliases = ["m", "mv", short::main::MOVE])]
     Move {
         /// id of the target to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
@@ -42,11 +42,11 @@ pub enum ArchiverCommand {
     },
 
     /// Vault management
-    #[command(subcommand, visible_aliases = ["v", main::VAULT])]
+    #[command(subcommand, visible_aliases = ["v", short::main::VAULT])]
     Vault(VaultAction),
 
     /// Show the list of archived objects
-    #[command(visible_aliases = ["l", main::LIST])]
+    #[command(visible_aliases = ["l", short::main::LIST])]
     List {
         /// Show all archived objects
         #[arg[short, long, group = "list_options"]]
@@ -58,26 +58,21 @@ pub enum ArchiverCommand {
     },
 
     /// Show the log of archiving operations
-    #[command(visible_alias = main::LOG)]
+    #[command(visible_alias = short::main::LOG)]
     Log {
         /// YYYYMM (display logs of this month), YYYYMM-YYYYMM
         #[arg(value_name = "time-range")]
         range: Option<String>,
     },
 
-    // todo config也要像vault一样改为子命令比较好
     /// Set or show configurations, use `arv config -h` to see more
-    #[command(visible_aliases = ["c", main::CONFIG])]
-    Config {
-        #[arg(num_args = 0..=10, long_help=misc::CONFIG_HELP_TEXT,group = "config_options")]
-        statement: Option<Vec<String>>,
-    },
+    #[command(subcommand, visible_aliases = ["c", short::main::CONFIG])]
+    Config(ConfigAction),
 
-    #[command(visible_aliases = ["u", main::UPDATE])]
+    #[command(visible_aliases = ["u", short::main::UPDATE])]
     Update,
 }
 
-// todo impl一个类似to_oper和arg的函数
 impl ArchiverCommand {
     pub fn to_operation(&self) -> Operation {
         match self {
@@ -87,15 +82,15 @@ impl ArchiverCommand {
                 } else {
                     map![]
                 };
-                Operation::simple(main::PUT, targets.clone(), opts)
+                Operation::simple(short::main::PUT, targets.clone(), opts)
             }
             ArchiverCommand::Restore { ids } => Operation::simple(
-                main::RESTORE,
+                short::main::RESTORE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
                 map![],
             ),
             ArchiverCommand::Move { ids, to } => Operation::simple(
-                main::MOVE,
+                short::main::MOVE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
                 map!["to".to_string() => Value::String(to.clone())],
             ),
@@ -116,12 +111,12 @@ impl ArchiverCommand {
                 } else {
                     vec![]
                 };
-                Operation::simple(main::LOG, args, map![])
+                Operation::simple(short::main::LOG, args, map![])
             }
-            ArchiverCommand::Config { statement: _ } => {
-                Operation::new(main::CONFIG, "", vec![], HashMap::new())
+            ArchiverCommand::Config(action) => action.to_operation(),
+            ArchiverCommand::Update => {
+                Operation::simple(short::main::UPDATE, vec![], HashMap::new())
             }
-            ArchiverCommand::Update => Operation::simple(main::UPDATE, vec![], HashMap::new()),
         }
     }
 }

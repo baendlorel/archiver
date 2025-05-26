@@ -1,4 +1,7 @@
-use crate::{err_info, err_warn, log_if_err, must_ok};
+use crate::{
+    cli::{AliasAction, AutoCheckUpdateAction, ConfigAction},
+    err_info, err_warn, log_if_err, must_ok,
+};
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
@@ -148,19 +151,16 @@ pub fn log(range: &Option<String>) {
     log_if_err!(log::display(range));
 }
 
-pub fn config(statement: &Option<Vec<String>>) {
-    let cmd = config::parse_command(statement);
-    match cmd {
-        config::ConfigCommand::Display { item } => config::display(&item),
-        config::ConfigCommand::Alias { add, remove } => {
-            if let Some(arg) = add {
-                config::add_alias(&arg)
-            }
-            if let Some(arg) = remove {
-                config::remove_alias(&arg)
-            }
-        }
-        config::ConfigCommand::AutoCheckUpdate { set } => config::auto_check_update(&set),
+pub fn config(action: &ConfigAction) {
+    match action {
+        ConfigAction::List => config::display(),
+        ConfigAction::Alias(action) => match action {
+            AliasAction::Add { alias } => config::add_alias(&alias),
+            AliasAction::Remove { alias } => config::remove_alias(&alias),
+        },
+        ConfigAction::AutoCheckUpdate(action) => match action {
+            AutoCheckUpdateAction::Set { status } => config::auto_check_update(status),
+        },
     }
 }
 

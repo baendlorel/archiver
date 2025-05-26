@@ -19,7 +19,7 @@ fn handle(command: &AC) {
         AC::Move { ids, to } => handlers::move_to(ids, to),
         AC::List { all, restored } => handlers::list(*all, *restored),
         AC::Log { range } => handlers::log(range),
-        AC::Config { statement } => handlers::config(&statement),
+        AC::Config(action) => handlers::config(&action),
         AC::Update => handlers::update(),
     }
 }

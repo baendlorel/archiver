@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::cli::main;
+use crate::cli::short;
 use crate::misc::{dt, mark, paths};
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::models::types::field_style::CustomColors;
@@ -73,7 +73,7 @@ impl LogEntry {
         };
 
         let archive_id = if let Some(archive_id) = self.archive_id {
-            if self.oper.main == main::PUT {
+            if self.oper.main == short::main::PUT {
                 format!("-> {}", archive_id.magenta())
             } else {
                 String::new()
@@ -84,8 +84,8 @@ impl LogEntry {
 
         let vault_id = if let Some(vault_id) = self.vault_id {
             match self.oper.main.as_str() {
-                main::PUT => format!("(vlt:{})", vault_id.bright_blue()),
-                main::VAULT => format!("(vlt:{})", vault_id.bright_blue()),
+                short::main::PUT => format!("(vlt:{})", vault_id.bright_blue()),
+                short::main::VAULT => format!("(vlt:{})", vault_id.bright_blue()),
                 _ => String::new(),
             }
         } else {
