@@ -43,7 +43,10 @@ pub struct LogEntry {
 // const INVARIANT_PADDING: usize = 9;
 impl LogEntry {
     // todo 对于可以多重输入的命令的日志，改由处理函数返回LogEntry数组，然后外部println
+    /// 创建一个状态为succ的日志条目
     pub fn succ() -> Self {}
+
+    /// 创建一个状态为fail的日志条目
     pub fn fail() -> Self {}
 
     pub fn to_log(&self) -> String {

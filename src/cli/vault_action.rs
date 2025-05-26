@@ -1,5 +1,4 @@
-use crate::misc;
-use clap::{Parser, Subcommand};
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum VaultAction {
@@ -33,4 +32,36 @@ pub enum VaultAction {
     /// List all vaults
     #[command(visible_aliases = ["ls"])]
     List,
+}
+
+impl VaultAction {
+    /// Returns the name of the vault action
+    pub fn get(&self) -> String {
+        match self {
+            VaultAction::Use { name } => format!("use {}", name),
+            VaultAction::Create { name, .. } => format!("create {}", name),
+            VaultAction::Remove { name } => format!("remove {}", name),
+            VaultAction::List => "list".to_string(),
+        }
+    }
+
+    pub fn to_operation(&self) -> crate::models::types::Operation {
+        use crate::models::types::Operation;
+        use std::collections::HashMap;
+        match self {
+            VaultAction::Use { name } => Operation::new("vlt", "use", name, HashMap::new()),
+            VaultAction::Create { name, remark, u } => {
+                let mut opts = HashMap::new();
+                if let Some(r) = remark {
+                    opts.insert("remark".to_string(), r.clone());
+                }
+                if *u {
+                    opts.insert("u".to_string(), "true".to_string());
+                }
+                Operation::new("vlt", "create", name, opts)
+            }
+            VaultAction::Remove { name } => Operation::new("vlt", "remove", name, HashMap::new()),
+            VaultAction::List => Operation::new("vlt", "list", "", HashMap::new()),
+        }
+    }
 }
