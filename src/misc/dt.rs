@@ -2,7 +2,7 @@ use crate::{as_fatal, must_ok, must_some};
 
 use chrono::{Datelike, Local, Months, NaiveDate, NaiveDateTime};
 
-use crate::models::error::ArchiverError;
+use crate::models::error::ArchiverResult;
 
 // # 日期常量
 pub const MIN_DT: NaiveDateTime = NaiveDateTime::MIN;
@@ -76,12 +76,12 @@ pub fn to_dt_string(date_time: &NaiveDateTime) -> String {
 
 /// 将字符串转化为无时区日期
 /// - 格式: 20250101
-pub fn parse_compact_ymd(ymd: &str) -> Result<NaiveDate, ArchiverError> {
+pub fn parse_compact_ymd(ymd: &str) -> ArchiverResult<NaiveDate> {
     as_fatal!(NaiveDate::parse_from_str(ymd, "%Y%m%d"))
 }
 
 /// 找到这个月的最后一天
-pub fn to_last_date(date: &NaiveDate) -> Result<NaiveDate, ArchiverError> {
+pub fn to_last_date(date: &NaiveDate) -> ArchiverResult<NaiveDate> {
     // 第一个unwrap可以直接使用
     let first_date = as_fatal!(date.with_day(1), "Failed to get first date")?;
     let next_month = as_fatal!(

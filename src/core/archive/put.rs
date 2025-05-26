@@ -3,12 +3,10 @@ use crate::{as_fatal, info, must_some, warn, wrap_result};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
 use super::list;
-use crate::{
-    misc::{ForceToString, paths},
-    models::{error::ArchiverError, types::ListEntry},
-};
+use crate::misc::{ForceToString, paths};
+use crate::models::{error::ArchiverResult, types::ListEntry};
 
-pub fn put(target: &str, message: &Option<String>) -> Result<ListEntry, ArchiverError> {
+pub fn put(target: &str, message: &Option<String>) -> ArchiverResult<ListEntry> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
     let cwd: std::path::PathBuf = paths::CWD.clone();
     let target_path = as_fatal!(cwd.join(target).canonicalize())?;

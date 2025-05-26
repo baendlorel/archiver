@@ -2,15 +2,13 @@ use crate::{info, warn, wrap_result};
 
 use std::path;
 
-use crate::{
-    misc::{ForceToString, paths},
-    models::{error::ArchiverError, types::AliasEntry},
-};
+use crate::misc::{ForceToString, paths};
+use crate::models::{error::ArchiverResult, types::AliasEntry};
 
 use super::sl;
 
 // # 业务函数
-pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
+pub fn remove_alias(alias_entry: &str) -> ArchiverResult<()> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut config = sl::load()?;
 
@@ -29,7 +27,7 @@ pub fn remove_alias(alias_entry: &str) -> Result<(), ArchiverError> {
     Ok(())
 }
 
-pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
+pub fn set_alias(alias_entry: &str) -> ArchiverResult<()> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut config = wrap_result!(sl::load())?;
 
@@ -37,15 +35,13 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
         if entry.alias == alias {
             return info!(
                 "Alias '{}' is already bound with origin '{}'",
-                entry.alias,
-                entry.origin
+                entry.alias, entry.origin
             );
         }
         if entry.origin == origin {
             return info!(
                 "Origin '{}' is already bound with alias '{}'",
-                entry.origin,
-                entry.alias
+                entry.origin, entry.alias
             );
         }
     }
@@ -60,7 +56,7 @@ pub fn set_alias(alias_entry: &str) -> Result<(), ArchiverError> {
 }
 
 // # 辅助函数
-pub fn parse_alias_entry_string(alias_entry: &str) -> Result<(String, String), ArchiverError> {
+pub fn parse_alias_entry_string(alias_entry: &str) -> ArchiverResult<(String, String)> {
     if let Some((alias, origin)) = alias_entry.split_once("=") {
         if alias.is_empty() {
             return warn!("alias is empty. Got '{}'", alias_entry);

@@ -1,9 +1,9 @@
-mod move_to;
+mod mv;
 mod put;
 mod restore;
 
 pub mod list;
 pub mod sl;
-pub use move_to::do_the_move;
+pub use mv::batch_mv;
 pub use put::put;
 pub use restore::restore;

@@ -3,12 +3,10 @@ use crate::{as_fatal, info, wrap_result};
 use std::{ffi::OsString, fs, path::PathBuf};
 
 use super::list;
-use crate::{
-    misc::{ForceToString, jsonl, paths},
-    models::{error::ArchiverError, types::ListEntry},
-};
+use crate::misc::{ForceToString, jsonl, paths};
+use crate::models::{error::ArchiverResult, types::ListEntry};
 
-pub fn restore(id: u32) -> Result<ListEntry, ArchiverError> {
+pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     let (mut list, index) = wrap_result!(list::find_one(id))?;
     let entry = &list[index];
     if entry.is_restored {

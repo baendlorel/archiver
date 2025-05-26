@@ -3,11 +3,9 @@ use crate::{must_some, warn};
 use chrono::NaiveDateTime;
 
 use crate::misc::dt;
-use crate::models::error::ArchiverError;
+use crate::models::error::ArchiverResult;
 
-pub fn normalize_range(
-    range: &Option<String>,
-) -> Result<(NaiveDateTime, NaiveDateTime), ArchiverError> {
+pub fn normalize_range(range: &Option<String>) -> ArchiverResult<(NaiveDateTime, NaiveDateTime)> {
     let default_a = dt::MIN_DT;
     let default_b = dt::MAX_DT;
 

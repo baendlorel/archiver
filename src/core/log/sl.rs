@@ -1,4 +1,4 @@
-use crate::wrap_result;
+use crate::{warn, wrap_result};
 
 use chrono::Datelike;
 use std::u32;
@@ -6,23 +6,51 @@ use std::u32;
 use super::parser;
 use crate::cli::{FULL_CMD, short};
 use crate::misc::{ForceToString, dt, jsonl, mark, paths};
-use crate::models::{error::ArchiverError, types::LogEntry};
+use crate::models::error::ArchiverResult;
+use crate::models::types::{LogEntry, OperSource, Operation};
 
 /// 在不加range直接arv log的时候，只输出最近这么多条
 /// 避免日志太多
 const CASUAL_LIMIT: usize = 15;
+
+pub fn save_system_oper(
+    oper: &Operation,
+    is_succ: bool,
+    archive_id: Option<u32>,
+    vault_id: Option<u32>,
+    remark: String,
+) -> ArchiverResult<()> {
+    // 保证是系统生成的操作才能调用
+    match oper.source {
+        // 系统操作
+        OperSource::System => {}
+        // 用户操作
+        _ => return warn!("User operations should not call this function directly"),
+    }
+
+    // 准备日志内容
+    let log_entry = LogEntry {
+        opered_at: dt::now_dt(),
+        is_succ,
+        oper: oper.clone(),
+        remark,
+        archive_id,
+        vault_id,
+    };
+
+    // 获取日志文件路径
+    let log_file_path = paths::get_log_path(dt::now_year());
+    wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
+    Ok(())
+}
 
 pub fn save(
     is_succ: bool,
     archive_id: Option<u32>,
     vault_id: Option<u32>,
     remark: Option<String>,
-) -> Result<(), ArchiverError> {
-    // 获取日志文件路径
-    let log_file_path = paths::get_log_path(dt::now_year());
-
+) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
-
     let normalized_remark = if oper.main == short::main::PUT && is_succ {
         let full_paths: Vec<String> = oper
             .args
@@ -55,11 +83,16 @@ pub fn save(
         vault_id,
     };
 
+    // 获取日志文件路径
+    let log_file_path = paths::get_log_path(dt::now_year());
     wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
     Ok(())
 }
 
-pub fn load(range: &Option<String>) -> Result<(Vec<LogEntry>, bool, usize), ArchiverError> {
+/// 加载日志
+///
+/// 返回值为三元组：（日志数组，是否到达随便看看限制，随便看看限制值）
+pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool, usize)> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();
 

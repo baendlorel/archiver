@@ -4,8 +4,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::cli::short;
-
-use super::field_style::CustomColors;
+use crate::misc::CustomColors;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Operation {
@@ -29,6 +28,17 @@ pub struct Operation {
     /// 选项，类似于--key=value的形式，不会保存“--”
     #[serde(rename = "opt")]
     pub opts: HashMap<String, Value>,
+
+    /// 操作来源，可能是系统生成的
+    /// - 例如 arv vault remove aaa，会导致生成将aaa中的对象move到默认库的操作
+    #[serde(rename = "sc")]
+    pub source: OperSource,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub enum OperSource {
+    User = 1,
+    System = 2,
 }
 
 impl Operation {
@@ -39,6 +49,7 @@ impl Operation {
             directive: String::new(),
             args,
             opts,
+            source: OperSource::User,
         }
     }
 
@@ -55,6 +66,24 @@ impl Operation {
             directive: directive.to_string(),
             args,
             opts,
+            source: OperSource::User,
+        }
+    }
+
+    pub fn system(
+        main: &str,
+        sub: &str,
+        directive: &str,
+        args: Vec<String>,
+        opts: HashMap<String, Value>,
+    ) -> Self {
+        Self {
+            main: main.to_string(),
+            sub: sub.to_string(),
+            directive: directive.to_string(),
+            args,
+            opts,
+            source: OperSource::System,
         }
     }
 

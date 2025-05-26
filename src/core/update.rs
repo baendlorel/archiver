@@ -6,7 +6,7 @@ use std::{cmp::Ordering, process::Command}; // for exec
 
 use crate::{
     misc::{ForceToString, mark, paths},
-    models::{error::ArchiverError, types::Version},
+    models::{error::ArchiverResult, types::Version},
 };
 
 use super::config::{auto_check_update, load};
@@ -57,7 +57,7 @@ pub fn auto_check() {
     log_if_err!(auto_check_update::refresh(&mut config));
 }
 
-pub fn prepare_versions() -> Result<(Version, Version), ArchiverError> {
+pub fn prepare_versions() -> ArchiverResult<(Version, Version)> {
     let current = Version::from(env!("CARGO_PKG_VERSION"));
     // 通过 GitHub API 获取最新 release
     let output = Command::new("curl")

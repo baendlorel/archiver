@@ -2,6 +2,7 @@ pub mod dt;
 pub mod jsonl;
 pub mod map;
 pub mod paths;
+pub mod rand;
 
 mod consts;
 mod field_style;

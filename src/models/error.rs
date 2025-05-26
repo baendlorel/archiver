@@ -1,7 +1,7 @@
 mod archiver_error;
 pub mod macros;
 
-pub use archiver_error::{ArchiverError, StackFrame};
+pub use archiver_error::{ArchiverError, ArchiverResult, StackFrame};
 
 #[test]
 fn test_error_display() {

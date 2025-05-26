@@ -52,6 +52,8 @@ pub struct ArchiverError {
     pub stack: Vec<StackFrame>,
 }
 
+pub type ArchiverResult<T> = Result<T, ArchiverError>;
+
 impl ArchiverError {
     fn new(level: ArchiverErrorLevel, message: String, stack: Vec<StackFrame>) -> Self {
         // 听从建议，给每个错误信息加上句号

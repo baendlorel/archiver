@@ -74,8 +74,16 @@ impl LogEntry {
 
         let avid = match (archive_id.is_empty(), vault_name.is_empty()) {
             (true, true) => String::new(),
-            (false, true) => format!("({})", archive_id.colored_archive_id()),
-            (true, false) => format!("({})", vault_name.colored_vault()),
+            (false, true) => format!(
+                "({}, {})",
+                archive_id.colored_archive_id(),
+                "-".colored_vault()
+            ),
+            (true, false) => format!(
+                "({}, {})",
+                "-".colored_archive_id(),
+                vault_name.colored_vault()
+            ),
             (false, false) => format!(
                 "({}, {})",
                 archive_id.colored_archive_id(),
@@ -85,19 +93,29 @@ impl LogEntry {
 
         // 下面处理remark、archive_id和vault_name的显示
         let rav = match (self.remark.is_empty(), avid.is_empty()) {
-            (true, true) => "(no remark)".bright_black().to_string(),
+            (true, true) => "".to_string(),
             (false, true) => remark.bright_black().to_string(),
             (true, false) => avid,
             (false, false) => format!("{} {}", remark.bright_black(), avid),
-            _ => String::new(),
+        };
+
+        let second_dash = if !rav.is_empty() {
+            if self.is_succ {
+                " - ".green().to_string()
+            } else {
+                " - ".red().to_string()
+            }
+        } else {
+            String::new()
         };
 
         format!(
-            "{} {} - {} - {}",
+            "{} {} {}{second_dash}{}",
             time.bright_black(),
             status,
             self.oper.to_display(),
             rav,
+            second_dash = second_dash
         )
     }
 }

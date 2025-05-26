@@ -1,14 +1,14 @@
 use crate::wrap_result;
 
 use crate::misc::{jsonl, paths};
-use crate::models::{error::ArchiverError, types::ListEntry};
+use crate::models::{error::ArchiverResult, types::ListEntry};
 
-pub fn save(list: &[ListEntry]) -> Result<(), ArchiverError> {
+pub fn save(list: &[ListEntry]) -> ArchiverResult<()> {
     wrap_result!(jsonl::save(list, paths::LIST_FILE_PATH.as_path()))?;
     Ok(())
 }
 
-pub fn load() -> Result<Vec<ListEntry>, ArchiverError> {
+pub fn load() -> ArchiverResult<Vec<ListEntry>> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
     Ok(list)
 }

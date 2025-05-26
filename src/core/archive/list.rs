@@ -3,17 +3,13 @@ use crate::{as_fatal, info, wrap_result};
 use owo_colors::OwoColorize;
 use std::fs;
 
-use crate::{
-    misc::{jsonl, paths},
-    models::{
-        error::ArchiverError,
-        types::{ListColumnLen, ListEntry, ListRow},
-    },
-};
+use crate::misc::{jsonl, paths};
+use crate::models::error::ArchiverResult;
+use crate::models::types::{ListColumnLen, ListEntry, ListRow};
 
 /// 将归档记录插入到列表中
 /// - 自动生成部分字段
-pub fn insert(entry: &ListEntry) -> Result<(), ArchiverError> {
+pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
     wrap_result!(jsonl::append(entry, paths::LIST_FILE_PATH.as_path()))?;
     Ok(())
 }
@@ -22,7 +18,7 @@ pub fn insert(entry: &ListEntry) -> Result<(), ArchiverError> {
 /// - 由于archive_id全局唯一，所以此处需要搜索所有的vault
 ///
 /// 返回ListEntry列表和找到的index
-pub fn find_one(id: u32) -> Result<(Vec<ListEntry>, usize), ArchiverError> {
+pub fn find_one(id: u32) -> ArchiverResult<(Vec<ListEntry>, usize)> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
     let index = list.iter().position(|entry| entry.id == id);
     if let Some(index) = index {
@@ -31,7 +27,7 @@ pub fn find_one(id: u32) -> Result<(Vec<ListEntry>, usize), ArchiverError> {
     info!("id: {} cannot be found", id)
 }
 
-pub fn find(ids: &[u32]) -> Result<Vec<ListEntry>, ArchiverError> {
+pub fn find(ids: &[u32]) -> ArchiverResult<Vec<ListEntry>> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
 
     let result = list
@@ -42,7 +38,7 @@ pub fn find(ids: &[u32]) -> Result<Vec<ListEntry>, ArchiverError> {
     Ok(result)
 }
 
-pub fn display(all: bool, restored: bool) -> Result<(), ArchiverError> {
+pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     let list_file_path = paths::LIST_FILE_PATH.as_path();
     if !list_file_path.exists() {
         println!("No archived object yet");

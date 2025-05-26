@@ -3,10 +3,10 @@ use crate::as_fatal;
 use serde::{Serialize, de::DeserializeOwned};
 use std::{fs, io::Write, path::Path};
 
-use crate::models::{error::ArchiverError, serde_custom::SerdeJson};
+use crate::models::{error::ArchiverResult, serde_custom::SerdeJson};
 
 /// 给jsonl文件末尾追加一行
-pub fn append<T>(entry: &T, file_path: &Path) -> Result<(), ArchiverError>
+pub fn append<T>(entry: &T, file_path: &Path) -> ArchiverResult<()>
 where
     T: ?Sized + Serialize + DeserializeOwned + SerdeJson,
 {
@@ -27,7 +27,7 @@ where
 }
 
 /// 从jsonl文件加载列表
-pub fn load<T>(file_path: &Path) -> Result<Vec<T>, ArchiverError>
+pub fn load<T>(file_path: &Path) -> ArchiverResult<Vec<T>>
 where
     T: ?Sized + Serialize + DeserializeOwned + SerdeJson,
 {
@@ -57,7 +57,7 @@ where
 }
 
 /// 保存列表到jsonl文件
-pub fn save<T>(list: &[T], file_path: &Path) -> Result<(), ArchiverError>
+pub fn save<T>(list: &[T], file_path: &Path) -> ArchiverResult<()>
 where
     T: ?Sized + Serialize + DeserializeOwned + SerdeJson,
 {

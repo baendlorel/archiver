@@ -1,10 +1,9 @@
+use crate::info;
+
 use std::process::exit;
 
-use crate::{
-    info,
-    misc::{CONFIG_VALID_STMT, mark},
-    models::error::ArchiverError,
-};
+use crate::misc::{CONFIG_VALID_STMT, mark};
+use crate::models::error::ArchiverResult;
 
 pub enum ConfigCommand {
     Display {
@@ -31,7 +30,7 @@ pub fn parse_command(statement: &Option<Vec<String>>) -> ConfigCommand {
     let stmt = statement.as_ref().unwrap();
 
     // 内部写一个handler，为了避免每次运行结束都要手写一遍show_standard_form
-    let _handler = || -> Result<ConfigCommand, ArchiverError> {
+    let _handler = || -> ArchiverResult<ConfigCommand> {
         // 配置语句只有一个词，那么可能是配置项<item>或者配置项+指令<item>.<dirv>
         // arv config xxx 或arv config xxx.action
         // 根据`.`来split
