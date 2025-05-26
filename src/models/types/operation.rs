@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
+use crate::cli::short;
+
 use super::field_style::CustomColors;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -25,7 +27,7 @@ pub struct Operation {
     pub args: Vec<String>,
 
     /// 选项，类似于--key=value的形式，不会保存“--”
-    #[serde(rename = "o")]
+    #[serde(rename = "opt")]
     pub opts: HashMap<String, Value>,
 }
 
@@ -35,7 +37,7 @@ impl Operation {
             main: main.to_string(),
             sub: String::new(),
             directive: String::new(),
-            args: args,
+            args,
             opts,
         }
     }
@@ -49,17 +51,27 @@ impl Operation {
     ) -> Self {
         Self {
             main: main.to_string(),
-            directive: directive.to_string(),
             sub: sub.to_string(),
-            args: args,
+            directive: directive.to_string(),
+            args,
             opts,
         }
     }
 
-    pub fn to_string(&self) -> String {
-        let mut result: Vec<String> = vec![self.main.clone()];
+    pub fn to_display(&self) -> String {
+        let main = match self.main.as_str() {
+            short::main::PUT => self.main.bright_green().to_string(),
+            short::main::RESTORE => self.main.orange().to_string(),
+            short::main::MOVE => self.main.cyan().to_string(),
+            short::main::VAULT => self.main.purple().to_string(),
+            short::main::CONFIG => self.main.yellow().to_string(),
+            short::main::UPDATE => self.main.magenta().to_string(),
+            _ => self.main.clone(), // 默认不变
+        };
+
+        let mut result: Vec<String> = vec![main];
         if !self.sub.is_empty() {
-            result.push(self.sub.clone());
+            result.push(self.sub.bright_black().to_string());
         }
 
         if !self.args.is_empty() {
@@ -67,25 +79,19 @@ impl Operation {
         }
 
         for (key, value) in &self.opts {
-            result.push(format!("--{}={}", key, value));
-        }
+            let entry = match value {
+                Value::String(s) => format!("--{}={}", key, s),
+                Value::Bool(b) => {
+                    if *b {
+                        format!("--{}", key)
+                    } else {
+                        continue;
+                    }
+                }
+                _ => continue, // 其他类型不处理
+            };
 
-        result.join(" ")
-    }
-
-    pub fn to_styled_string(&self) -> String {
-        let mut result: Vec<String> = vec![self.main.yellow().to_string()];
-        if !self.sub.is_empty() {
-            result.push(self.sub.grey());
-        }
-
-        if !self.args.is_empty() {
-            result.append(self.args.clone().as_mut());
-        }
-
-        for (key, value) in &self.opts {
-            let key_colored = format!("--{}=", key).grey();
-            result.push(format!("{}{}", key_colored, value.blue()));
+            result.push(entry.dimmed_orange());
         }
 
         result.join(" ")

@@ -147,7 +147,7 @@ impl ListRow {
 
         format!(
             "{}{} {}{} {}{} {}{} {}",
-            self.archived_at.grey(),
+            self.archived_at.bright_black(),
             " ".repeat(max_len.archived_at - cl.archived_at),
             self.vault_name.bright_blue(),
             " ".repeat(max_len.vault_name - cl.vault_name),
@@ -155,7 +155,7 @@ impl ListRow {
             " ".repeat(max_len.id - cl.id),
             target,
             " ".repeat(max_len.target - cl.target),
-            self.dir.grey(),
+            self.dir.bright_black(),
         )
     }
 }

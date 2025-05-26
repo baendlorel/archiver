@@ -59,7 +59,7 @@ pub fn save(
     Ok(())
 }
 
-pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool, usize), ArchiverError> {
+pub fn load(range: &Option<String>) -> Result<(Vec<LogEntry>, bool, usize), ArchiverError> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();
 
@@ -68,7 +68,7 @@ pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool, usize), Archiv
     let (ya, yb) = (a.year(), b.year());
 
     let years = paths::get_years_desc();
-    let mut logs: Vec<String> = vec![];
+    let mut logs: Vec<LogEntry> = vec![];
     'year_loop: for year in years {
         // 跳过不在范围内的年份
         if year < ya || year > yb {
@@ -88,11 +88,11 @@ pub fn load(range: &Option<String>) -> Result<(Vec<String>, bool, usize), Archiv
 
         let cur_logs = jsonl::load::<LogEntry>(&log_file_path)?;
 
-        for l in cur_logs.iter().rev() {
+        for l in cur_logs.into_iter().rev() {
             if l.opered_at < a || l.opered_at > b {
                 continue; // 跳过不在范围内的日期
             }
-            logs.push(l.to_log());
+            logs.push(l);
             // 如果没设置范围，只是随便看看日志，那么不要打得太多
             // 同时在load和log_content使用方可生效
             if casual && logs.len() >= CASUAL_LIMIT {
