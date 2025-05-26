@@ -1,5 +1,6 @@
 pub mod dt;
 pub mod jsonl;
+pub mod map;
 pub mod paths;
 
 mod consts;

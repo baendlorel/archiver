@@ -1,4 +1,10 @@
+use crate::map;
+
 use clap::Subcommand;
+use serde_json::Value;
+use std::collections::HashMap;
+
+use crate::models::types::Operation;
 
 #[derive(Subcommand)]
 pub enum VaultAction {
@@ -35,33 +41,23 @@ pub enum VaultAction {
 }
 
 impl VaultAction {
-    /// Returns the name of the vault action
-    pub fn get(&self) -> String {
-        match self {
-            VaultAction::Use { name } => format!("use {}", name),
-            VaultAction::Create { name, .. } => format!("create {}", name),
-            VaultAction::Remove { name } => format!("remove {}", name),
-            VaultAction::List => "list".to_string(),
-        }
-    }
-
     pub fn to_operation(&self) -> crate::models::types::Operation {
-        use crate::models::types::Operation;
-        use std::collections::HashMap;
         match self {
-            VaultAction::Use { name } => Operation::new("vlt", "use", name, HashMap::new()),
+            VaultAction::Use { name } => Operation::new("vlt", "use", vec![name.clone()], map![]),
             VaultAction::Create { name, remark, u } => {
                 let mut opts = HashMap::new();
-                if let Some(r) = remark {
-                    opts.insert("remark".to_string(), r.clone());
+                if let Some(remark) = remark {
+                    opts.insert("remark".to_string(), Value::String(remark.clone()));
                 }
                 if *u {
-                    opts.insert("u".to_string(), "true".to_string());
+                    opts.insert("use".to_string(), Value::String(String::new()));
                 }
-                Operation::new("vlt", "create", name, opts)
+                Operation::new("vlt", "create", vec![name.clone()], opts)
             }
-            VaultAction::Remove { name } => Operation::new("vlt", "remove", name, HashMap::new()),
-            VaultAction::List => Operation::new("vlt", "list", "", HashMap::new()),
+            VaultAction::Remove { name } => {
+                Operation::new("vlt", "remove", vec![name.clone()], HashMap::new())
+            }
+            VaultAction::List => Operation::new("vlt", "list", vec![], HashMap::new()),
         }
     }
 }

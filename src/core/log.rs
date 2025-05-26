@@ -2,27 +2,20 @@ use crate::{log_if_err, wrap_result};
 
 use crate::misc::mark;
 use crate::models::error::ArchiverError;
-use crate::models::types::OperType;
 
 mod parser;
 mod sl;
 
 pub mod format_arg;
 
-pub fn succ(
-    oper: &OperType,
-    arg: &str,
-    archive_id: Option<u32>,
-    vault_id: Option<u32>,
-    msg: &String,
-) {
+pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, msg: &String) {
     println!("{} {}", mark::succ(), msg);
-    log_if_err!(sl::save(oper, arg, true, archive_id, vault_id, None));
+    log_if_err!(sl::save(true, archive_id, vault_id, None));
 }
 
-pub fn fail(oper: &OperType, arg: &str, e: ArchiverError) {
+pub fn fail(e: ArchiverError) {
     e.display();
-    log_if_err!(sl::save(oper, arg, false, None, None, Some(e.to_string())));
+    log_if_err!(sl::save(false, None, None, Some(e.to_string())));
 }
 
 pub fn display(range: &Option<String>) -> Result<(), ArchiverError> {

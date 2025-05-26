@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use super::OperType;
+use super::Operation;
 
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
@@ -22,10 +22,7 @@ pub struct LogEntry {
     pub is_succ: bool, // 是否成功
 
     #[serde(rename = "o")]
-    pub oper: OperType, // 操作类型
-
-    #[serde(rename = "a")]
-    pub arg: String, // 操作参数
+    pub oper: Operation, // 操作类型
 
     #[serde(rename = "r")]
     pub remark: String, // 备注
@@ -44,10 +41,10 @@ pub struct LogEntry {
 impl LogEntry {
     // todo 对于可以多重输入的命令的日志，改由处理函数返回LogEntry数组，然后外部println
     /// 创建一个状态为succ的日志条目
-    pub fn succ() -> Self {}
+    // pub fn succ() -> Self {}
 
     /// 创建一个状态为fail的日志条目
-    pub fn fail() -> Self {}
+    // pub fn fail() -> Self {}
 
     pub fn to_log(&self) -> String {
         let time = dt::to_dt_string(&self.opered_at);
@@ -79,18 +76,19 @@ impl LogEntry {
         };
 
         let archive_id = if let Some(archive_id) = self.archive_id {
-            match self.oper {
-                OperType::Put => format!("-> {}", archive_id.magenta()),
-                _ => String::new(),
+            if self.oper.main == "put" {
+                format!("-> {}", archive_id.magenta())
+            } else {
+                String::new()
             }
         } else {
             String::new()
         };
 
         let vault_id = if let Some(vault_id) = self.vault_id {
-            match self.oper {
-                OperType::Put => format!("(vlt:{})", vault_id.bright_blue()),
-                OperType::Vault(_) => format!("(vlt:{})", vault_id.bright_blue()),
+            match self.oper.main.as_str() {
+                "put" => format!("(vlt:{})", vault_id.bright_blue()),
+                "vlt" => format!("(vlt:{})", vault_id.bright_blue()),
                 _ => String::new(),
             }
         } else {
@@ -98,11 +96,10 @@ impl LogEntry {
         };
 
         format!(
-            "{} {} - {} {} - {} {}{}",
+            "{} {} - {} - {} {}{}",
             time.grey(),
             status,
-            self.oper.to_padded_str(),
-            self.arg,
+            self.oper.to_string(),
             remark,
             archive_id,
             vault_id,

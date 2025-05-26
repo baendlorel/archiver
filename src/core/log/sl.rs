@@ -4,21 +4,15 @@ use chrono::Datelike;
 use std::u32;
 
 use super::parser;
-use crate::{
-    misc::{ForceToString, dt, jsonl, mark, paths},
-    models::{
-        error::ArchiverError,
-        types::{LogEntry, OperType},
-    },
-};
+use crate::cli::FULL_CMD;
+use crate::misc::{ForceToString, dt, jsonl, mark, paths};
+use crate::models::{error::ArchiverError, types::LogEntry};
 
 /// 在不加range直接arv log的时候，只输出最近这么多条
 /// 避免日志太多
 const CASUAL_LIMIT: usize = 15;
 
 pub fn save(
-    oper: &OperType,
-    arg: &str,
     is_succ: bool,
     archive_id: Option<u32>,
     vault_id: Option<u32>,
@@ -27,16 +21,28 @@ pub fn save(
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
 
-    let normalized_remark = match oper {
-        OperType::Put => {
-            let full_path = paths::CWD.join(arg);
-            if is_succ {
-                full_path.force_to_string()
-            } else {
-                remark.unwrap_or(String::new())
-            }
-        }
-        _ => remark.unwrap_or(String::new()),
+    let oper = FULL_CMD.to_operation();
+
+    let normalized_remark = if oper.main == "put" && is_succ {
+        let full_paths: Vec<String> = oper
+            .args
+            .iter()
+            .map(|a| match paths::CWD.join(a).canonicalize() {
+                Ok(p) => p.force_to_string(),
+                Err(e) => {
+                    println!(
+                        "{} Failed to canonicalize path '{}': {}",
+                        mark::warn(),
+                        a,
+                        e
+                    );
+                    a.clone() // 如果失败，保留原路径
+                }
+            })
+            .collect();
+        full_paths.join(" ")
+    } else {
+        remark.unwrap_or(String::new())
     };
 
     // 准备日志内容
@@ -44,7 +50,6 @@ pub fn save(
         opered_at: dt::now_dt(),
         is_succ,
         oper: oper.clone(),
-        arg: arg.to_string(),
         remark: normalized_remark,
         archive_id,
         vault_id,

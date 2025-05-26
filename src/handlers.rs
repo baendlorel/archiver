@@ -7,7 +7,6 @@ use crate::{
     cli::VaultAction,
     core::{archive, config, log, update, vault},
     misc::mark,
-    models::types::OperType,
 };
 
 pub fn vault(action: &VaultAction) {
@@ -16,50 +15,40 @@ pub fn vault(action: &VaultAction) {
             name,
             remark,
             u: use_at_once,
-        } => {
-            let oper = OperType::Vault("create".to_string());
-            match vault::create(name, *use_at_once, remark) {
-                Ok(vault) => {
-                    let msg = format!(
-                        "Vault '{}' is successfully created, vault id:{}",
-                        name, vault.id
-                    );
-                    let arg = log::format_arg::vault::create(name, *use_at_once, remark);
-                    log::succ(&oper, &arg, None, Some(vault.id), &msg);
-                }
-                Err(e) => log::fail(&oper, name, e),
+        } => match vault::create(name, *use_at_once, remark) {
+            Ok(vault) => {
+                let msg = format!(
+                    "Vault '{}' is successfully created, vault id:{}",
+                    name, vault.id
+                );
+                let arg = log::format_arg::vault::create(name, *use_at_once, remark);
+                log::succ(None, Some(vault.id), &msg);
             }
-        }
+            Err(e) => log::fail(e),
+        },
         VaultAction::List => vault::display(),
-        VaultAction::Use { name } => {
-            let oper = OperType::Vault("use".to_string());
-            match vault::use_by_name(name) {
-                Ok(vault_id) => {
-                    let msg = format!("Vault '{}' is successfully set as current vault", name);
-                    log::succ(&oper, name, None, Some(vault_id), &msg);
-                }
-                Err(e) => {
-                    log::fail(&oper, name, e);
-                }
+        VaultAction::Use { name } => match vault::use_by_name(name) {
+            Ok(vault_id) => {
+                let msg = format!("Vault '{}' is successfully set as current vault", name);
+                log::succ(None, Some(vault_id), &msg);
             }
-        }
-        VaultAction::Remove { name } => {
-            let oper = OperType::Vault(format!("remove {}", name));
-            match vault::remove(name) {
-                Ok(vault_id) => {
-                    let msg = format!("Vault '{}' is successfully removed", name);
-                    log::succ(&oper, name, None, Some(vault_id), &msg);
-                }
-                Err(e) => {
-                    log::fail(&oper, name, e);
-                }
+            Err(e) => {
+                log::fail(e);
             }
-        }
+        },
+        VaultAction::Remove { name } => match vault::remove(name) {
+            Ok(vault_id) => {
+                let msg = format!("Vault '{}' is successfully removed", name);
+                log::succ(None, Some(vault_id), &msg);
+            }
+            Err(e) => {
+                log::fail(e);
+            }
+        },
     }
 }
 
 pub fn put(targets: &[String], message: &Option<String>) {
-    let oper = OperType::Put;
     // 去重以防止重复操作同一目标
     let set: HashSet<String> = targets.iter().cloned().collect();
     for target in set {
@@ -73,16 +62,15 @@ pub fn put(targets: &[String], message: &Option<String>) {
                     vault::get_name(entry.vault_id),
                     entry.message,
                 );
-                log::succ(&oper, &target, Some(entry.id), Some(entry.vault_id), &msg);
+                log::succ(Some(entry.id), Some(entry.vault_id), &msg);
             }
-            Err(e) => log::fail(&oper, &target, e),
+            Err(e) => log::fail(e),
         };
     }
     println!("Use `arv list` to check the archived list");
 }
 
 pub fn restore(ids: &[u32]) {
-    let oper = OperType::Restore;
     // 去重以防止重复操作同一目标
     let set: HashSet<u32> = ids.iter().cloned().collect();
     for id in set {
@@ -95,33 +83,26 @@ pub fn restore(ids: &[u32]) {
                     vault::get_name(entry.vault_id),
                     entry.get_target_path_string()
                 );
-                log::succ(
-                    &oper,
-                    &id.to_string(),
-                    Some(entry.id),
-                    Some(entry.vault_id),
-                    &msg,
-                );
+                log::succ(Some(entry.id), Some(entry.vault_id), &msg);
             }
-            Err(e) => log::fail(&oper, &id.to_string(), e),
+            Err(e) => log::fail(e),
         }
     }
 }
 
 pub fn move_to(ids: &[u32], to: &str) {
-    let oper = OperType::Move;
     // 去重以防止重复操作同一目标
     let vault_id = match vault::find_by_name(to) {
         Some(v) => v.id,
         None => {
-            log::fail(&oper, &to.to_string(), err_warn!("Vault not found"));
+            log::fail(err_warn!("Vault not found"));
             return;
         }
     };
     let mut full_list = match archive::sl::load() {
         Ok(list) => list,
         Err(e) => {
-            log::fail(&oper, &to.to_string(), e);
+            log::fail(e);
             return;
         }
     };
@@ -138,16 +119,16 @@ pub fn move_to(ids: &[u32], to: &str) {
                 count += 1;
                 entry.vault_id = vault_id; // 更新目标vault_id
                 let msg = format!("id:{} is moved to '{}'", entry.id, to);
-                log::succ(&oper, &to.to_string(), None, None, &msg);
+                log::succ(None, None, &msg);
             }
-            Err(e) => log::fail(&oper, &to.to_string(), e),
+            Err(e) => log::fail(e),
         }
     }
 
     // 如果没有任何对象被移动，输出错误信息
     if count == 0 {
         let e = err_info!("No satisfied archived object found");
-        log::fail(&oper, &to.to_string(), e);
+        log::fail(e);
         return;
     }
 
@@ -156,7 +137,7 @@ pub fn move_to(ids: &[u32], to: &str) {
     if count > 1 {
         // 当移动了超过1条记录，则写一条总结日志
         let msg = format!("{}/{} archived objects moved to '{}'", count, set.len(), to);
-        log::succ(&oper, &to.to_string(), None, None, &msg);
+        log::succ(None, None, &msg);
     }
 }
 
