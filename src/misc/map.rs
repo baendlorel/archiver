@@ -3,9 +3,12 @@
 /// - 内容必须支持clone
 #[macro_export]
 macro_rules! map {
+    () => {{
+        std::collections::HashMap::new()
+    }};
     ( $( $key:expr => $val:expr ),* $(,)? ) => {{
         let mut map = std::collections::HashMap::new();
-        $( map.insert($key.clone(), $val.clone()); )*
+        $( map.insert($key, $val); )*
         map
     }};
 }

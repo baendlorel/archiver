@@ -47,6 +47,7 @@ pub fn vault(action: &VaultAction) {
     }
 }
 
+// todo put和restore都感觉太重了，应该舍弃批量归纳批量归档
 pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>) {
     let vault_id = match vault {
         Some(name) => match vault::find_by_name(name) {

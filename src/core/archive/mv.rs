@@ -1,30 +1,28 @@
 use crate::{as_fatal, map, wrap_result};
 
-use crate::cli::short;
-use crate::misc::paths;
-
+use serde_json::json;
 use std::fs;
 
 use super::sl;
+use crate::cli::short;
 use crate::core::log;
+use crate::misc::paths;
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, Operation};
 
-// todo 这样会不会有点奇怪？put和restore都是单条但循环处理的，只有mv是一块的。是不是put也有频繁sl jsonl文件的问题？
+// todo put和restore都是函数单条/循环函数的，只有mv是一块的。是不是put也有频繁sl jsonl文件的问题？
 /// 批量移动归档对象到指定的vault_id
 ///
 /// ! 必须在vault_id确认存在时方可调用
 pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> ArchiverResult<usize> {
     let mut list = wrap_result!(sl::load())?;
 
-    let mut args: Vec<String> = vec![];
     let mut count: usize = 0;
     for entry in list.iter_mut() {
         if !satisfies(&entry) {
             continue;
         }
         count += 1;
-        args.push(entry.id.to_string());
         let from = paths::get_archived_path(entry.id, entry.vault_id);
         let to = paths::get_archived_path(entry.id, vault_id);
 
@@ -34,8 +32,8 @@ pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> Archiv
             short::main::MOVE,
             "",
             "",
-            args,
-            map!["to".to_string() => vault_id.to_string()],
+            vec![entry.id.to_string()],
+            map!["to".to_string() => json!(vault_id)],
         );
 
         log::save_system_oper(
