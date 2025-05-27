@@ -3,11 +3,10 @@ use crate::{info, must_ok, must_some, wrap_result};
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::io::{self, Write};
 
 use super::config;
 use crate::core::archive;
-use crate::misc::{CustomColors, jsonl, paths, rand};
+use crate::misc::{CustomColors, confirm, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME};
 use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus};
@@ -127,12 +126,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         DEFAULT_VLT_NAME.colored_vault().underline().bold(),
         "'".underline().bold()
     );
-    print!("Are you sure? [y/N]> ");
-    io::stdout().flush().ok();
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).ok();
-    let input = input.trim();
-    if input != "y" {
+    if !confirm("Are you sure? [y/N]> ", "y") {
         return info!("Removal cancelled");
     }
 
@@ -143,12 +137,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         name.colored_vault(),
         verify_code
     );
-    print!("> ");
-    io::stdout().flush().ok();
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).ok();
-    let input = input.trim();
-    if input != verify_code {
+    if !confirm("> ", &verify_code) {
         return info!("Confirmation failed, exit");
     }
 

@@ -10,19 +10,20 @@ use crate::core::log;
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, Operation};
 
-// todo 所有多重输入，为了反复根据id查询，可能应该把sl::load改为返回HashMap<u32, ListEntry>，同时配套save入参
-
+// todo 这样会不会有点奇怪？put和restore都是单条但循环处理的，只有mv是一块的。是不是put也有频繁sl jsonl文件的问题？
 /// 批量移动归档对象到指定的vault_id
 ///
 /// ! 必须在vault_id确认存在时方可调用
-pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> ArchiverResult<()> {
+pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> ArchiverResult<usize> {
     let mut list = wrap_result!(sl::load())?;
 
     let mut args: Vec<String> = vec![];
+    let mut count: usize = 0;
     for entry in list.iter_mut() {
         if !satisfies(&entry) {
             continue;
         }
+        count += 1;
         args.push(entry.id.to_string());
         let from = paths::get_archived_path(entry.id, entry.vault_id);
         let to = paths::get_archived_path(entry.id, vault_id);
@@ -34,7 +35,7 @@ pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> Archiv
             "",
             "",
             args,
-            map!["to".to_string() => vault_id],
+            map!["to".to_string() => vault_id.to_string()],
         );
 
         log::save_system_oper(
@@ -50,5 +51,5 @@ pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> Archiv
 
     wrap_result!(sl::save(&list))?;
 
-    Ok(())
+    Ok(count)
 }

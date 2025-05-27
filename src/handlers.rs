@@ -6,6 +6,7 @@ use std::{cmp::Ordering, collections::HashSet};
 use crate::cli::{AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction};
 use crate::core::{archive, config, log, update, vault};
 use crate::misc::{CustomColors, mark};
+use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
 
 pub fn vault(action: &VaultAction) {
     match action {
@@ -46,19 +47,29 @@ pub fn vault(action: &VaultAction) {
     }
 }
 
-pub fn put(targets: &[String], message: &Option<String>) {
+pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>) {
+    let vault_id = match vault {
+        Some(name) => match vault::find_by_name(name) {
+            Some(v) => v.id,
+            None => {
+                log::fail(err_warn!("Vault '{}' not found", name));
+                return;
+            }
+        },
+        None => DEFAULT_VLT_ID, // 默认使用0号vault
+    };
+
     // 去重以防止重复操作同一目标
     let set: HashSet<String> = targets.iter().cloned().collect();
     for target in set {
         println!("Putting '{}' into archive", target);
-        match archive::put(&target, message) {
+        match archive::put(&target, message, vault_id) {
             Ok(entry) => {
                 let msg = format!(
-                    "'{}' is successfully archived (id: {}, vault: {}), message: {}",
+                    "'{}' is successfully archived (id: {}, vault: {})",
                     target,
                     entry.id,
                     vault::get_name(entry.vault_id),
-                    entry.message,
                 );
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
             }
@@ -88,7 +99,7 @@ pub fn restore(ids: &[u32]) {
     }
 }
 
-pub fn move_to(ids: &[u32], to: &str) {
+pub fn mv(ids: &[u32], to: &str) {
     // 去重以防止重复操作同一目标
     let vault_id = match vault::find_by_name(to) {
         Some(v) => v.id,
@@ -97,46 +108,26 @@ pub fn move_to(ids: &[u32], to: &str) {
             return;
         }
     };
-    let mut full_list = match archive::sl::load() {
-        Ok(list) => list,
+
+    let satisfies = |entry: &ListEntry| ids.contains(&entry.id) && entry.vault_id != vault_id;
+    let count = match archive::batch_mv(satisfies, vault_id) {
+        Ok(count) => {
+            let msg = format!("{} objects are successfully moved to vault '{}'", count, to);
+            log::succ(None, Some(vault_id), &msg);
+            count
+        }
         Err(e) => {
             log::fail(e);
+            println!("{} Please use `arv log` for details.", mark::info());
             return;
         }
     };
-
-    let set: HashSet<u32> = ids.iter().cloned().collect();
-    let mut count = 0;
-
-    for entry in full_list.iter_mut() {
-        if !set.contains(&entry.id) || entry.vault_id != vault_id {
-            continue; // 跳过不在ids中的id
-        }
-        match archive::do_the_move(&entry, vault_id) {
-            Ok(_) => {
-                count += 1;
-                entry.vault_id = vault_id; // 更新目标vault_id
-                // & 很遗憾这里不适合用彩色的id，否则会使得日志里面也有多余的彩色字符
-                let msg = format!("id: {} is moved to '{}'", entry.id, to);
-                log::succ(Some(entry.id), Some(entry.vault_id), &msg);
-            }
-            Err(e) => log::fail(e),
-        }
-    }
 
     // 如果没有任何对象被移动，输出错误信息
     if count == 0 {
         let e = err_info!("No satisfied archived object found");
         log::fail(e);
         return;
-    }
-
-    must_ok!(archive::sl::save(&full_list), "");
-
-    if count > 1 {
-        // 当移动了超过1条记录，则写一条总结日志
-        let msg = format!("{}/{} archived objects moved to '{}'", count, set.len(), to);
-        log::succ(None, None, &msg);
     }
 }
 

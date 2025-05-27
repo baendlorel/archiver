@@ -75,17 +75,17 @@ pub struct ListColumnLen {
 }
 
 impl ListEntry {
-    pub fn new(target: String, is_dir: bool, dir: String, message: String) -> Self {
+    pub fn new(target: String, is_dir: bool, dir: String, message: String, vault_id: u32) -> Self {
         Self {
             // 这些是传入参数
             target,
             is_dir,
             dir,
             message,
+            vault_id,
 
             // 这些是自动获取
             id: auto_incr::archive_id::next(),
-            vault_id: CONFIG.current_vault_id,
             archived_at: dt::now_dt(),
             status: ListStatus::Archived,
             remark: String::new(),

@@ -19,6 +19,10 @@ pub enum ArchiverCommand {
         /// The reason why you archive it
         #[arg(short, long)]
         message: Option<String>,
+
+        /// To which vault, default to the current vault
+        #[arg(short, long)]
+        vault: Option<String>,
     },
 
     /// Restore an archived object by its file/directory name or id
@@ -76,12 +80,19 @@ pub enum ArchiverCommand {
 impl ArchiverCommand {
     pub fn to_operation(&self) -> Operation {
         match self {
-            ArchiverCommand::Put { targets, message } => {
-                let opts = if let Some(m) = message {
-                    map!["message".to_string() => Value::String(m.clone())]
-                } else {
-                    map![]
-                };
+            ArchiverCommand::Put {
+                targets,
+                message,
+                vault,
+            } => {
+                let mut opts: HashMap<String, Value> = map![];
+                if let Some(m) = message {
+                    opts.insert("message".to_string(), Value::String(m.clone()));
+                }
+                if let Some(v) = vault {
+                    opts.insert("vault".to_string(), Value::String(v.clone()));
+                }
+
                 Operation::simple(short::main::PUT, targets.clone(), opts)
             }
             ArchiverCommand::Restore { ids } => Operation::simple(

@@ -248,7 +248,7 @@ pub fn get_vault_path(vault_id: u32) -> PathBuf {
     path
 }
 
-/// 根据归档id和vault_id获取归档对象的路径
+/// 根据archive_id和vault_id获取归档对象的路径
 pub fn get_archived_path(archive_id: u32, vault_id: u32) -> PathBuf {
     let path = VAULTS_DIR
         .join(vault_id.to_string())

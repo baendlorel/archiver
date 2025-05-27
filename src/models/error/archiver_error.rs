@@ -77,6 +77,10 @@ impl ArchiverError {
         Self::new(ArchiverErrorLevel::Fatal, message, stack)
     }
 
+    // pub fn set_message(&mut self, message: String) {
+    //     self.message = format!("{}.", message.trim_end_matches("."));
+    // }
+
     fn get_stack_string(&self) -> String {
         let mut stack_info: Vec<String> = vec![];
         let mut count: u32 = 0;

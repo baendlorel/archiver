@@ -13,10 +13,14 @@ fn main() {
 
 fn handle(command: &AC) {
     match command {
-        AC::Put { targets, message } => handlers::put(&targets, message),
+        AC::Put {
+            targets,
+            message,
+            vault,
+        } => handlers::put(&targets, message, vault),
         AC::Restore { ids } => handlers::restore(&ids),
         AC::Vault(action) => handlers::vault(&action),
-        AC::Move { ids, to } => handlers::move_to(ids, to),
+        AC::Move { ids, to } => handlers::mv(ids, to),
         AC::List { all, restored } => handlers::list(*all, *restored),
         AC::Log { range } => handlers::log(range),
         AC::Config(action) => handlers::config(&action),

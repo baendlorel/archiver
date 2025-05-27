@@ -6,10 +6,9 @@ use super::list;
 use crate::misc::{ForceToString, paths};
 use crate::models::{error::ArchiverResult, types::ListEntry};
 
-pub fn put(target: &str, message: &Option<String>) -> ArchiverResult<ListEntry> {
+pub fn put(target: &str, message: &Option<String>, vault_id: u32) -> ArchiverResult<ListEntry> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
-    let cwd: std::path::PathBuf = paths::CWD.clone();
-    let target_path = as_fatal!(cwd.join(target).canonicalize())?;
+    let target_path = as_fatal!(paths::CWD.join(target).canonicalize())?;
 
     // 目标不存在则报错
     if !target_path.exists() {
@@ -51,7 +50,7 @@ pub fn put(target: &str, message: &Option<String>) -> ArchiverResult<ListEntry> 
     } else {
         String::new()
     };
-    let entry = ListEntry::new(target_name_str, is_dir, target_dir, message);
+    let entry = ListEntry::new(target_name_str, is_dir, target_dir, message, vault_id);
     let archived_path = paths::get_archived_path(entry.id, entry.vault_id);
 
     // 先移动再插表
