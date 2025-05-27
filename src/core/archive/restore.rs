@@ -4,12 +4,14 @@ use std::{ffi::OsString, fs, path::PathBuf};
 
 use super::list;
 use crate::misc::{ForceToString, jsonl, paths};
-use crate::models::{error::ArchiverResult, types::ListEntry};
+use crate::models::error::ArchiverResult;
+use crate::models::types::{ListEntry, ListStatus};
 
 pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     let (mut list, index) = wrap_result!(list::find_one(id))?;
     let entry = &list[index];
-    if entry.is_restored {
+
+    if matches!(entry.status, ListStatus::Archived) {
         return info!(
             "id: {} has already been restored to '{}'",
             id,
@@ -47,7 +49,7 @@ pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     // 和put一样，先移动文件，再改表
     as_fatal!(fs::rename(archive_path, target_path))?;
     // 标记为已恢复
-    list[index].is_restored = true;
+    list[index].status = ListStatus::Restored;
     wrap_result!(jsonl::save(&list, paths::LIST_FILE_PATH.as_path()))?;
 
     Ok(list[index].clone())

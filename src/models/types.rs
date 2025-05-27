@@ -8,7 +8,7 @@ mod version;
 
 pub use archiver_config::{AliasEntry, ArchiverConfig, CONFIG, CONFIG_ITEMS};
 pub use auto_incr_vars::AutoIncrVars;
-pub use list_entry::{ListColumnLen, ListEntry, ListRow};
+pub use list_entry::{ListColumnLen, ListEntry, ListRow, ListStatus};
 pub use log_entry::LogEntry;
 pub use operation::{OperSource, Operation};
 pub use vault::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME, Vault, VaultStatus};

@@ -58,7 +58,7 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
             Ok(entry) => {
                 // 展示条件为全部展示，或者展示已恢复的，或者展示未恢复的
                 // * all || (restored && entry.is_restored) || (!restored && !entry.is_restored)
-                let display_condition = all || (restored == entry.is_restored);
+                let display_condition = all || (restored == entry.is_restored());
 
                 // 设置了all的话，展示全部，否则只展示未恢复的对象
                 if display_condition {

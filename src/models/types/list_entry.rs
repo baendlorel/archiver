@@ -16,8 +16,8 @@ pub struct ListEntry {
     pub archived_at: NaiveDateTime,
 
     /// 是否已经恢复
-    #[serde(rename = "is_r", with = "boolean")]
-    pub is_restored: bool,
+    #[serde(rename = "st")]
+    pub status: ListStatus,
 
     /// 归档目标是否为文件夹
     #[serde(rename = "is_d", with = "boolean")]
@@ -47,13 +47,21 @@ pub struct ListEntry {
     pub remark: String,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub enum ListStatus {
+    /// 已归档
+    Archived,
+    /// 已恢复
+    Restored,
+}
+
 /// 专门输出表格用的
 pub struct ListRow {
     pub archived_at: String,
     pub vault_name: String,
     pub id: String,
     pub target: String,
-    pub is_restored: bool,
+    pub status: ListStatus,
     pub is_dir: bool,
     pub dir: String,
 }
@@ -79,7 +87,7 @@ impl ListEntry {
             id: auto_incr::archive_id::next(),
             vault_id: CONFIG.current_vault_id,
             archived_at: dt::now_dt(),
-            is_restored: false,
+            status: ListStatus::Archived,
             remark: String::new(),
         }
     }
@@ -97,9 +105,13 @@ impl ListEntry {
             vault_name: vault::get_name(self.vault_id),
             target: self.target.to_string(),
             is_dir: self.is_dir,
-            is_restored: self.is_restored,
+            status: self.status.clone(),
             dir: paths::apply_alias(&self.dir),
         }
+    }
+
+    pub fn is_restored(&self) -> bool {
+        matches!(self.status, ListStatus::Restored)
     }
 }
 
@@ -107,7 +119,10 @@ impl ListRow {
     pub fn get_len(&self) -> ListColumnLen {
         let target_len = {
             let base = self.target.len();
-            let rst = if self.is_restored { 3 } else { 0 };
+            let rst = match self.status {
+                ListStatus::Archived => 0,
+                ListStatus::Restored => 3, // (R) 的长度
+            };
             let slash = if self.is_dir { 1 } else { 0 };
             base + rst + slash
         };
@@ -131,10 +146,9 @@ impl ListRow {
             } else {
                 self.target.to_string()
             },
-            if self.is_restored {
-                "(R)".orange()
-            } else {
-                String::new()
+            match self.status {
+                ListStatus::Archived => String::new(),
+                ListStatus::Restored => "(R)".orange(), // (R) 的长度
             },
             if self.is_dir {
                 std::path::MAIN_SEPARATOR.to_string()

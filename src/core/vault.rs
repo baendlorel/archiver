@@ -9,7 +9,8 @@ use super::config;
 use crate::core::archive;
 use crate::misc::{CustomColors, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
-use crate::models::types::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME, ListEntry, Vault, VaultStatus};
+use crate::models::types::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME};
+use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus};
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     let vaults = must_ok!(
@@ -108,10 +109,9 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         .iter()
         .map(|(_, v)| v.clone())
         .collect::<Vec<Vault>>();
-    let index = vaults.iter().position(|v| match v.status {
-        VaultStatus::Valid => v.name == name,
-        _ => false,
-    });
+    let index = vaults
+        .iter()
+        .position(|v| matches!(v.status, VaultStatus::Valid) && v.name == name);
     if index.is_none() {
         return info!("Vault '{}' not found", name);
     }
@@ -154,8 +154,12 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
 
     // * 删除
     // 移动归档对象到默认库
-    let satisfy = |entry: &ListEntry| entry.vault_id == vaults[index].id;
-    wrap_result!(archive::batch_mv(satisfy, DEFAULT_VLT_ID))?;
+    // 已回收的就不管了
+    let satisfies = |entry: &ListEntry| {
+        matches!(entry.status, ListStatus::Archived) && entry.vault_id == vaults[index].id
+    };
+
+    wrap_result!(archive::batch_mv(satisfies, DEFAULT_VLT_ID))?;
 
     // 修改vaults.jsonl
     vaults[index].status = VaultStatus::Removed;
