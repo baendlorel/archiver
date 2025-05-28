@@ -3,11 +3,10 @@ use crate::log_if_err;
 use super::log;
 
 mod alias;
-pub mod auto_check_update;
-mod command;
 mod display;
 mod sl;
 
+pub mod auto_check_update;
 pub use sl::{load, save};
 
 pub fn display() {

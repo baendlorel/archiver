@@ -1,4 +1,5 @@
 use owo_colors::OwoColorize;
+use strip_ansi_escapes::strip_str;
 
 pub enum ArchiverErrorLevel {
     Fatal,
@@ -123,30 +124,22 @@ impl ArchiverError {
     /// 将Error转化为写入文件的字符串，无彩色
     /// - dev环境下，包含全部stack信息
     pub fn to_string(&self) -> String {
-        let stack_info = self.get_stack_string();
-        format!(
-            "{} - {}\n{}",
-            self.level.to_string(),
-            self.message,
-            stack_info
-        )
+        let message = strip_str(self.message.as_str());
+        let stack = self.get_stack_string();
+        format!("{} - {}\n{}", self.level.to_string(), message, stack)
     }
 
     #[cfg(not(feature = "dev"))]
     /// 将Error转化为写入文件的字符串，无彩色
     /// - 生产环境下，仅fatal报错包含stack信息
     pub fn to_string(&self) -> String {
+        let message = strip_str(self.message.as_str());
         match self.level {
             ArchiverErrorLevel::Fatal => {
                 let stack_info = self.get_stack_string();
-                return format!(
-                    "{} - {}\n{}",
-                    self.level.to_string(),
-                    self.message,
-                    stack_info
-                );
+                return format!("{} - {}\n{}", self.level.to_string(), message, stack_info);
             }
-            _ => return format!("{} - {}", self.level.to_string(), self.message),
+            _ => return format!("{} - {}", self.level.to_string(), message),
         }
     }
 }

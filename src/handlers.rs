@@ -1,11 +1,11 @@
-use crate::{err_info, err_warn, log_if_err, must_ok};
+use crate::{err_info, err_warn, log_if_err};
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
 
 use crate::cli::{AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction};
 use crate::core::{archive, config, log, update, vault};
-use crate::misc::{CustomColors, mark};
+use crate::misc::{CustomColors, dedup_to_set, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
 
 pub fn vault(action: &VaultAction) {
@@ -31,18 +31,14 @@ pub fn vault(action: &VaultAction) {
                 let msg = format!("Vault '{}' is successfully set as current vault", name);
                 log::succ(None, Some(vault_id), &msg);
             }
-            Err(e) => {
-                log::fail(e);
-            }
+            Err(e) => log::fail(e),
         },
         VaultAction::Remove { name } => match vault::remove(name) {
             Ok(vault_id) => {
                 let msg = format!("Vault '{}' is successfully removed", name);
                 log::succ(None, Some(vault_id), &msg);
             }
-            Err(e) => {
-                log::fail(e);
-            }
+            Err(e) => log::fail(e),
         },
     }
 }
@@ -61,8 +57,10 @@ pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>)
     };
 
     // 去重以防止重复操作同一目标
-    let set: HashSet<String> = targets.iter().cloned().collect();
-    for target in set {
+    let set = dedup_to_set(targets);
+
+    let mut count: usize = 0;
+    set.iter().for_each(|target| {
         println!("Putting '{}' into archive", target);
         match archive::put(&target, message, vault_id) {
             Ok(entry) => {
@@ -73,9 +71,14 @@ pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>)
                     vault::get_name(entry.vault_id),
                 );
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
+                count += 1;
             }
             Err(e) => log::fail(e),
         };
+    });
+
+    if set.len() > 1 {
+        println!("{}/{} targets are successfully archived", count, set.len());
     }
     println!("Use `arv list` to check the archived list");
 }

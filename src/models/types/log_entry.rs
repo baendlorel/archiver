@@ -8,6 +8,13 @@ use crate::core::vault;
 use crate::misc::{CustomColors, dt, mark, paths};
 use crate::models::serde_custom::{boolean, naive_date_time};
 
+// todo 整合error里的level
+pub enum LogLevel {
+    Fatal,
+    Warn,
+    Info,
+}
+
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {

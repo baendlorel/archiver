@@ -43,8 +43,6 @@ pub fn put(target: &str, message: &Option<String>, vault_id: u32) -> ArchiverRes
     // * 下面开始归档
     // 准备字段
     let is_dir = target_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
-
-    // 新建实例
     let message: String = if let Some(m) = message {
         m.clone()
     } else {

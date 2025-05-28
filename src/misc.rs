@@ -8,9 +8,10 @@ mod confirm;
 mod consts;
 mod field_style;
 mod no_loss_path;
+mod set;
 
 pub use confirm::confirm;
 pub use consts::mark;
-pub use consts::{CONFIG_HELP_TEXT, CONFIG_VALID_STMT};
 pub use field_style::CustomColors;
 pub use no_loss_path::ForceToString;
+pub use set::dedup_to_set;
