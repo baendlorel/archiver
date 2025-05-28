@@ -7,8 +7,3 @@ pub fn save(list: &[ListEntry]) -> ArchiverResult<()> {
     wrap_result!(jsonl::save(list, paths::LIST_FILE_PATH.as_path()))?;
     Ok(())
 }
-
-pub fn load() -> ArchiverResult<Vec<ListEntry>> {
-    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
-    Ok(list)
-}

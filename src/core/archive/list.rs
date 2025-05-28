@@ -1,11 +1,21 @@
-use crate::{info, wrap_result};
+use crate::wrap_result;
 
 use owo_colors::OwoColorize;
 
-use super::sl;
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListColumnLen, ListEntry, ListRow};
+
+// pub fn select(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
+//     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+//     let list = list.into_iter().filter(|entry| condition(entry)).collect();
+//     Ok(list)
+// }
+
+pub fn select_all() -> ArchiverResult<Vec<ListEntry>> {
+    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+    Ok(list)
+}
 
 /// 将归档记录插入到列表中
 /// - 自动生成部分字段
@@ -14,32 +24,10 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
     Ok(())
 }
 
-/// 查找某个id的归档记录，用在restore上
-/// - 由于archive_id全局唯一，所以此处需要搜索所有的vault
-///
-/// 返回ListEntry列表和找到的index
-pub fn find_one(id: u32) -> ArchiverResult<(Vec<ListEntry>, usize)> {
-    let list = wrap_result!(sl::load())?;
-    let index = list.iter().position(|entry| entry.id == id);
-    if let Some(index) = index {
-        return Ok((list, index));
-    }
-    info!("id: {} cannot be found", id)
-}
-
-pub fn find(ids: &[u32]) -> ArchiverResult<Vec<ListEntry>> {
-    let list = wrap_result!(sl::load())?;
-
-    let result = list
-        .into_iter()
-        .filter(|entry| ids.contains(&entry.id))
-        .collect();
-
-    Ok(result)
-}
-
+// todo 利用stripansi的trait改造这里，最好能通用
 pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
-    let list = wrap_result!(sl::load())?;
+    let list = wrap_result!(select_all())?;
+
     let list = list
         .iter()
         .filter(|entry| all || (restored == entry.is_restored()))

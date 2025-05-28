@@ -6,16 +6,22 @@ use super::list;
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus};
-use crate::traits::ForceToString;
+use crate::traits::{CustomColors, ForceToString};
 
 pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
-    let (mut list, index) = wrap_result!(list::find_one(id))?;
+    let mut list = wrap_result!(list::select_all())?;
+    let index = list.iter().position(|entry| entry.id == id);
+    if index.is_none() {
+        return info!("id: {} cannot be found", id.styled_archive_id());
+    }
+
+    let index = index.unwrap();
     let entry = &list[index];
 
     if matches!(entry.status, ListStatus::Archived) {
         return info!(
             "id: {} has already been restored to '{}'",
-            id,
+            id.styled_archive_id(),
             entry.get_target_path_string()
         );
     }
