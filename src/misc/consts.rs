@@ -1,3 +1,5 @@
+/// 标记符号，和LogLevel的名称一致
+/// - 不放在LogLevel是因为可能在其他地方单独用它
 pub mod mark {
     use owo_colors::OwoColorize;
 
@@ -5,8 +7,12 @@ pub mod mark {
         "✓".green().to_string()
     }
 
-    pub fn fail() -> String {
-        "✗".red().to_string()
+    pub fn error() -> String {
+        "!".red().bold().to_string()
+    }
+
+    pub fn fatal() -> String {
+        "✗".bright_red().bold().to_string()
     }
 
     pub fn warn() -> String {

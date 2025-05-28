@@ -7,7 +7,7 @@ use super::parser;
 use crate::cli::{FULL_CMD, short};
 use crate::misc::{ForceToString, dt, jsonl, mark, paths};
 use crate::models::error::ArchiverResult;
-use crate::models::types::{LogEntry, OperSource, Operation};
+use crate::models::types::{LogEntry, LogLevel, OperSource, Operation};
 
 /// 在不加range直接arv log的时候，只输出最近这么多条
 /// 避免日志太多
@@ -15,7 +15,7 @@ const CASUAL_LIMIT: usize = 15;
 
 pub fn save_system_oper(
     oper: &Operation,
-    is_succ: bool,
+    level: LogLevel,
     archive_id: Option<u32>,
     vault_id: Option<u32>,
     remark: String,
@@ -29,14 +29,7 @@ pub fn save_system_oper(
     }
 
     // 准备日志内容
-    let log_entry = LogEntry {
-        opered_at: dt::now_dt(),
-        is_succ,
-        oper: oper.clone(),
-        remark,
-        archive_id,
-        vault_id,
-    };
+    let log_entry = LogEntry::new(oper, level, remark, archive_id, vault_id);
 
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
@@ -45,13 +38,13 @@ pub fn save_system_oper(
 }
 
 pub fn save(
-    is_succ: bool,
+    level: LogLevel,
     archive_id: Option<u32>,
     vault_id: Option<u32>,
     remark: Option<String>,
 ) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
-    let normalized_remark = if oper.main == short::main::PUT && is_succ {
+    let normalized_remark = if oper.main == short::main::PUT && level.is_succ() {
         let full_paths: Vec<String> = oper
             .args
             .iter()
@@ -74,14 +67,7 @@ pub fn save(
     };
 
     // 准备日志内容
-    let log_entry = LogEntry {
-        opered_at: dt::now_dt(),
-        is_succ,
-        oper: oper.clone(),
-        remark: normalized_remark,
-        archive_id,
-        vault_id,
-    };
+    let log_entry = LogEntry::new(&oper, level, normalized_remark, archive_id, vault_id);
 
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
@@ -92,7 +78,7 @@ pub fn save(
 /// 加载日志
 ///
 /// 返回值为三元组：（日志数组，是否到达随便看看限制，随便看看限制值）
-pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool, usize)> {
+pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool)> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();
 
@@ -141,5 +127,5 @@ pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool, usiz
         println!("No logs found");
     }
 
-    Ok((logs, reach_casual_limit, CASUAL_LIMIT))
+    Ok((logs, reach_casual_limit))
 }

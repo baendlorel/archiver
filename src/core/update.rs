@@ -128,12 +128,12 @@ pub fn reinstall() {
             if s.success() {
                 println!("{} script downloaded", mark::succ());
             } else {
-                eprintln!("{} Failed to download update script: {}", mark::fail(), s);
+                eprintln!("{} Failed to download update script: {}", mark::error(), s);
                 return;
             }
         }
         Err(e) => {
-            eprintln!("{} Failed to download update script: {}", mark::fail(), e);
+            eprintln!("{} Failed to download update script: {}", mark::error(), e);
             return;
         }
     }
@@ -149,12 +149,12 @@ pub fn reinstall() {
             if s.success() {
                 println!("{} script chmoded", mark::succ());
             } else {
-                eprintln!("{} Failed to chmod update script: {}", mark::fail(), s);
+                eprintln!("{} Failed to chmod update script: {}", mark::error(), s);
                 return;
             }
         }
         Err(e) => {
-            eprintln!("{} Failed to chmod update script: {}", mark::fail(), e);
+            eprintln!("{} Failed to chmod update script: {}", mark::error(), e);
             return;
         }
     }
@@ -167,6 +167,6 @@ pub fn reinstall() {
         .exec();
 
     // exec 只会在出错时返回
-    eprintln!("{} Failed to exec update script: {}", mark::fail(), err);
+    eprintln!("{} Failed to exec update script: {}", mark::error(), err);
     std::process::exit(1);
 }

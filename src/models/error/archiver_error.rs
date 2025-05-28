@@ -1,43 +1,6 @@
-use owo_colors::OwoColorize;
 use strip_ansi_escapes::strip_str;
 
-pub enum ArchiverErrorLevel {
-    Fatal,
-    Warn,
-    Info,
-}
-
-// 下面是ArchiverError用的错误等级
-const FATAL: &str = "!"; // \u{2757};
-const WARN: &str = "⚠";
-const INFO: &str = "i"; // \u{2139}
-
-impl ArchiverErrorLevel {
-    pub fn to_string_styled(&self) -> String {
-        match self {
-            ArchiverErrorLevel::Info => format!("{} {}", INFO, "Info")
-                .cyan()
-                .underline()
-                .to_string(),
-            ArchiverErrorLevel::Warn => format!("{} {}", WARN, "Warn")
-                .yellow()
-                .underline()
-                .to_string(),
-            ArchiverErrorLevel::Fatal => format!("{} {}", FATAL, "Fatal")
-                .red()
-                .underline()
-                .to_string(),
-        }
-    }
-
-    pub fn to_string(&self) -> String {
-        match self {
-            ArchiverErrorLevel::Info => format!("{}", "Info"),
-            ArchiverErrorLevel::Warn => format!("{}", "Warn"),
-            ArchiverErrorLevel::Fatal => format!("{}", "Fatal"),
-        }
-    }
-}
+use crate::models::types::LogLevel;
 
 #[derive(Clone)]
 pub struct StackFrame {
@@ -48,7 +11,7 @@ pub struct StackFrame {
 }
 
 pub struct ArchiverError {
-    pub level: ArchiverErrorLevel,
+    pub level: LogLevel,
     pub message: String,
     pub stack: Vec<StackFrame>,
 }
@@ -56,7 +19,7 @@ pub struct ArchiverError {
 pub type ArchiverResult<T> = Result<T, ArchiverError>;
 
 impl ArchiverError {
-    fn new(level: ArchiverErrorLevel, message: String, stack: Vec<StackFrame>) -> Self {
+    fn new(level: LogLevel, message: String, stack: Vec<StackFrame>) -> Self {
         // 听从建议，给每个错误信息加上句号
         let message = format!("{}.", message.trim_end_matches("."));
         Self {
@@ -67,15 +30,15 @@ impl ArchiverError {
     }
 
     pub fn info(message: String, stack: Vec<StackFrame>) -> Self {
-        Self::new(ArchiverErrorLevel::Info, message, stack)
+        Self::new(LogLevel::Info, message, stack)
     }
 
     pub fn warn(message: String, stack: Vec<StackFrame>) -> Self {
-        Self::new(ArchiverErrorLevel::Warn, message, stack)
+        Self::new(LogLevel::Warn, message, stack)
     }
 
     pub fn fatal(message: String, stack: Vec<StackFrame>) -> Self {
-        Self::new(ArchiverErrorLevel::Fatal, message, stack)
+        Self::new(LogLevel::Fatal, message, stack)
     }
 
     // pub fn set_message(&mut self, message: String) {
@@ -102,22 +65,22 @@ impl ArchiverError {
     #[cfg(feature = "dev")]
     /// 将Error转化为显示在终端的日志，含彩色
     /// - dev环境下总是显示stack信息
-    fn to_log(&self) -> String {
+    fn to_display(&self) -> String {
         format!("{}\n{}", self.message, self.get_stack_string())
     }
 
     #[cfg(not(feature = "dev"))]
     /// 将Error转化为显示在终端的日志，含彩色
     /// - 生产环境下，仅fatal报错展示stack信息
-    fn to_log(&self) -> String {
+    fn to_display(&self) -> String {
         match self.level {
-            ArchiverErrorLevel::Fatal => format!("{}\n{}", self.message, self.get_stack_string()),
+            LogLevel::Fatal => format!("{}\n{}", self.message, self.get_stack_string()),
             _ => self.message.clone(),
         }
     }
 
     pub fn display(&self) {
-        println!("{} {}", self.level.to_string_styled(), self.to_log());
+        println!("{} {}", self.level.to_mark(), self.to_display());
     }
 
     #[cfg(feature = "dev")]
@@ -135,7 +98,7 @@ impl ArchiverError {
     pub fn to_string(&self) -> String {
         let message = strip_str(self.message.as_str());
         match self.level {
-            ArchiverErrorLevel::Fatal => {
+            LogLevel::Fatal => {
                 let stack_info = self.get_stack_string();
                 return format!("{} - {}\n{}", self.level.to_string(), message, stack_info);
             }

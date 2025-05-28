@@ -41,7 +41,7 @@ fn force_no_loss<T: AsRef<Path>>(t: &T) -> String {
     if lossy.contains('\u{FFFD}') {
         panic!(
             "{} Failed to convert OsStr to String. Please use utf8 chars to name the target",
-            mark::fail()
+            mark::error()
         );
     } else {
         // 如果没有 �，可能是平台差异，允许返回

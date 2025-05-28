@@ -2,27 +2,22 @@ use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use super::Operation;
+use super::super::Operation;
+use super::LogLevel;
 use crate::cli::short;
 use crate::core::vault;
 use crate::misc::{CustomColors, dt, mark, paths};
-use crate::models::serde_custom::{boolean, naive_date_time};
+use crate::models::serde_custom::naive_date_time;
 
 // todo 整合error里的level
-pub enum LogLevel {
-    Fatal,
-    Warn,
-    Info,
-}
-
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
     #[serde(rename = "oat", with = "naive_date_time")]
     pub opered_at: NaiveDateTime, // 操作时间
 
-    #[serde(rename = "s", with = "boolean")]
-    pub is_succ: bool, // 是否成功
+    #[serde(rename = "lv")]
+    pub level: LogLevel, // 是否成功
 
     #[serde(rename = "o")]
     pub oper: Operation, // 操作类型
@@ -45,15 +40,25 @@ impl LogEntry {
     /// 创建一个状态为fail的日志条目
     // pub fn fail() -> Self {}
 
+    pub fn new(
+        oper: &Operation,
+        level: LogLevel,
+        remark: String,
+        archive_id: Option<u32>,
+        vault_id: Option<u32>,
+    ) -> Self {
+        Self {
+            opered_at: dt::now_dt(),
+            oper: oper.clone(),
+            level: level.clone(),
+            remark,
+            archive_id,
+            vault_id,
+        }
+    }
+
     pub fn to_display(&self) -> String {
         let time = dt::to_dt_string(&self.opered_at);
-
-        let status = if self.is_succ {
-            //  ✓ 和 ✗
-            mark::succ()
-        } else {
-            mark::fail()
-        };
 
         let archive_id = if let Some(archive_id) = self.archive_id {
             if self.oper.main == short::main::PUT {
@@ -107,7 +112,7 @@ impl LogEntry {
         };
 
         let second_dash = if !rav.is_empty() {
-            if self.is_succ {
+            if self.level.is_succ() {
                 " - ".green().to_string()
             } else {
                 " - ".red().to_string()
@@ -119,7 +124,7 @@ impl LogEntry {
         format!(
             "{} {} {}{second_dash}{}",
             time.bright_black(),
-            status,
+            self.level.to_mark(),
             self.oper.to_display(),
             rav,
             second_dash = second_dash
