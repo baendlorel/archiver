@@ -5,16 +5,17 @@ use std::u32;
 
 use super::parser;
 use crate::cli::{FULL_CMD, short};
-use crate::misc::{ForceToString, dt, jsonl, mark, paths};
+use crate::misc::{dt, jsonl, mark, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{LogEntry, LogLevel, OperSource, Operation};
+use crate::traits::ForceToString;
 
 /// 在不加range直接arv log的时候，只输出最近这么多条
 /// 避免日志太多
 const CASUAL_LIMIT: usize = 15;
 
 pub fn save_system_oper(
-    oper: &Operation,
+    oper: Operation,
     level: LogLevel,
     archive_id: Option<u32>,
     vault_id: Option<u32>,
@@ -67,7 +68,7 @@ pub fn save(
     };
 
     // 准备日志内容
-    let log_entry = LogEntry::new(&oper, level, remark, archive_id, vault_id);
+    let log_entry = LogEntry::new(oper, level, remark, archive_id, vault_id);
 
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
@@ -77,7 +78,7 @@ pub fn save(
 
 /// 加载日志
 ///
-/// 返回值为三元组：（日志数组，是否到达随便看看限制，随便看看限制值）
+/// 返回值为元组：（日志数组，是否到达随便看看限制）
 pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool)> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();

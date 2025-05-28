@@ -7,8 +7,9 @@ use super::super::Operation;
 use super::LogLevel;
 use crate::cli::short;
 use crate::core::vault;
-use crate::misc::{CustomColors, dt, paths};
+use crate::misc::{dt, paths};
 use crate::models::serde_custom::naive_date_time;
+use crate::traits::CustomColors;
 
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
@@ -33,15 +34,8 @@ pub struct LogEntry {
 }
 
 impl LogEntry {
-    // todo 对于可以多重输入的命令的日志，改由处理函数返回LogEntry数组，然后外部println
-    /// 创建一个状态为succ的日志条目
-    // pub fn succ() -> Self {}
-
-    /// 创建一个状态为fail的日志条目
-    // pub fn fail() -> Self {}
-
     pub fn new(
-        oper: &Operation,
+        oper: Operation,
         level: LogLevel,
         remark: String,
         archive_id: Option<u32>,
@@ -49,8 +43,8 @@ impl LogEntry {
     ) -> Self {
         Self {
             opered_at: dt::now_dt(),
-            oper: oper.clone(),
-            level: level.clone(),
+            oper,
+            level,
             remark: strip_str(remark),
             archive_id,
             vault_id,
@@ -88,18 +82,18 @@ impl LogEntry {
             (true, true) => String::new(),
             (false, true) => format!(
                 "({}, {})",
-                archive_id.colored_archive_id(),
-                "-".colored_vault()
+                archive_id.styled_archive_id(),
+                "-".styled_vault()
             ),
             (true, false) => format!(
                 "({}, {})",
-                "-".colored_archive_id(),
-                vault_name.colored_vault()
+                "-".styled_archive_id(),
+                vault_name.styled_vault()
             ),
             (false, false) => format!(
                 "({}, {})",
-                archive_id.colored_archive_id(),
-                vault_name.colored_vault()
+                archive_id.styled_archive_id(),
+                vault_name.styled_vault()
             ),
         };
 

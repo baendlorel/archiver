@@ -3,6 +3,7 @@ mod core;
 mod handlers;
 mod misc;
 mod models;
+mod traits;
 
 use cli::{ArchiverCommand as AC, FULL_CMD};
 

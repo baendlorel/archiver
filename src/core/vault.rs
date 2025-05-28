@@ -6,10 +6,11 @@ use std::collections::HashMap;
 
 use super::config;
 use crate::core::archive;
-use crate::misc::{CustomColors, confirm, jsonl, paths, rand};
+use crate::misc::{confirm, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME};
 use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus};
+use crate::traits::CustomColors;
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     let vaults = must_ok!(
@@ -39,7 +40,7 @@ pub fn find_by_name(name: &str) -> Option<Vault> {
 pub fn get_name(id: u32) -> String {
     let vault = must_some!(
         VAULT_MAP.get(&id),
-        format!("vault_id: {} not found", id.colored_vault())
+        format!("vault_id: {} not found", id.styled_vault())
     );
     vault.name.clone()
 }
@@ -121,9 +122,9 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
     // 告知删除会导致归档对象移动到默认库
     println!(
         "All archived objects in '{}' {}{}{} (which is the default vault).",
-        name.colored_vault(),
+        name.styled_vault(),
         "shall be moved to '".underline().bold(),
-        DEFAULT_VLT_NAME.colored_vault().underline().bold(),
+        DEFAULT_VLT_NAME.styled_vault().underline().bold(),
         "'".underline().bold()
     );
     if !confirm("Are you sure? [y/N]> ", "y") {
@@ -134,7 +135,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
     let verify_code = rand::string(6);
     println!(
         "To confirm removing vault '{}', please type: {}",
-        name.colored_vault(),
+        name.styled_vault(),
         verify_code
     );
     if !confirm("> ", &verify_code) {

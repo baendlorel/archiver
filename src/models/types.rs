@@ -6,7 +6,7 @@ mod operation;
 mod vault;
 mod version;
 
-pub use archiver_config::{AliasEntry, ArchiverConfig, CONFIG, CONFIG_ITEMS};
+pub use archiver_config::{AliasEntry, ArchiverConfig, CONFIG_ITEMS};
 pub use auto_incr_vars::AutoIncrVars;
 pub use list_entry::{ListColumnLen, ListEntry, ListRow, ListStatus};
 pub use log_types::{LogEntry, LogLevel};

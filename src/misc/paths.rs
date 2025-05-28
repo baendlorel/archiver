@@ -5,11 +5,11 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
-use super::ForceToString;
 use crate::models::{
     serde_custom::SerdeJson,
     types::{ArchiverConfig, AutoIncrVars},
 };
+use crate::traits::ForceToString;
 
 mod consts {
     // 目录

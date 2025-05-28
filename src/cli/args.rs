@@ -20,7 +20,6 @@ pub static FULL_CMD: Lazy<ArchiverCommand> = Lazy::new(|| {
         // 打印帮助信息
         // 一定要顶部写use clap::{CommandFactory, Parser};
         // 下边的Args::command()才能成立，否则会说：
-        // * items from traits can only be used if the trait is in scoperustcClick for full compiler diagnostic
         Args::command()
             .print_help()
             .expect("Cannot print help text");

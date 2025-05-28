@@ -29,8 +29,8 @@ pub fn fail(e: ArchiverError) {
 }
 
 /// 保存系统自动生成的操作的日志
-pub fn save_system_oper(
-    oper: &Operation,
+pub fn sys(
+    oper: Operation,
     level: LogLevel,
     archive_id: Option<u32>,
     vault_id: Option<u32>,

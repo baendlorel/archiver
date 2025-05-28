@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::cli::short;
-use crate::misc::CustomColors;
+use crate::traits::CustomColors;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Operation {

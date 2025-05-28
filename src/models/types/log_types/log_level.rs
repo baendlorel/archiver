@@ -4,19 +4,19 @@ use crate::misc::mark;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum LogLevel {
-    #[serde(rename = "s")]
+    #[serde(rename = "S")]
     Success,
 
-    #[serde(rename = "i")]
+    #[serde(rename = "I")]
     Info,
 
-    #[serde(rename = "w")]
+    #[serde(rename = "W")]
     Warn,
 
-    #[serde(rename = "e")]
+    #[serde(rename = "E")]
     Error,
 
-    #[serde(rename = "f")]
+    #[serde(rename = "F")]
     Fatal,
 }
 

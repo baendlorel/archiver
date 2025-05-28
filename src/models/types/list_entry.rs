@@ -2,10 +2,10 @@ use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use super::CONFIG;
 use crate::core::{auto_incr, vault};
-use crate::misc::{CustomColors, dt, paths};
+use crate::misc::{dt, paths};
 use crate::models::serde_custom::{boolean, naive_date_time};
+use crate::traits::CustomColors;
 
 /// 归档列表的条目
 /// - 这样的字段排序是为了序列化的时候jsonl文件也可以是这个顺序
@@ -50,8 +50,11 @@ pub struct ListEntry {
 #[derive(Serialize, Deserialize, Clone)]
 pub enum ListStatus {
     /// 已归档
+    #[serde(rename = "A")]
     Archived,
+
     /// 已恢复
+    #[serde(rename = "R")]
     Restored,
 }
 
@@ -61,8 +64,6 @@ pub struct ListRow {
     pub vault_name: String,
     pub id: String,
     pub target: String,
-    pub status: ListStatus,
-    pub is_dir: bool,
     pub dir: String,
 }
 
@@ -99,14 +100,29 @@ impl ListEntry {
     }
 
     pub fn to_row(&self) -> ListRow {
+        let target = {
+            let t = if self.is_dir {
+                format!("{}{}", self.target.styled_dir(), std::path::MAIN_SEPARATOR)
+            } else {
+                self.target.clone()
+            };
+
+            let r = match self.status {
+                ListStatus::Archived => String::new(),
+                ListStatus::Restored => "(R)".orange(),
+            };
+
+            format!("{}{}", t, r)
+        };
+
         ListRow {
-            archived_at: dt::to_dt_string(&self.archived_at),
-            id: self.id.to_string(),
-            vault_name: vault::get_name(self.vault_id),
-            target: self.target.to_string(),
-            is_dir: self.is_dir,
-            status: self.status.clone(),
-            dir: paths::apply_alias(&self.dir),
+            archived_at: dt::to_dt_string(&self.archived_at)
+                .bright_black()
+                .to_string(),
+            id: self.id.styled_archive_id(),
+            vault_name: vault::get_name(self.vault_id).styled_vault(),
+            target,
+            dir: paths::apply_alias(&self.dir).bright_grey(),
         }
     }
 
@@ -117,55 +133,26 @@ impl ListEntry {
 
 impl ListRow {
     pub fn get_len(&self) -> ListColumnLen {
-        let target_len = {
-            let base = self.target.len();
-            let rst = match self.status {
-                ListStatus::Archived => 0,
-                ListStatus::Restored => 3, // (R) 的长度
-            };
-            let slash = if self.is_dir { 1 } else { 0 };
-            base + rst + slash
-        };
-
         ListColumnLen {
             archived_at: self.archived_at.len(),
             vault_name: self.vault_name.len(),
             id: self.id.len(),
-            target: target_len,
+            target: self.target.len(),
             dir: self.dir.len(),
         }
     }
 
     pub fn to_display(&self, max_len: &ListColumnLen) -> String {
         let cl = self.get_len();
-
-        let target = format!(
-            "{}{}{}",
-            if self.is_dir {
-                self.target.colored_dir().to_string()
-            } else {
-                self.target.to_string()
-            },
-            match self.status {
-                ListStatus::Archived => String::new(),
-                ListStatus::Restored => "(R)".orange(), // (R) 的长度
-            },
-            if self.is_dir {
-                std::path::MAIN_SEPARATOR.to_string()
-            } else {
-                String::new()
-            }
-        );
-
         format!(
             "{}{} {}{} {}{} {}{} {}",
             self.archived_at.bright_black(),
             " ".repeat(max_len.archived_at - cl.archived_at),
-            self.vault_name.colored_vault(),
+            self.vault_name.styled_vault(),
             " ".repeat(max_len.vault_name - cl.vault_name),
-            self.id.colored_archive_id(),
+            self.id.styled_archive_id(),
             " ".repeat(max_len.id - cl.id),
-            target,
+            self.target,
             " ".repeat(max_len.target - cl.target),
             self.dir.bright_black(),
         )

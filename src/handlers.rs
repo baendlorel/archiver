@@ -5,8 +5,9 @@ use std::{cmp::Ordering, collections::HashSet};
 
 use crate::cli::{AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction};
 use crate::core::{archive, config, log, update, vault};
-use crate::misc::{CustomColors, dedup_to_set, mark};
+use crate::misc::{dedup_to_set, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
+use crate::traits::CustomColors;
 
 pub fn vault(action: &VaultAction) {
     match action {
@@ -19,7 +20,7 @@ pub fn vault(action: &VaultAction) {
                 let msg = format!(
                     "Vault '{}' is successfully created, vault id: {}",
                     name,
-                    vault.id.colored_vault()
+                    vault.id.styled_vault()
                 );
                 log::succ(None, Some(vault.id), &msg);
             }
@@ -43,7 +44,6 @@ pub fn vault(action: &VaultAction) {
     }
 }
 
-// todo put和restore都感觉太重了，应该舍弃批量归纳批量归档
 pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>) {
     let vault_id = match vault {
         Some(name) => match vault::find_by_name(name) {
@@ -87,13 +87,13 @@ pub fn restore(ids: &[u32]) {
     // 去重以防止重复操作同一目标
     let set: HashSet<u32> = ids.iter().cloned().collect();
     for id in set {
-        println!("Restoring id: {}", id.colored_archive_id());
+        println!("Restoring id: {}", id.styled_archive_id());
         match archive::restore(id) {
             Ok(entry) => {
                 let msg = format!(
                     "(id: {}, vault: {}) is successfully restored to '{}'",
-                    entry.id.colored_archive_id(),
-                    vault::get_name(entry.vault_id).colored_vault(),
+                    entry.id.styled_archive_id(),
+                    vault::get_name(entry.vault_id).styled_vault(),
                     entry.get_target_path_string()
                 );
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
