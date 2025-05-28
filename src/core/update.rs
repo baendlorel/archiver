@@ -1,4 +1,4 @@
-use crate::{info, log_if_err, must_ok};
+use crate::{info, allow, must_ok};
 
 use std::fs;
 use std::os::unix::process::CommandExt;
@@ -54,7 +54,7 @@ pub fn auto_check() {
     }
 
     // 检查过了更新，刷新一下检测记录
-    log_if_err!(auto_check_update::refresh(&mut config));
+    allow!(auto_check_update::refresh(&mut config));
 }
 
 pub fn prepare_versions() -> ArchiverResult<(Version, Version)> {

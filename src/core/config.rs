@@ -1,4 +1,4 @@
-use crate::log_if_err;
+use crate::allow;
 
 use super::log;
 
@@ -10,7 +10,7 @@ pub mod auto_check_update;
 pub use sl::{load, save};
 
 pub fn display() {
-    log_if_err!(display::display(&None));
+    allow!(display::display(&None));
 }
 
 pub fn add_alias(alias: &str) {

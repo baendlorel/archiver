@@ -44,7 +44,7 @@ pub fn save(
     remark: Option<String>,
 ) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
-    let normalized_remark = if oper.main == short::main::PUT && level.is_succ() {
+    let remark = if oper.main == short::main::PUT && level.is_succ() {
         let full_paths: Vec<String> = oper
             .args
             .iter()
@@ -67,7 +67,7 @@ pub fn save(
     };
 
     // 准备日志内容
-    let log_entry = LogEntry::new(&oper, level, normalized_remark, archive_id, vault_id);
+    let log_entry = LogEntry::new(&oper, level, remark, archive_id, vault_id);
 
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());

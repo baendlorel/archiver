@@ -1,4 +1,4 @@
-use crate::{err_info, err_warn, log_if_err};
+use crate::{allow, err_info, err_warn};
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
@@ -136,11 +136,11 @@ pub fn mv(ids: &[u32], to: &str) {
 }
 
 pub fn list(all: bool, restored: bool) {
-    log_if_err!(archive::list::display(all, restored));
+    allow!(archive::list::display(all, restored));
 }
 
 pub fn log(range: &Option<String>) {
-    log_if_err!(log::display(range));
+    allow!(log::display(range));
 }
 
 pub fn config(action: &ConfigAction) {

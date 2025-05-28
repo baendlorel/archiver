@@ -1,5 +1,3 @@
-use strip_ansi_escapes::strip_str;
-
 use crate::models::types::LogLevel;
 
 #[derive(Clone)]
@@ -41,10 +39,6 @@ impl ArchiverError {
         Self::new(LogLevel::Fatal, message, stack)
     }
 
-    // pub fn set_message(&mut self, message: String) {
-    //     self.message = format!("{}.", message.trim_end_matches("."));
-    // }
-
     fn get_stack_string(&self) -> String {
         let mut stack_info: Vec<String> = vec![];
         let mut count: u32 = 0;
@@ -65,14 +59,14 @@ impl ArchiverError {
     #[cfg(feature = "dev")]
     /// 将Error转化为显示在终端的日志，含彩色
     /// - dev环境下总是显示stack信息
-    fn to_display(&self) -> String {
+    pub fn to_string(&self) -> String {
         format!("{}\n{}", self.message, self.get_stack_string())
     }
 
     #[cfg(not(feature = "dev"))]
     /// 将Error转化为显示在终端的日志，含彩色
     /// - 生产环境下，仅fatal报错展示stack信息
-    fn to_display(&self) -> String {
+    pub fn to_string(&self) -> String {
         match self.level {
             LogLevel::Fatal => format!("{}\n{}", self.message, self.get_stack_string()),
             _ => self.message.clone(),
@@ -80,29 +74,6 @@ impl ArchiverError {
     }
 
     pub fn display(&self) {
-        println!("{} {}", self.level.to_mark(), self.to_display());
-    }
-
-    #[cfg(feature = "dev")]
-    /// 将Error转化为写入文件的字符串，无彩色
-    /// - dev环境下，包含全部stack信息
-    pub fn to_string(&self) -> String {
-        let message = strip_str(self.message.as_str());
-        let stack = self.get_stack_string();
-        format!("{} - {}\n{}", self.level.to_string(), message, stack)
-    }
-
-    #[cfg(not(feature = "dev"))]
-    /// 将Error转化为写入文件的字符串，无彩色
-    /// - 生产环境下，仅fatal报错包含stack信息
-    pub fn to_string(&self) -> String {
-        let message = strip_str(self.message.as_str());
-        match self.level {
-            LogLevel::Fatal => {
-                let stack_info = self.get_stack_string();
-                return format!("{} - {}\n{}", self.level.to_string(), message, stack_info);
-            }
-            _ => return format!("{} - {}", self.level.to_string(), message),
-        }
+        println!("{} {}", self.level.to_mark(), self.to_string());
     }
 }

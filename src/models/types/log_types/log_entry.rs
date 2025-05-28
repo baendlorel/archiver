@@ -1,15 +1,15 @@
 use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
+use strip_ansi_escapes::strip_str;
 
 use super::super::Operation;
 use super::LogLevel;
 use crate::cli::short;
 use crate::core::vault;
-use crate::misc::{CustomColors, dt, mark, paths};
+use crate::misc::{CustomColors, dt, paths};
 use crate::models::serde_custom::naive_date_time;
 
-// todo 整合error里的level
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
 pub struct LogEntry {
@@ -51,7 +51,7 @@ impl LogEntry {
             opered_at: dt::now_dt(),
             oper: oper.clone(),
             level: level.clone(),
-            remark,
+            remark: strip_str(remark),
             archive_id,
             vault_id,
         }

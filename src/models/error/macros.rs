@@ -82,7 +82,7 @@ macro_rules! must_ok {
         $e.unwrap_or_else(|error| {
             panic!(
                 "{} {}{}\n at {} {}:{}",
-                crate::misc::mark::fail(),
+                crate::misc::mark::fatal(),
                 if $s.is_empty() {
                     String::new()
                 } else {
@@ -106,7 +106,7 @@ macro_rules! must_some {
         $e.unwrap_or_else(|| {
             panic!(
                 "{} {}\n at {} {}:{}",
-                crate::misc::mark::fail(),
+                crate::misc::mark::fatal(),
                 $s,
                 file!(),
                 line!(),
@@ -161,7 +161,7 @@ macro_rules! wrap_result {
 
 /// 展示一个ArchiverError的错误，但只是看看，依然继续执行后面的
 #[macro_export]
-macro_rules! log_if_err {
+macro_rules! allow {
     ($e:expr) => {
         $e.map_err(|e| e.display()).ok()
     };

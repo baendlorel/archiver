@@ -1,6 +1,4 @@
-use crate::{log_if_err, wrap_result};
-
-use strip_ansi_escapes::strip_str;
+use crate::{allow, wrap_result};
 
 use crate::misc::mark;
 use crate::models::error::{ArchiverError, ArchiverResult};
@@ -14,15 +12,11 @@ mod sl;
 
 /// 写入成功的日志
 /// - 会继承入参msg对象的信息
-pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, msg: &String) {
-    println!("{} {}", mark::succ(), msg);
+pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, message: &String) {
+    println!("{} {}", mark::succ(), message);
 
-    log_if_err!(sl::save(
-        LogLevel::Error,
-        archive_id,
-        vault_id,
-        Some(strip_str(msg))
-    ));
+    // message没必要写入，因为level和operation已携带成功信息
+    allow!(sl::save(LogLevel::Success, archive_id, vault_id, None));
 }
 
 /// 写入错误日志
@@ -31,7 +25,7 @@ pub fn fail(e: ArchiverError) {
     e.display();
     let str = e.to_string();
     let level = e.level;
-    log_if_err!(sl::save(level, None, None, Some(str)));
+    allow!(sl::save(level, None, None, Some(str)));
 }
 
 /// 保存系统自动生成的操作的日志
@@ -42,7 +36,7 @@ pub fn save_system_oper(
     vault_id: Option<u32>,
     remark: String,
 ) {
-    log_if_err!(sl::save_system_oper(
+    allow!(sl::save_system_oper(
         oper, level, archive_id, vault_id, remark
     ));
 }
