@@ -2,10 +2,10 @@ use crate::{info, warn, wrap_result};
 
 use std::path;
 
-use crate::misc::{ForceToString, paths};
-use crate::models::{error::ArchiverResult, types::AliasEntry};
-
 use super::sl;
+use crate::misc::paths;
+use crate::models::{error::ArchiverResult, types::AliasEntry};
+use crate::traits::ForceToString;
 
 // # 业务函数
 pub fn remove_alias(alias_entry: &str) -> ArchiverResult<()> {

@@ -1,8 +1,8 @@
-use crate::{as_fatal, info, wrap_result};
+use crate::{info, wrap_result};
 
 use owo_colors::OwoColorize;
-use std::fs;
 
+use super::sl;
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListColumnLen, ListEntry, ListRow};
@@ -19,7 +19,7 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
 ///
 /// 返回ListEntry列表和找到的index
 pub fn find_one(id: u32) -> ArchiverResult<(Vec<ListEntry>, usize)> {
-    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+    let list = wrap_result!(sl::load())?;
     let index = list.iter().position(|entry| entry.id == id);
     if let Some(index) = index {
         return Ok((list, index));
@@ -28,7 +28,7 @@ pub fn find_one(id: u32) -> ArchiverResult<(Vec<ListEntry>, usize)> {
 }
 
 pub fn find(ids: &[u32]) -> ArchiverResult<Vec<ListEntry>> {
-    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+    let list = wrap_result!(sl::load())?;
 
     let result = list
         .into_iter()
@@ -39,38 +39,14 @@ pub fn find(ids: &[u32]) -> ArchiverResult<Vec<ListEntry>> {
 }
 
 pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
-    let list_file_path = paths::LIST_FILE_PATH.as_path();
-    if !list_file_path.exists() {
-        println!("No archived object yet");
-        return Ok(());
-    }
+    let list = wrap_result!(sl::load())?;
+    let list = list
+        .iter()
+        .filter(|entry| all || (restored == entry.is_restored()))
+        .map(|entry| entry.to_row())
+        .collect::<Vec<ListRow>>();
 
-    let content = as_fatal!(fs::read_to_string(list_file_path))?;
-
-    let mut list: Vec<ListRow> = vec![];
-    let mut count = 0;
-    for line in content.lines() {
-        if line.trim().is_empty() {
-            continue; // 跳过空行
-        }
-
-        match as_fatal!(serde_json::from_str::<ListEntry>(line)) {
-            Ok(entry) => {
-                // 展示条件为全部展示，或者展示已恢复的，或者展示未恢复的
-                // * all || (restored && entry.is_restored) || (!restored && !entry.is_restored)
-                let display_condition = all || (restored == entry.is_restored());
-
-                // 设置了all的话，展示全部，否则只展示未恢复的对象
-                if display_condition {
-                    count += 1;
-                    list.push(entry.to_row());
-                }
-            }
-            Err(e) => e.display(),
-        }
-    }
-
-    if count == 0 {
+    if list.len() == 0 {
         println!("No archived object found");
     }
 

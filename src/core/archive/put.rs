@@ -3,8 +3,9 @@ use crate::{as_fatal, info, must_some, warn, wrap_result};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
 use super::list;
-use crate::misc::{ForceToString, paths};
+use crate::misc::paths;
 use crate::models::{error::ArchiverResult, types::ListEntry};
+use crate::traits::ForceToString;
 
 pub fn put(target: &str, message: &Option<String>, vault_id: u32) -> ArchiverResult<ListEntry> {
     // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名

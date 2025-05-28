@@ -92,16 +92,16 @@ impl ArchiverConfig {
     }
 }
 
-pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
-    let content = must_ok!(
-        fs::read_to_string(paths::CONFIG_FILE_PATH.as_path()),
-        "Cannot read config file"
-    );
+// pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
+//     let content = must_ok!(
+//         fs::read_to_string(paths::CONFIG_FILE_PATH.as_path()),
+//         "Cannot read config file"
+//     );
 
-    must_ok!(
-        serde_json::from_str::<ArchiverConfig>(&content),
-        "Cannot parse config file"
-    )
-});
+//     must_ok!(
+//         serde_json::from_str::<ArchiverConfig>(&content),
+//         "Cannot parse config file"
+//     )
+// });
 
 pub const CONFIG_ITEMS: [&str; 2] = ["alias", "auto-check-update"];

@@ -17,7 +17,6 @@ mod consts {
     pub const LOGS_DIR: &str = "logs";
     pub const CORE_DIR: &str = "core";
     pub const VAULTS_DIR: &str = "vaults";
-    pub const DEFAULT_VAULT: &str = "0";
 
     // 特定文件
     pub const LIST_FILE: &str = "list.jsonl";

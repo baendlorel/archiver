@@ -1,15 +1,13 @@
-use crate::{info, allow, must_ok};
+use crate::{allow, info, must_ok};
 
 use std::fs;
 use std::os::unix::process::CommandExt;
 use std::{cmp::Ordering, process::Command}; // for exec
 
-use crate::{
-    misc::{ForceToString, mark, paths},
-    models::{error::ArchiverResult, types::Version},
-};
-
 use super::config::{auto_check_update, load};
+use crate::misc::{mark, paths};
+use crate::models::{error::ArchiverResult, types::Version};
+use crate::traits::ForceToString;
 
 const GITHUB_API_URL: &str = "https://api.github.com/repos/baendlorel/archiver/releases/latest";
 const SCRIPT_URL: &str =

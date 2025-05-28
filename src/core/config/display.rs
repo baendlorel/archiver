@@ -3,8 +3,9 @@ use crate::wrap_result;
 use owo_colors::OwoColorize;
 
 use super::sl;
-use crate::misc::{ForceToString, paths};
+use crate::misc::paths;
 use crate::models::{error::ArchiverResult, types::CONFIG_ITEMS};
+use crate::traits::ForceToString;
 
 pub fn display(config_item: &Option<String>) -> ArchiverResult<()> {
     let config = wrap_result!(sl::load())?;
