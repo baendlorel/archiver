@@ -12,5 +12,7 @@ pub mod short;
 pub use operation::{OperSource, Operation};
 
 // 子命令
-pub use config_action::{AliasAction, AutoCheckUpdateAction, ConfigAction};
+pub use config_action::{
+    AliasAction, AutoCheckUpdateAction, ConfigAction, VaultItemSeperatorAction,
+};
 pub use vault_action::VaultAction;

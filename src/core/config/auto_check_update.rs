@@ -1,12 +1,12 @@
-use crate::{as_fatal, warn, wrap_result};
+use crate::{warn, wrap_result};
 
 use chrono::Datelike;
 
-use super::sl;
+use super::{CONFIG, sl};
 use crate::misc::dt;
 use crate::models::{error::ArchiverResult, types::ArchiverConfig};
 
-pub fn toggle(status: &str) -> ArchiverResult<()> {
+pub fn set(status: &str) -> ArchiverResult<()> {
     if status != "on" && status != "off" {
         return warn!(
             "Status of auto check update must be 'on' or 'off', but got '{}'",
@@ -14,7 +14,7 @@ pub fn toggle(status: &str) -> ArchiverResult<()> {
         );
     }
 
-    let mut config = as_fatal!(sl::load())?;
+    let mut config = CONFIG.clone();
     config.auto_check_update = status.to_string();
     wrap_result!(sl::save(&config))?;
 
@@ -33,7 +33,8 @@ pub fn time_passed(config: &ArchiverConfig) -> bool {
     months_passed > 1
 }
 
-pub fn refresh(config: &mut ArchiverConfig) -> ArchiverResult<()> {
+pub fn refresh_last_date() -> ArchiverResult<()> {
+    let mut config = CONFIG.clone();
     config.last_check_update_date = dt::now_d();
     wrap_result!(sl::save(&config))?;
     Ok(())

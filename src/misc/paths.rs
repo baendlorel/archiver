@@ -137,77 +137,7 @@ pub static LIST_FILE_PATH: Lazy<PathBuf> =
 pub static VAULTS_FILE_PATH: Lazy<PathBuf> =
     Lazy::new(|| ROOT_DIR.join(raw::CORE_DIR).join(raw::VAULTS_FILE));
 
-/// 别名映射表
-/// - 专门给下面的apply_alias函数使用
-/// - 该表存放在配置文件中
-static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
-    let content = must_ok!(
-        fs::read_to_string(CONFIG_FILE_PATH.as_path()),
-        "Cannot read config file"
-    );
-
-    let config = must_ok!(
-        serde_json::from_str::<ArchiverConfig>(&content),
-        "Cannot parse config file"
-    );
-
-    let mut map: HashMap<String, String> = HashMap::new();
-
-    map.insert("~".to_string(), HOME_DIR.force_to_string());
-    for line in config.alias {
-        map.insert(line.alias, line.origin);
-    }
-
-    map
-});
-
 // # 与路径相关的函数
-
-/// 将alias应用到一串路径字符串里
-pub fn apply_alias(path_str: &str) -> String {
-    use std::path::MAIN_SEPARATOR;
-    for (alias, origin) in ALIAS_MAP.iter() {
-        let bytes = path_str.as_bytes();
-        let origin_bytes = origin.as_bytes();
-        let len = path_str.len();
-        let olen = origin.len();
-
-        let mut i = 0;
-        while i + olen <= len {
-            if &bytes[i..i + olen] == origin_bytes {
-                // 判断是不是单词起始
-                let is_word_start =
-                    i == 0 || !bytes[i - 1].is_ascii_alphanumeric() && bytes[i - 1] != b'_';
-                if is_word_start {
-                    // 找到单词边界
-                    let mut left = i;
-                    let mut right = i + olen;
-                    // 向左扩展
-                    while left > 0
-                        && (bytes[left - 1].is_ascii_alphanumeric() || bytes[left - 1] == b'_')
-                    {
-                        left -= 1;
-                    }
-                    // 向右扩展
-                    while right < len
-                        && (bytes[right].is_ascii_alphanumeric() || bytes[right] == b'_')
-                    {
-                        right += 1;
-                    }
-                    // 检查单词是否包含 MAIN_SEPARATOR
-                    let word = &path_str[left..right];
-                    if word.contains(MAIN_SEPARATOR) {
-                        let mut replaced = path_str.to_string();
-                        replaced.replace_range(i..i + olen, alias);
-                        return replaced;
-                    }
-                }
-            }
-            i += 1;
-        }
-    }
-    path_str.to_string()
-}
 
 /// 根据年份获取日志文件路径
 pub fn get_log_path(year: i32) -> PathBuf {

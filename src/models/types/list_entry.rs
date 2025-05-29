@@ -2,8 +2,8 @@ use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::core::{auto_incr, vault};
-use crate::misc::{dt, paths};
+use crate::core::{auto_incr, config, vault};
+use crate::misc::dt;
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::traits::CustomColors;
 use crate::traits::StripAnsi;
@@ -93,7 +93,7 @@ impl ListEntry {
     }
 
     pub fn get_item_path_string(&self) -> String {
-        let dir = paths::apply_alias(&self.dir);
+        let dir = config::alias::apply(&self.dir);
         format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, &self.item)
     }
 
@@ -111,7 +111,7 @@ impl ListEntry {
             };
 
             let v = vault::get_name(self.vault_id).styled_vault();
-            format!("{}{}{}{}", v, ":".to_string().styled_vault(), t, r)
+            format!("{}{}{}{}", v, *config::VLT_ITEM_SEP, t, r)
         };
 
         ListRow {
@@ -120,7 +120,7 @@ impl ListEntry {
                 .to_string(),
             id: self.id.styled_archive_id(),
             item,
-            dir: paths::apply_alias(&self.dir).bright_grey(),
+            dir: config::alias::apply(&self.dir).bright_grey(),
         }
     }
 

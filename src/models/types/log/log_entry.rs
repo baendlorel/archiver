@@ -5,8 +5,8 @@ use strip_ansi_escapes::strip_str;
 
 use super::LogLevel;
 use crate::cli::{Operation, short};
-use crate::core::vault;
-use crate::misc::{dt, paths};
+use crate::core::{config, vault};
+use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
 
@@ -73,26 +73,29 @@ impl LogEntry {
             String::new()
         };
 
-        let remark = paths::apply_alias(&self.remark)
+        let remark = config::alias::apply(&self.remark)
             .replace("\n", "\\n")
             .to_string();
 
         let avid = match (archive_id.is_empty(), vault_name.is_empty()) {
             (true, true) => String::new(),
             (false, true) => format!(
-                "({}, {})",
+                "({}{}{})",
+                "-".styled_vault(),
+                *config::VLT_ITEM_SEP,
                 archive_id.styled_archive_id(),
-                "-".styled_vault()
             ),
             (true, false) => format!(
-                "({}, {})",
+                "({}{}{})",
+                vault_name.styled_vault(),
+                *config::VLT_ITEM_SEP,
                 "-".styled_archive_id(),
-                vault_name.styled_vault()
             ),
             (false, false) => format!(
-                "({}, {})",
+                "({}{}{})",
+                vault_name.styled_vault(),
+                *config::VLT_ITEM_SEP,
                 archive_id.styled_archive_id(),
-                vault_name.styled_vault()
             ),
         };
 

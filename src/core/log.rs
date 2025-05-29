@@ -1,9 +1,10 @@
-use crate::{allow, err_error, wrap_result};
+use crate::{err_error, wrap_result};
 
 use crate::cli::Operation;
 use crate::misc::mark;
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
+use crate::traits::ResultExt;
 
 mod parser;
 mod sl;
@@ -16,7 +17,7 @@ pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, message: &String) {
     println!("{} {}", mark::succ(), message);
 
     // message没必要写入，因为level和operation已携带成功信息
-    allow!(sl::save(LogLevel::Success, archive_id, vault_id, None));
+    sl::save(LogLevel::Success, archive_id, vault_id, None).allow_and_display();
 }
 
 /// 写入错误日志
@@ -25,7 +26,7 @@ pub fn error(e: ArchiverError) {
     e.display();
     let str = e.to_string();
     let level = e.level;
-    allow!(sl::save(level, None, None, Some(str)));
+    sl::save(level, None, None, Some(str)).allow_and_display();
 }
 
 /// 输出一段字符串
@@ -33,7 +34,7 @@ pub fn fail(message: &str) {
     let e = err_error!("{}", message);
     let str = e.to_string();
     let level = e.level;
-    allow!(sl::save(level, None, None, Some(str)));
+    sl::save(level, None, None, Some(str)).allow_and_display();
 }
 
 /// 保存系统自动生成的操作的日志
@@ -44,9 +45,7 @@ pub fn sys(
     vault_id: Option<u32>,
     remark: String,
 ) {
-    allow!(sl::save_system_oper(
-        oper, level, archive_id, vault_id, remark
-    ));
+    sl::save_system_oper(oper, level, archive_id, vault_id, remark).allow_and_display();
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {

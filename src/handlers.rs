@@ -1,13 +1,13 @@
-use crate::allow;
-
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
 
-use crate::cli::{AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction};
+use crate::cli::{
+    AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction, VaultItemSeperatorAction,
+};
 use crate::core::{archive, config, log, update, vault};
 use crate::misc::{dedup_and_log, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
-use crate::traits::CustomColors;
+use crate::traits::{CustomColors, ResultExt};
 
 pub fn vault(action: &VaultAction) {
     match action {
@@ -15,32 +15,25 @@ pub fn vault(action: &VaultAction) {
             name,
             remark,
             u: use_at_once,
-        } => match vault::create(name, *use_at_once, remark) {
-            Ok(vault) => {
-                let msg = format!(
-                    "Vault '{}' is successfully created, vault id: {}",
-                    name,
-                    vault.id.styled_vault()
-                );
-                log::succ(None, Some(vault.id), &msg);
-            }
-            Err(e) => log::error(e),
-        },
+        } => vault::create(name, *use_at_once, remark).ok_then_or_log(|v| {
+            let msg = format!(
+                "Vault '{}' is successfully created, vault id: {}",
+                name,
+                v.id.styled_vault()
+            );
+            log::succ(None, Some(v.id), &msg);
+        }),
         VaultAction::List => vault::display(),
-        VaultAction::Use { name } => match vault::use_by_name(name) {
-            Ok(vault_id) => {
-                let msg = format!("Vault '{}' is successfully set as current vault", name);
-                log::succ(None, Some(vault_id), &msg);
-            }
-            Err(e) => log::error(e),
-        },
-        VaultAction::Remove { name } => match vault::remove(name) {
-            Ok(vault_id) => {
+        VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
+            let msg = format!("Vault '{}' is successfully set as current vault", name);
+            log::succ(None, Some(vault_id), &msg);
+        }),
+        VaultAction::Remove { name } => {
+            vault::use_by_name(name).ok_then_or_log(|vault_id| {
                 let msg = format!("Vault '{}' is successfully removed", name);
                 log::succ(None, Some(vault_id), &msg);
-            }
-            Err(e) => log::error(e),
-        },
+            });
+        }
     }
 }
 
@@ -63,19 +56,16 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
     items.iter().for_each(|item| {
         println!("Putting '{}' into archive", item);
         // 循环中使用message必须clone，否则move一次就没了
-        match archive::put(&item, message.clone(), vault_id) {
-            Ok(entry) => {
-                let msg = format!(
-                    "'{}' is successfully archived (id: {}, vault: {})",
-                    item,
-                    entry.id,
-                    vault::get_name(entry.vault_id),
-                );
-                log::succ(Some(entry.id), Some(entry.vault_id), &msg);
-                count += 1;
-            }
-            Err(e) => log::error(e),
-        };
+        archive::put(&item, message.clone(), vault_id).ok_then_or_log(|entry| {
+            let msg = format!(
+                "'{}' is successfully archived (id: {}, vault: {})",
+                item,
+                entry.id,
+                vault::get_name(entry.vault_id),
+            );
+            log::succ(Some(entry.id), Some(entry.vault_id), &msg);
+            count += 1;
+        });
     });
 
     if items.len() > 1 {
@@ -89,18 +79,15 @@ pub fn restore(ids: &[u32]) {
     let set: HashSet<u32> = ids.iter().cloned().collect();
     for id in set {
         println!("Restoring id: {}", id.styled_archive_id());
-        match archive::restore(id) {
-            Ok(entry) => {
-                let msg = format!(
-                    "(id: {}, vault: {}) is successfully restored to '{}'",
-                    entry.id.styled_archive_id(),
-                    vault::get_name(entry.vault_id).styled_vault(),
-                    entry.get_item_path_string()
-                );
-                log::succ(Some(entry.id), Some(entry.vault_id), &msg);
-            }
-            Err(e) => log::error(e),
-        }
+        archive::restore(id).ok_then_or_log(|entry| {
+            let msg = format!(
+                "(id: {}, vault: {}) is successfully restored to '{}'",
+                entry.id.styled_archive_id(),
+                vault::get_name(entry.vault_id).styled_vault(),
+                entry.get_item_path_string()
+            );
+            log::succ(Some(entry.id), Some(entry.vault_id), &msg);
+        });
     }
 }
 
@@ -117,7 +104,12 @@ pub fn mv(ids: &[u32], to: &str) {
     let satisfies = |entry: &ListEntry| ids.contains(&entry.id) && entry.vault_id != vault_id;
     let count = match archive::batch_mv(satisfies, vault_id) {
         Ok(count) => {
-            let msg = format!("{} objects are successfully moved to vault '{}'", count, to);
+            let msg = format!(
+                "{} objects are successfully moved to vault '{}', id: {}",
+                count,
+                to,
+                vault_id.styled_vault()
+            );
             log::succ(None, Some(vault_id), &msg);
             count
         }
@@ -136,22 +128,40 @@ pub fn mv(ids: &[u32], to: &str) {
 }
 
 pub fn list(all: bool, restored: bool) {
-    allow!(archive::list::display(all, restored));
+    archive::list::display(all, restored).allow_and_display();
 }
 
 pub fn log(range: &Option<String>) {
-    allow!(log::display(range));
+    log::display(range).allow_and_display();
 }
 
 pub fn config(action: &ConfigAction) {
     match action {
         ConfigAction::List => config::display(),
         ConfigAction::Alias(action) => match action {
-            AliasAction::Add { alias } => config::add_alias(&alias),
-            AliasAction::Remove { alias } => config::remove_alias(&alias),
+            AliasAction::Set { alias } => config::alias::set(alias).ok_then_or_log(|_| {
+                let msg = format!("Alias '{}' is set successfully", alias);
+                log::succ(None, None, &msg);
+            }),
+            AliasAction::Remove { alias } => config::alias::remove(&alias).ok_then_or_log(|_| {
+                let msg = format!("Alias '{}' is removed successfully", alias);
+                log::succ(None, None, &msg);
+            }),
         },
         ConfigAction::AutoCheckUpdate(action) => match action {
-            AutoCheckUpdateAction::Set { status } => config::auto_check_update(status),
+            AutoCheckUpdateAction::Set { status } => config::auto_check_update::set(&status)
+                .ok_then_or_log(|_| {
+                    let msg = format!("Auto check update is set to '{}'", status);
+                    log::succ(None, None, &msg);
+                }),
+        },
+        ConfigAction::VaultItemSeperator(action) => match action {
+            VaultItemSeperatorAction::Set { seperator } => {
+                config::vault_item_seperator::set(seperator).ok_then_or_log(|_| {
+                    let msg = format!("Vault item separator is set to '{}'", seperator);
+                    log::succ(None, None, &msg);
+                })
+            }
         },
     }
 }

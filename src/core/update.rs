@@ -1,13 +1,13 @@
-use crate::{allow, info, must_ok};
+use crate::{info, must_ok};
 
 use std::fs;
 use std::os::unix::process::CommandExt;
 use std::{cmp::Ordering, process::Command}; // for exec
 
-use super::config::{auto_check_update, load};
+use super::config::{CONFIG, auto_check_update};
 use crate::misc::{mark, paths};
 use crate::models::{error::ArchiverResult, types::Version};
-use crate::traits::ForceToString;
+use crate::traits::{ForceToString, ResultExt};
 
 const GITHUB_API_URL: &str = "https://api.github.com/repos/baendlorel/archiver/releases/latest";
 const SCRIPT_URL: &str =
@@ -15,21 +15,13 @@ const SCRIPT_URL: &str =
 
 /// 和上面的区别在于版本相同时静默
 pub fn auto_check() {
-    let mut config = match load() {
-        Ok(c) => c,
-        Err(e) => {
-            e.display();
-            return;
-        }
-    };
-
     // 只在config为真时进行
-    if config.auto_check_update == "off" {
+    if CONFIG.auto_check_update == "off" {
         return;
     }
 
     // 一个月看一次
-    if !auto_check_update::time_passed(&config) {
+    if !auto_check_update::time_passed(&CONFIG) {
         return;
     }
 
@@ -52,7 +44,7 @@ pub fn auto_check() {
     }
 
     // 检查过了更新，刷新一下检测记录
-    allow!(auto_check_update::refresh(&mut config));
+    auto_check_update::refresh_last_date().allow_and_display();
 }
 
 pub fn prepare_versions() -> ArchiverResult<(Version, Version)> {

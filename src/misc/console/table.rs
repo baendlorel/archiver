@@ -1,5 +1,6 @@
 use crate::traits::StripAnsi;
 
+// todo 编写统一的table组件
 #[derive(Clone)]
 pub struct Column {
     pub name: String,

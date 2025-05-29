@@ -5,6 +5,7 @@ use crate::cli::Operation;
 #[derive(Subcommand)]
 pub enum ConfigAction {
     /// Show all configuration of Archiver
+    #[command(aliases = ["l", "ls"])]
     List,
 
     /// Set alias entries
@@ -14,17 +15,21 @@ pub enum ConfigAction {
     /// Set auto check update
     #[command(subcommand)]
     AutoCheckUpdate(AutoCheckUpdateAction),
+
+    /// Set auto check update
+    #[command(subcommand)]
+    VaultItemSeperator(VaultItemSeperatorAction),
 }
 
 #[derive(Subcommand)]
 pub enum AliasAction {
-    /// Add an alias entry
-    Add {
+    /// Set an alias-origin map
+    Set {
         #[arg(value_name = "alias", required = true)]
         alias: String,
     },
 
-    /// Remove an alias entry
+    /// Remove an alias-origin map
     Remove {
         #[arg(value_name = "alias", required = true)]
         alias: String,
@@ -40,12 +45,22 @@ pub enum AutoCheckUpdateAction {
     },
 }
 
+#[derive(Subcommand)]
+pub enum VaultItemSeperatorAction {
+    /// Set auto check update on or off
+    Set {
+        #[arg(value_name = "sep", required = true)]
+        seperator: String,
+    },
+}
+
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
             ConfigAction::List => Operation::new("cfg", Some("list"), None, None, None),
             ConfigAction::Alias(action) => action.to_operation(),
             ConfigAction::AutoCheckUpdate(action) => action.to_operation(),
+            ConfigAction::VaultItemSeperator(action) => action.to_operation(),
         }
     }
 }
@@ -53,10 +68,10 @@ impl ConfigAction {
 impl AliasAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            AliasAction::Add { alias } => Operation::new(
+            AliasAction::Set { alias } => Operation::new(
                 "cfg",
                 Some("alias"),
-                Some("add"),
+                Some("set"),
                 Some(vec![alias.clone()]),
                 None,
             ),
@@ -79,6 +94,20 @@ impl AutoCheckUpdateAction {
                 Some("auto-check-update"),
                 Some("set"),
                 Some(vec![status.clone()]),
+                None,
+            ),
+        }
+    }
+}
+
+impl VaultItemSeperatorAction {
+    pub fn to_operation(&self) -> Operation {
+        match self {
+            VaultItemSeperatorAction::Set { seperator } => Operation::new(
+                "cfg",
+                Some("vault-item-seperator"),
+                Some("set"),
+                Some(vec![seperator.clone()]),
                 None,
             ),
         }

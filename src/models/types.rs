@@ -6,7 +6,7 @@ mod vault;
 mod version;
 
 pub use auto_incr_vars::AutoIncrVars;
-pub use config::{AliasEntry, ArchiverConfig, CONFIG_ITEMS};
+pub use config::ArchiverConfig;
 pub use list_entry::{ListColumnLen, ListEntry, ListRow, ListStatus};
 pub use log::{LogEntry, LogLevel};
 pub use vault::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME, Vault, VaultStatus};

@@ -54,7 +54,7 @@ pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
 
     // 更新current_vault_id
     let id = vault.unwrap().id;
-    let mut config = wrap_result!(config::load())?;
+    let mut config = config::CONFIG.clone();
     config.current_vault_id = id;
     wrap_result!(config::save(&config))?;
 

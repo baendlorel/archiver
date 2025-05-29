@@ -174,11 +174,3 @@ macro_rules! wrap_result {
         }
     };
 }
-
-/// 展示一个ArchiverError的错误，但只是看看，依然继续执行后面的
-#[macro_export]
-macro_rules! allow {
-    ($e:expr) => {
-        $e.map_err(|e| e.display()).ok()
-    };
-}
