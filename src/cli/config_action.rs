@@ -45,7 +45,7 @@ pub enum AutoCheckUpdateAction {
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            ConfigAction::List => Operation::new("cfg", "list", "", vec![], map![]),
+            ConfigAction::List => Operation::new("cfg", Some("list"), None, None, None),
             ConfigAction::Alias(action) => action.to_operation(),
             ConfigAction::AutoCheckUpdate(action) => action.to_operation(),
         }
@@ -55,12 +55,20 @@ impl ConfigAction {
 impl AliasAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            AliasAction::Add { alias } => {
-                Operation::new("cfg", "alias", "add", vec![alias.clone()], map![])
-            }
-            AliasAction::Remove { alias } => {
-                Operation::new("cfg", "alias", "remove", vec![alias.clone()], map![])
-            }
+            AliasAction::Add { alias } => Operation::new(
+                "cfg",
+                Some("alias"),
+                Some("add"),
+                Some(vec![alias.clone()]),
+                None,
+            ),
+            AliasAction::Remove { alias } => Operation::new(
+                "cfg",
+                Some("alias"),
+                Some("remove"),
+                Some(vec![alias.clone()]),
+                None,
+            ),
         }
     }
 }
@@ -70,10 +78,10 @@ impl AutoCheckUpdateAction {
         match self {
             AutoCheckUpdateAction::Set { status } => Operation::new(
                 "cfg",
-                "auto-check-update",
-                "set",
-                vec![status.clone()],
-                map![],
+                Some("auto-check-update"),
+                Some("set"),
+                Some(vec![status.clone()]),
+                None,
             ),
         }
     }

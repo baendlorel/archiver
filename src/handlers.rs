@@ -24,7 +24,7 @@ pub fn vault(action: &VaultAction) {
                 );
                 log::succ(None, Some(vault.id), &msg);
             }
-            Err(e) => log::fail(e),
+            Err(e) => log::error(e),
         },
         VaultAction::List => vault::display(),
         VaultAction::Use { name } => match vault::use_by_name(name) {
@@ -32,14 +32,14 @@ pub fn vault(action: &VaultAction) {
                 let msg = format!("Vault '{}' is successfully set as current vault", name);
                 log::succ(None, Some(vault_id), &msg);
             }
-            Err(e) => log::fail(e),
+            Err(e) => log::error(e),
         },
         VaultAction::Remove { name } => match vault::remove(name) {
             Ok(vault_id) => {
                 let msg = format!("Vault '{}' is successfully removed", name);
                 log::succ(None, Some(vault_id), &msg);
             }
-            Err(e) => log::fail(e),
+            Err(e) => log::error(e),
         },
     }
 }
@@ -49,7 +49,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
         Some(name) => match vault::find_by_name(&name) {
             Some(v) => v.id,
             None => {
-                log::fail(err_warn!("Vault '{}' not found", name));
+                log::fail(&format!("Vault '{}' not found", name));
                 return;
             }
         },
@@ -74,7 +74,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
                 count += 1;
             }
-            Err(e) => log::fail(e),
+            Err(e) => log::error(e),
         };
     });
 
@@ -99,7 +99,7 @@ pub fn restore(ids: &[u32]) {
                 );
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
             }
-            Err(e) => log::fail(e),
+            Err(e) => log::error(e),
         }
     }
 }
@@ -109,7 +109,7 @@ pub fn mv(ids: &[u32], to: &str) {
     let vault_id = match vault::find_by_name(to) {
         Some(v) => v.id,
         None => {
-            log::fail(err_info!("Vault not found"));
+            log::fail("Vault not found");
             return;
         }
     };
@@ -122,7 +122,7 @@ pub fn mv(ids: &[u32], to: &str) {
             count
         }
         Err(e) => {
-            log::fail(e);
+            log::error(e);
             println!("{} Please use `arv log` for details.", mark::info());
             return;
         }
@@ -130,8 +130,7 @@ pub fn mv(ids: &[u32], to: &str) {
 
     // 如果没有任何对象被移动，输出错误信息
     if count == 0 {
-        let e = err_info!("No satisfied archived object found");
-        log::fail(e);
+        log::fail("No satisfied archived object found");
         return;
     }
 }

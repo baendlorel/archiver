@@ -19,7 +19,7 @@ pub fn add_alias(alias: &str) {
             let msg = format!("Alias '{}' is set successfully", alias);
             log::succ(None, None, &msg);
         }
-        Err(e) => log::fail(e),
+        Err(e) => log::error(e),
     }
 }
 
@@ -29,7 +29,7 @@ pub fn remove_alias(alias: &str) {
             let msg = format!("Alias '{}' is removed successfully", alias);
             log::succ(None, None, &msg);
         }
-        Err(e) => log::fail(e),
+        Err(e) => log::error(e),
     }
 }
 
@@ -39,6 +39,6 @@ pub fn auto_check_update(status: &str) {
             let msg = format!("Auto check update is set to '{}'", status);
             log::succ(None, None, &msg);
         }
-        Err(e) => log::fail(e),
+        Err(e) => log::error(e),
     }
 }

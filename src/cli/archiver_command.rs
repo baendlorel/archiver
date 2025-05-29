@@ -92,21 +92,22 @@ impl ArchiverCommand {
                 if let Some(v) = vault {
                     opts.insert("vault".to_string(), Value::String(v.clone()));
                 }
+                let opts = if opts.len() == 0 { None } else { Some(opts) };
 
-                Operation::simple(short::main::PUT, items.clone(), opts)
+                Operation::simple(short::main::PUT, Some(items.clone()), opts)
             }
             ArchiverCommand::Restore { ids } => Operation::simple(
                 short::main::RESTORE,
-                ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
-                map![],
+                Some(ids.iter().map(|id| id.to_string()).collect::<Vec<String>>()),
+                None,
             ),
             ArchiverCommand::Move { ids, to } => Operation::simple(
                 short::main::MOVE,
-                ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
-                map!["to".to_string() => Value::String(to.clone())],
+                Some(ids.iter().map(|id| id.to_string()).collect::<Vec<String>>()),
+                Some(map!["to".to_string() => Value::String(to.clone())]),
             ),
             ArchiverCommand::Vault(action) => action.to_operation(),
-            ArchiverCommand::List { all, restored } => Operation::simple("lst", vec![], {
+            ArchiverCommand::List { all, restored } => Operation::simple("lst", None, {
                 let mut opts: HashMap<String, Value> = HashMap::new();
                 if *all {
                     opts.insert("all".to_string(), Value::Bool(true));
@@ -114,20 +115,18 @@ impl ArchiverCommand {
                 if *restored {
                     opts.insert("restored".to_string(), Value::Bool(true));
                 }
-                opts
+                if opts.len() == 0 { None } else { Some(opts) }
             }),
             ArchiverCommand::Log { range } => {
                 let args = if let Some(range) = range {
-                    vec![range.clone()]
+                    Some(vec![range.clone()])
                 } else {
-                    vec![]
+                    None
                 };
-                Operation::simple(short::main::LOG, args, map![])
+                Operation::simple(short::main::LOG, args, None)
             }
             ArchiverCommand::Config(action) => action.to_operation(),
-            ArchiverCommand::Update => {
-                Operation::simple(short::main::UPDATE, vec![], HashMap::new())
-            }
+            ArchiverCommand::Update => Operation::simple(short::main::UPDATE, None, None),
         }
     }
 }

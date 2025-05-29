@@ -2,7 +2,6 @@ use crate::map;
 
 use clap::Subcommand;
 use serde_json::Value;
-use std::collections::HashMap;
 
 use crate::models::types::Operation;
 
@@ -44,22 +43,23 @@ impl VaultAction {
     pub fn to_operation(&self) -> crate::models::types::Operation {
         match self {
             VaultAction::Use { name } => {
-                Operation::new("vlt", "use", "", vec![name.clone()], map![])
+                Operation::new("vlt", Some("use"), None, Some(vec![name.clone()]), None)
             }
             VaultAction::Create { name, remark, u } => {
-                let mut opts = HashMap::new();
+                let mut opts = map![];
                 if let Some(remark) = remark {
                     opts.insert("remark".to_string(), Value::String(remark.clone()));
                 }
                 if *u {
                     opts.insert("use".to_string(), Value::String(String::new()));
                 }
-                Operation::new("vlt", "create", "", vec![name.clone()], opts)
+                let opts = if opts.len() == 0 { None } else { Some(opts) };
+                Operation::new("vlt", Some("create"), None, Some(vec![name.clone()]), opts)
             }
             VaultAction::Remove { name } => {
-                Operation::new("vlt", "remove", "", vec![name.clone()], HashMap::new())
+                Operation::new("vlt", Some("remove"), None, Some(vec![name.clone()]), None)
             }
-            VaultAction::List => Operation::new("vlt", "list", "", vec![], HashMap::new()),
+            VaultAction::List => Operation::new("vlt", Some("list"), None, None, None),
         }
     }
 }

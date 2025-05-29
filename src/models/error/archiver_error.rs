@@ -35,6 +35,10 @@ impl ArchiverError {
         Self::new(LogLevel::Warn, message, stack)
     }
 
+    pub fn error(message: String, stack: Vec<StackFrame>) -> Self {
+        Self::new(LogLevel::Error, message, stack)
+    }
+
     pub fn fatal(message: String, stack: Vec<StackFrame>) -> Self {
         Self::new(LogLevel::Fatal, message, stack)
     }

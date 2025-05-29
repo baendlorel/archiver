@@ -4,7 +4,7 @@ pub mod mark {
     use owo_colors::OwoColorize;
 
     pub fn succ() -> String {
-        "✓".green().to_string()
+        "✓".green().bold().to_string()
     }
 
     pub fn error() -> String {
@@ -20,6 +20,6 @@ pub mod mark {
     }
 
     pub fn info() -> String {
-        "i".cyan().to_string()
+        "i".cyan().bold().to_string()
     }
 }

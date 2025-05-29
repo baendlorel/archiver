@@ -1,4 +1,4 @@
-use crate::{allow, wrap_result};
+use crate::{allow, err_error, wrap_result};
 
 use crate::misc::mark;
 use crate::models::error::{ArchiverError, ArchiverResult};
@@ -21,8 +21,16 @@ pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, message: &String) {
 
 /// 写入错误日志
 /// - 会继承入参error对象的level和信息
-pub fn fail(e: ArchiverError) {
+pub fn error(e: ArchiverError) {
     e.display();
+    let str = e.to_string();
+    let level = e.level;
+    allow!(sl::save(level, None, None, Some(str)));
+}
+
+/// 输出一段字符串
+pub fn fail(message: &str) {
+    let e = err_error!("{}", message);
     let str = e.to_string();
     let level = e.level;
     allow!(sl::save(level, None, None, Some(str)));

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use crate::cli::short;
 use crate::traits::CustomColors;
 
+/// 完整操作信息，包含主命令、子命令、指令、参数和选项等
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Operation {
     /// 主命令，比如put、restore
@@ -13,21 +14,21 @@ pub struct Operation {
     pub main: String,
 
     /// 子命令，比如vault的create、use
-    #[serde(rename = "s")]
-    pub sub: String,
+    #[serde(rename = "s", skip_serializing_if = "Option::is_none")]
+    pub sub: Option<String>,
 
     /// 指令，比如config alias add的add
-    #[serde(rename = "d")]
-    pub directive: String,
+    #[serde(rename = "d", skip_serializing_if = "Option::is_none")]
+    pub directive: Option<String>,
 
     /// 参数，直接跟在主/子命令后面的
     /// - 有了子命令时，主命令不会有参数
-    #[serde(rename = "a")]
-    pub args: Vec<String>,
+    #[serde(rename = "a", skip_serializing_if = "Option::is_none")]
+    pub args: Option<Vec<String>>,
 
     /// 选项，类似于--key=value的形式，不会保存“--”
-    #[serde(rename = "opt")]
-    pub opts: HashMap<String, Value>,
+    #[serde(rename = "opt", skip_serializing_if = "Option::is_none")]
+    pub opts: Option<HashMap<String, Value>>,
 
     /// 操作来源，可能是系统生成的
     /// - 例如 arv vault remove aaa，会导致生成将aaa中的对象move到默认库的操作
@@ -37,16 +38,23 @@ pub struct Operation {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum OperSource {
-    User = 1,
+    #[serde(rename = "u")]
+    User,
+
+    #[serde(rename = "s")]
     System = 2,
 }
 
 impl Operation {
-    pub fn simple(main: &str, args: Vec<String>, opts: HashMap<String, Value>) -> Self {
+    pub fn simple(
+        main: &str,
+        args: Option<Vec<String>>,
+        opts: Option<HashMap<String, Value>>,
+    ) -> Self {
         Self {
             main: main.to_string(),
-            sub: String::new(),
-            directive: String::new(),
+            sub: None,
+            directive: None,
             args,
             opts,
             source: OperSource::User,
@@ -55,32 +63,32 @@ impl Operation {
 
     pub fn new(
         main: &str,
-        sub: &str,
-        directive: &str,
-        args: Vec<String>,
-        opts: HashMap<String, Value>,
+        sub: Option<&str>,
+        directive: Option<&str>,
+        args: Option<Vec<String>>,
+        opts: Option<HashMap<String, Value>>,
     ) -> Self {
         Self {
             main: main.to_string(),
-            sub: sub.to_string(),
-            directive: directive.to_string(),
+            sub: sub.map(|s| s.to_string()),
+            directive: directive.map(|d| d.to_string()),
             args,
             opts,
             source: OperSource::User,
         }
     }
 
-    pub fn system(
+    pub fn sys(
         main: &str,
-        sub: &str,
-        directive: &str,
-        args: Vec<String>,
-        opts: HashMap<String, Value>,
+        sub: Option<&str>,
+        directive: Option<&str>,
+        args: Option<Vec<String>>,
+        opts: Option<HashMap<String, Value>>,
     ) -> Self {
         Self {
             main: main.to_string(),
-            sub: sub.to_string(),
-            directive: directive.to_string(),
+            sub: sub.map(|s| s.to_string()),
+            directive: directive.map(|d| d.to_string()),
             args,
             opts,
             source: OperSource::System,
@@ -99,28 +107,30 @@ impl Operation {
         };
 
         let mut result: Vec<String> = vec![main];
-        if !self.sub.is_empty() {
-            result.push(self.sub.bright_black().to_string());
+        if let Some(sub) = &self.sub {
+            result.push(sub.bright_black().to_string());
         }
 
-        if !self.args.is_empty() {
-            result.append(self.args.clone().as_mut());
+        if let Some(args) = &self.args {
+            result.append(args.clone().as_mut());
         }
 
-        for (key, value) in &self.opts {
-            let entry = match value {
-                Value::String(s) => format!("--{}={}", key, s),
-                Value::Bool(b) => {
-                    if *b {
-                        format!("--{}", key)
-                    } else {
-                        continue;
+        if let Some(opts) = &self.opts {
+            for (key, value) in opts {
+                let entry = match value {
+                    Value::String(s) => format!("--{}={}", key, s),
+                    Value::Bool(b) => {
+                        if *b {
+                            format!("--{}", key)
+                        } else {
+                            continue;
+                        }
                     }
-                }
-                _ => continue, // 其他类型不处理
-            };
+                    _ => continue, // 其他类型不处理
+                };
 
-            result.push(entry.dimmed_orange());
+                result.push(entry.dimmed_orange());
+            }
         }
 
         result.join(" ")

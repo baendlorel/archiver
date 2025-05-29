@@ -46,23 +46,26 @@ pub fn save(
 ) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
     let remark = if oper.main == short::main::PUT && level.is_succ() {
-        let full_paths: Vec<String> = oper
-            .args
-            .iter()
-            .map(|a| match paths::CWD.join(a).canonicalize() {
-                Ok(p) => p.force_to_string(),
-                Err(e) => {
-                    println!(
-                        "{} Failed to canonicalize path '{}': {}",
-                        mark::warn(),
-                        a,
-                        e
-                    );
-                    a.clone() // 如果失败，保留原路径
-                }
-            })
-            .collect();
-        full_paths.join(" ")
+        if let Some(args) = &oper.args {
+            let full_paths: Vec<String> = args
+                .iter()
+                .map(|a| match paths::CWD.join(a).canonicalize() {
+                    Ok(p) => p.force_to_string(),
+                    Err(e) => {
+                        println!(
+                            "{} Failed to canonicalize path '{}': {}",
+                            mark::warn(),
+                            a,
+                            e
+                        );
+                        a.clone() // 如果失败，保留原路径
+                    }
+                })
+                .collect();
+            full_paths.join(" ")
+        } else {
+            remark.unwrap_or(String::new())
+        }
     } else {
         remark.unwrap_or(String::new())
     };

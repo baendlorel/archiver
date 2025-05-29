@@ -18,10 +18,10 @@ pub struct LogEntry {
     pub opered_at: NaiveDateTime, // 操作时间
 
     #[serde(rename = "lv")]
-    pub level: LogLevel, // 是否成功
+    pub level: LogLevel,
 
     #[serde(rename = "o")]
-    pub oper: Operation, // 操作类型
+    pub oper: Operation, // 操作的完整信息
 
     #[serde(rename = "r")]
     pub remark: String, // 备注

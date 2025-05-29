@@ -1,6 +1,22 @@
 /// 此处的宏无法再缩减，err_fatal在下面还有其他地方用
 /// 故同理，另外两个warn/info宏也无法再缩减
 
+/// 创建一个error级别的ArchiverError，支持字符串模板
+#[macro_export]
+macro_rules! err_error {
+    ($($arg:tt)*) => {
+        $crate::models::error::ArchiverError::error(
+            format!($($arg)*),
+            vec![$crate::models::error::StackFrame {
+                file: file!(),
+                line: line!(),
+                col: column!(),
+                module_path: module_path!(),
+            }],
+        )
+    };
+}
+
 /// 创建一个fatal级别的ArchiverError，支持字符串模板
 #[macro_export]
 macro_rules! err_fatal {

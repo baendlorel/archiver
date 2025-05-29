@@ -31,12 +31,12 @@ pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> Archiv
         // 移动后写日志，移动一条写一条，方便中断后追查
         as_fatal!(fs::rename(from, to))?;
 
-        let oper = Operation::system(
+        let oper = Operation::sys(
             short::main::MOVE,
-            "",
-            "",
-            vec![entry.id.to_string()],
-            map!["to".to_string() => json!(vault_id)],
+            None,
+            None,
+            Some(vec![entry.id.to_string()]),
+            Some(map!["to".to_string() => json!(vault_id)]),
         );
 
         log::sys(
