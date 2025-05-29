@@ -1,8 +1,6 @@
-use crate::map;
-
 use clap::Subcommand;
 
-use crate::models::types::Operation;
+use crate::cli::Operation;
 
 #[derive(Subcommand)]
 pub enum ConfigAction {

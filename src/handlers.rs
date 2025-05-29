@@ -1,4 +1,4 @@
-use crate::{allow, err_info, err_warn};
+use crate::allow;
 
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};

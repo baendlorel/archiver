@@ -11,7 +11,7 @@ use crate::models::{
 };
 use crate::traits::ForceToString;
 
-mod consts {
+mod raw {
     // 目录
     pub const ROOT: &str = ".archiver";
     pub const LOGS_DIR: &str = "logs";
@@ -59,7 +59,7 @@ pub static CWD: Lazy<PathBuf> =
 
 /// 程序主目录
 pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = HOME_DIR.join(consts::ROOT);
+    let path = HOME_DIR.join(raw::ROOT);
     // 检查路径是否存在，不存在则创建
     if !path.exists() {
         must_ok!(fs::create_dir_all(&path), "Failed to create root directory");
@@ -68,20 +68,20 @@ pub static ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
 });
 
 /// 日志目录
-pub static LOGS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::LOGS_DIR));
+pub static LOGS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(raw::LOGS_DIR));
 
 /// 配置目录
-pub static CORE_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::CORE_DIR));
+pub static CORE_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(raw::CORE_DIR));
 
 /// 归档的文件/文件夹存放的地方
-pub static VAULTS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(consts::VAULTS_DIR));
+pub static VAULTS_DIR: Lazy<PathBuf> = ensure_dir!(ROOT_DIR.join(raw::VAULTS_DIR));
 
 /// 配置文件路径
 /// - 该文件存放在CORE_DIR下
 /// - 如果文件不存在，则创建一个默认的配置文件。因为配置文件总要读取，必须存在
 /// - 如果是目录，则panic
 pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let path = CORE_DIR.join(consts::CONFIG_FILE);
+    let path = CORE_DIR.join(raw::CONFIG_FILE);
     // 从CORE_DIR读取确保了CORE_DIR一定存在
     // 下面只看配置文件是否存在
     if !path.exists() {
@@ -107,7 +107,7 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 /// - 如果文件不存在，则创建一个默认的
 /// - 如果是目录，则panic
 pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(consts::CORE_DIR).join(consts::AUTO_INCR_FILE);
+    let path = ROOT_DIR.join(raw::CORE_DIR).join(raw::AUTO_INCR_FILE);
     if !path.exists() {
         let json = must_ok!(
             AutoIncrVars::default().to_formatted_string(),
@@ -131,11 +131,11 @@ pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 
 /// 归档记录文件路径
 pub static LIST_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::LIST_FILE));
+    Lazy::new(|| ROOT_DIR.join(raw::CORE_DIR).join(raw::LIST_FILE));
 
 /// 库列表文件路径
 pub static VAULTS_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| ROOT_DIR.join(consts::CORE_DIR).join(consts::VAULTS_FILE));
+    Lazy::new(|| ROOT_DIR.join(raw::CORE_DIR).join(raw::VAULTS_FILE));
 
 /// 别名映射表
 /// - 专门给下面的apply_alias函数使用

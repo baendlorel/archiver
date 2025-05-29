@@ -4,11 +4,11 @@ use serde_json::json;
 use std::fs;
 
 use super::{list, sl};
-use crate::cli::short;
+use crate::cli::{Operation, short};
 use crate::core::log;
 use crate::misc::paths;
 use crate::models::error::ArchiverResult;
-use crate::models::types::{ListEntry, LogLevel, Operation};
+use crate::models::types::{ListEntry, LogLevel};
 
 // todo put和restore都是函数单条/循环函数的，只有mv是一块的。是不是put也有频繁sl jsonl文件的问题？
 // ? put和restore都感觉太重了，应该舍弃批量归纳批量归档

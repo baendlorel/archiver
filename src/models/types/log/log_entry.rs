@@ -3,9 +3,8 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use strip_ansi_escapes::strip_str;
 
-use super::super::Operation;
 use super::LogLevel;
-use crate::cli::short;
+use crate::cli::{Operation, short};
 use crate::core::vault;
 use crate::misc::{dt, paths};
 use crate::models::serde_custom::naive_date_time;
@@ -26,10 +25,10 @@ pub struct LogEntry {
     #[serde(rename = "r")]
     pub remark: String, // 备注
 
-    #[serde(rename = "aid")]
+    #[serde(rename = "aid", skip_serializing_if = "Option::is_none")]
     pub archive_id: Option<u32>, // archive id，如果有的话
 
-    #[serde(rename = "vid")]
+    #[serde(rename = "vid", skip_serializing_if = "Option::is_none")]
     pub vault_id: Option<u32>, // archive id，如果有的话
 }
 

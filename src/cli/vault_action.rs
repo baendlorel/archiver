@@ -3,7 +3,7 @@ use crate::map;
 use clap::Subcommand;
 use serde_json::Value;
 
-use crate::models::types::Operation;
+use crate::cli::Operation;
 
 #[derive(Subcommand)]
 pub enum VaultAction {
@@ -40,7 +40,7 @@ pub enum VaultAction {
 }
 
 impl VaultAction {
-    pub fn to_operation(&self) -> crate::models::types::Operation {
+    pub fn to_operation(&self) -> Operation {
         match self {
             VaultAction::Use { name } => {
                 Operation::new("vlt", Some("use"), None, Some(vec![name.clone()]), None)

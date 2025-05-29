@@ -1,12 +1,11 @@
 use crate::wrap_result;
 
-use crate::traits::strip_ansi::StripAnsi;
 use owo_colors::OwoColorize;
-use std::path::MAIN_SEPARATOR;
 
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListColumnLen, ListEntry, ListRow};
+use crate::traits::StripAnsi;
 
 // pub fn select(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
 //     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
@@ -44,7 +43,7 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     // 字段名称
     let field_archived_at = "Archived At";
     let field_id = "ID";
-    let field_item = format!("Vault{}Item", MAIN_SEPARATOR);
+    let field_item = "Item";
     let field_dir = "Directory";
 
     let mut col_len = ListColumnLen {

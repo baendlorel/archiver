@@ -1,9 +1,9 @@
 use crate::{allow, err_error, wrap_result};
 
+use crate::cli::Operation;
 use crate::misc::mark;
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
-use crate::models::types::Operation;
 
 mod parser;
 mod sl;

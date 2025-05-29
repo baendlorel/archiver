@@ -34,15 +34,4 @@ impl LogLevel {
             LogLevel::Fatal => mark::fatal(),
         }
     }
-
-    pub fn to_string(&self) -> String {
-        match self {
-            LogLevel::Success => "SUCC",
-            LogLevel::Info => "INFO",
-            LogLevel::Warn => "WARN",
-            LogLevel::Error => "ERROR",
-            LogLevel::Fatal => "FATAL",
-        }
-        .to_string()
-    }
 }

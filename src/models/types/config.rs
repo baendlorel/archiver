@@ -1,12 +1,9 @@
-use crate::must_ok;
-
 use chrono::NaiveDate;
-use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use std::{fs, vec};
+use std::vec;
 
-use crate::misc::{dt, paths};
+use crate::misc::dt;
 
 fn default_current_vault_id() -> u32 {
     0

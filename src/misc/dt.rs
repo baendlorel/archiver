@@ -29,6 +29,7 @@ pub fn start_dt() -> NaiveDateTime {
 /// 获取当前日期时间字符串
 /// - 无时区
 /// - 格式：2000-01-01 00:00:00
+#[allow(dead_code)]
 pub fn now_dt_string() -> String {
     Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
 }

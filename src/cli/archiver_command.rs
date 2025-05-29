@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::{collections::HashMap, vec};
 
 use super::{config_action::ConfigAction, short, vault_action::VaultAction};
-use crate::models::types::Operation;
+use crate::cli::Operation;
 
 #[derive(Subcommand)]
 pub enum ArchiverCommand {

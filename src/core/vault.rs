@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use super::config;
 use crate::core::archive;
-use crate::misc::{confirm, jsonl, paths, rand};
+use crate::misc::{console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME};
 use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus};
@@ -127,7 +127,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         DEFAULT_VLT_NAME.styled_vault().underline().bold(),
         "'".underline().bold()
     );
-    if !confirm("Are you sure? [y/N]> ", "y") {
+    if !console::confirm("Are you sure? [y/N]> ", "y") {
         return info!("Removal cancelled");
     }
 
@@ -138,7 +138,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         name.styled_vault(),
         verify_code
     );
-    if !confirm("> ", &verify_code) {
+    if !console::confirm("> ", &verify_code) {
         return info!("Confirmation failed, exit");
     }
 
