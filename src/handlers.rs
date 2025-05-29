@@ -5,7 +5,7 @@ use std::{cmp::Ordering, collections::HashSet};
 
 use crate::cli::{AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction};
 use crate::core::{archive, config, log, update, vault};
-use crate::misc::{dedup_to_set, mark};
+use crate::misc::{dedup_and_log, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
 use crate::traits::CustomColors;
 
@@ -44,9 +44,9 @@ pub fn vault(action: &VaultAction) {
     }
 }
 
-pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>) {
+pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>) {
     let vault_id = match vault {
-        Some(name) => match vault::find_by_name(name) {
+        Some(name) => match vault::find_by_name(&name) {
             Some(v) => v.id,
             None => {
                 log::fail(err_warn!("Vault '{}' not found", name));
@@ -57,16 +57,17 @@ pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>)
     };
 
     // 去重以防止重复操作同一目标
-    let set = dedup_to_set(targets);
+    let items = dedup_and_log(items);
 
     let mut count: usize = 0;
-    set.iter().for_each(|target| {
-        println!("Putting '{}' into archive", target);
-        match archive::put(&target, message, vault_id) {
+    items.iter().for_each(|item| {
+        println!("Putting '{}' into archive", item);
+        // 循环中使用message必须clone，否则move一次就没了
+        match archive::put(&item, message.clone(), vault_id) {
             Ok(entry) => {
                 let msg = format!(
                     "'{}' is successfully archived (id: {}, vault: {})",
-                    target,
+                    item,
                     entry.id,
                     vault::get_name(entry.vault_id),
                 );
@@ -77,8 +78,8 @@ pub fn put(targets: &[String], message: &Option<String>, vault: &Option<String>)
         };
     });
 
-    if set.len() > 1 {
-        println!("{}/{} targets are successfully archived", count, set.len());
+    if items.len() > 1 {
+        println!("{}/{} items are successfully archived", count, items.len());
     }
     println!("Use `arv list` to check the archived list");
 }
@@ -94,7 +95,7 @@ pub fn restore(ids: &[u32]) {
                     "(id: {}, vault: {}) is successfully restored to '{}'",
                     entry.id.styled_archive_id(),
                     vault::get_name(entry.vault_id).styled_vault(),
-                    entry.get_target_path_string()
+                    entry.get_item_path_string()
                 );
                 log::succ(Some(entry.id), Some(entry.vault_id), &msg);
             }
@@ -108,7 +109,7 @@ pub fn mv(ids: &[u32], to: &str) {
     let vault_id = match vault::find_by_name(to) {
         Some(v) => v.id,
         None => {
-            log::fail(err_warn!("Vault not found"));
+            log::fail(err_info!("Vault not found"));
             return;
         }
     };

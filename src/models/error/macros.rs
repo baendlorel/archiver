@@ -21,7 +21,7 @@ macro_rules! err_fatal {
 #[macro_export]
 macro_rules! fatal {
     ($($arg:tt)*) => {
-        Err($crate::err_fatal_from_str!($($arg)*))
+        Err($crate::err_fatal!($($arg)*))
     };
 }
 

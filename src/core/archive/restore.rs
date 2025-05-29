@@ -22,21 +22,21 @@ pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
         return info!(
             "id: {} has already been restored to '{}'",
             id.styled_archive_id(),
-            entry.get_target_path_string()
+            entry.get_item_path_string()
         );
     }
 
-    let target_name = OsString::from(&entry.target);
+    let item_name = OsString::from(&entry.item);
     let dir = PathBuf::from(OsString::from(&entry.dir));
-    let target_path = dir.join(target_name);
+    let item_path = dir.join(item_name);
     let archive_path = paths::get_archived_path(id, entry.vault_id);
 
     // 要检查archive里面的文件和系统外面的路径是否都存在
     // 还要检查复制后是否会导致文件覆盖
-    if target_path.exists() {
+    if item_path.exists() {
         return info!(
             "Path '{}' already exists, please remove or rename it first",
-            target_path.force_to_string()
+            item_path.force_to_string()
         );
     }
 
@@ -54,7 +54,7 @@ pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     }
 
     // 和put一样，先移动文件，再改表
-    as_fatal!(fs::rename(archive_path, target_path))?;
+    as_fatal!(fs::rename(archive_path, item_path))?;
     // 标记为已恢复
     list[index].status = ListStatus::Restored;
     wrap_result!(jsonl::save(&list, paths::LIST_FILE_PATH.as_path()))?;

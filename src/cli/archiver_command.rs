@@ -13,8 +13,8 @@ pub enum ArchiverCommand {
     #[command(visible_aliases = ["p"])]
     Put {
         /// The file/directory names to be archived
-        #[arg(value_name = "targets", required = true)]
-        targets: Vec<String>, // 改成 Vec<String>
+        #[arg(value_name = "items", required = true)]
+        items: Vec<String>, // 改成 Vec<String>
 
         /// The reason why you archive it
         #[arg(short, long)]
@@ -28,7 +28,7 @@ pub enum ArchiverCommand {
     /// Restore an archived object by its file/directory name or id
     #[command(visible_aliases = ["r", short::main::RESTORE])]
     Restore {
-        /// id of the target to be restored. Can be obtained by command `arv list`
+        /// id to be restored. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
         ids: Vec<u32>,
     },
@@ -36,7 +36,7 @@ pub enum ArchiverCommand {
     /// Move archived objects to a new vault
     #[command(visible_aliases = ["m", "mv", short::main::MOVE])]
     Move {
-        /// id of the target to be restored. Can be obtained by command `arv list`
+        /// id to be moved. Can be obtained by command `arv list`
         #[arg(value_name = "ids", required = true)]
         ids: Vec<u32>,
 
@@ -81,7 +81,7 @@ impl ArchiverCommand {
     pub fn to_operation(&self) -> Operation {
         match self {
             ArchiverCommand::Put {
-                targets,
+                items,
                 message,
                 vault,
             } => {
@@ -93,7 +93,7 @@ impl ArchiverCommand {
                     opts.insert("vault".to_string(), Value::String(v.clone()));
                 }
 
-                Operation::simple(short::main::PUT, targets.clone(), opts)
+                Operation::simple(short::main::PUT, items.clone(), opts)
             }
             ArchiverCommand::Restore { ids } => Operation::simple(
                 short::main::RESTORE,

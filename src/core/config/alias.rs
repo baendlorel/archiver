@@ -12,12 +12,12 @@ pub fn remove_alias(alias_entry: &str) -> ArchiverResult<()> {
     let (alias, origin) = wrap_result!(parse_alias_entry_string(alias_entry))?;
     let mut config = sl::load()?;
 
-    let target_index = config
+    let item_index = config
         .alias
         .iter()
         .position(|entry| entry.alias == alias && entry.origin == origin);
 
-    if let Some(index) = target_index {
+    if let Some(index) = item_index {
         config.alias.remove(index);
         wrap_result!(sl::save(&config))?;
     } else {

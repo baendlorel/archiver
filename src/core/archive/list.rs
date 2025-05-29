@@ -1,6 +1,8 @@
 use crate::wrap_result;
 
+use crate::traits::strip_ansi::StripAnsi;
 use owo_colors::OwoColorize;
+use std::path::MAIN_SEPARATOR;
 
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
@@ -28,13 +30,13 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
 pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     let list = wrap_result!(select_all())?;
 
-    let list = list
+    let rows = list
         .iter()
         .filter(|entry| all || (restored == entry.is_restored()))
         .map(|entry| entry.to_row())
         .collect::<Vec<ListRow>>();
 
-    if list.len() == 0 {
+    if rows.len() == 0 {
         println!("No archived object found");
     }
 
@@ -42,47 +44,42 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     // 字段名称
     let field_archived_at = "Archived At";
     let field_id = "ID";
-    let field_vault_name = "Vault";
-    let field_target = "Item";
+    let field_item = format!("Vault{}Item", MAIN_SEPARATOR);
     let field_dir = "Directory";
 
     let mut col_len = ListColumnLen {
         archived_at: field_archived_at.len(),
-        vault_name: field_vault_name.len(),
         id: field_id.len(),
-        target: field_target.len(),
+        item: field_item.len(),
         dir: field_dir.len(),
     };
 
-    for row in list.iter() {
+    for row in rows.iter() {
         let cur = row.get_len();
         col_len.archived_at = col_len.archived_at.max(cur.archived_at);
-        col_len.vault_name = col_len.vault_name.max(cur.vault_name);
         col_len.id = col_len.id.max(cur.id);
-        col_len.target = col_len.target.max(cur.target);
+        col_len.item = col_len.item.max(cur.item);
         col_len.dir = col_len.dir.max(cur.dir);
     }
 
     println!(
         "{}",
         format!(
-            "{field_archived_at}{} {field_vault_name}{} {field_id}{} {field_target}{} {field_dir}{}",
-            " ".repeat(col_len.archived_at - field_archived_at.len()),
-            " ".repeat(col_len.vault_name - field_vault_name.len()),
-            " ".repeat(col_len.id - field_id.len()),
-            " ".repeat(col_len.target - field_target.len()),
-            " ".repeat(col_len.dir - field_dir.len()),
+            "{field_archived_at}{} {field_id}{} {field_item}{} {field_dir}{}",
+            " ".repeat(col_len.archived_at - field_archived_at.true_len()),
+            " ".repeat(col_len.id - field_id.true_len()),
+            " ".repeat(col_len.item - field_item.true_len()),
+            " ".repeat(col_len.dir - field_dir.true_len()),
             field_archived_at = field_archived_at,
-            field_vault_name = field_vault_name,
             field_id = field_id,
-            field_target = field_target,
+            field_item = field_item,
             field_dir = field_dir,
         )
         .bold()
         .underline()
     );
 
-    for row in list.iter() {
+    for row in rows.iter() {
         println!("{}", row.to_display(&col_len));
     }
 
