@@ -127,7 +127,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         DEFAULT_VLT_NAME.styled_vault().underline().bold(),
         "'".underline().bold()
     );
-    if !console::confirm("Are you sure? [y/N]> ", "y") {
+    if !console::confirm("Are you sure?") {
         return info!("Removal cancelled");
     }
 
@@ -138,7 +138,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         name.styled_vault(),
         verify_code
     );
-    if !console::confirm("> ", &verify_code) {
+    if !console::confirm_str("> ", &verify_code) {
         return info!("Confirmation failed, exit");
     }
 

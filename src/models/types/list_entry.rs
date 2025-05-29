@@ -1,13 +1,12 @@
 use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use std::path::MAIN_SEPARATOR;
 
 use crate::core::{auto_incr, vault};
 use crate::misc::{dt, paths};
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::traits::CustomColors;
-use crate::traits::strip_ansi::StripAnsi;
+use crate::traits::StripAnsi;
 
 /// 归档列表的条目
 /// - 这样的字段排序是为了序列化的时候jsonl文件也可以是这个顺序
@@ -112,7 +111,7 @@ impl ListEntry {
             };
 
             let v = vault::get_name(self.vault_id).styled_vault();
-            format!("{}{}{}{}", v, MAIN_SEPARATOR, t, r)
+            format!("{}{}{}{}", v, ":".to_string().styled_vault(), t, r)
         };
 
         ListRow {

@@ -1,49 +1,26 @@
+use crate::{map, must_ok};
+
 use chrono::NaiveDate;
+use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use std::vec;
 
-use crate::misc::dt;
-
-fn default_current_vault_id() -> u32 {
-    0
-}
-
-fn default_auto_check_update() -> String {
-    "on".to_string()
-}
-
-fn default_last_check_update_date() -> NaiveDate {
-    dt::now_d()
-}
-
-fn default_alias() -> Vec<AliasEntry> {
-    vec![]
-}
+use crate::misc::{dt, paths};
 
 #[derive(Serialize, Deserialize)]
 pub struct ArchiverConfig {
-    #[serde(default = "default_current_vault_id")]
     /// 自动检查更新的开关，默认为on
     pub current_vault_id: u32,
 
-    #[serde(default = "default_auto_check_update")]
     /// 自动检查更新的开关，默认为on
     pub auto_check_update: String,
 
     /// 上次检查更新的时间
-    #[serde(default = "default_last_check_update_date")]
     pub last_check_update_date: NaiveDate,
 
     /// 别名映射表
-    #[serde(default = "default_alias")]
-    pub alias: Vec<AliasEntry>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AliasEntry {
-    pub alias: String,
-    pub origin: String,
+    pub alias_map: std::collections::HashMap<String, String>,
 }
 
 impl ArchiverConfig {
@@ -52,7 +29,7 @@ impl ArchiverConfig {
             current_vault_id: 0,
             auto_check_update: "on".to_string(),
             last_check_update_date: dt::now_d(),
-            alias: vec![],
+            alias_map: map![],
         }
     }
 
@@ -66,8 +43,8 @@ impl ArchiverConfig {
                     crate::misc::paths::HOME_DIR.to_string_lossy(),
                     "(default)".cyan()
                 ));
-                for entry in &self.alias {
-                    result.push(format!("  {}={}", entry.alias, entry.origin));
+                for (alias, origin) in &self.alias_map {
+                    result.push(format!("  {}={}", alias, origin));
                 }
                 result.join("\n")
             }
@@ -89,16 +66,16 @@ impl ArchiverConfig {
     }
 }
 
-// pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
-//     let content = must_ok!(
-//         fs::read_to_string(paths::CONFIG_FILE_PATH.as_path()),
-//         "Cannot read config file"
-//     );
+pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
+    let content = must_ok!(
+        std::fs::read_to_string(paths::CONFIG_FILE_PATH.as_path()),
+        "Cannot read config file"
+    );
 
-//     must_ok!(
-//         serde_json::from_str::<ArchiverConfig>(&content),
-//         "Cannot parse config file"
-//     )
-// });
+    must_ok!(
+        serde_json::from_str::<ArchiverConfig>(&content),
+        "Cannot parse config file"
+    )
+});
 
 pub const CONFIG_ITEMS: [&str; 2] = ["alias", "auto-check-update"];

@@ -16,15 +16,18 @@ pub enum ColumnAlign {
 
 pub struct TableRow {
     pub cells: Vec<String>,
+    pub widths: Vec<usize>,
 }
 
 impl TableRow {
     pub fn new(cells: Vec<String>) -> Self {
-        Self { cells }
+        let widths = cells.iter().map(|cell| cell.true_len()).collect();
+        Self { cells, widths }
     }
 
-    pub fn get_cell_widths(&self) -> Vec<usize> {
-        self.cells.iter().map(|cell| cell.true_len()).collect()
+    pub fn refresh_cell_widths(&mut self) {
+        let widths = self.cells.iter().map(|cell| cell.true_len()).collect();
+        self.widths = widths;
     }
 }
 
@@ -51,8 +54,7 @@ pub trait TableDisplay {
         let mut max_widths: Vec<usize> = columns.iter().map(|col| col.min_width).collect();
 
         for row in &rows {
-            let widths = row.get_cell_widths();
-            for (i, width) in widths.iter().enumerate() {
+            for (i, width) in row.widths.iter().enumerate() {
                 if i < max_widths.len() {
                     max_widths[i] = max_widths[i].max(*width);
                 }
