@@ -88,7 +88,6 @@ fn parse(alias_entry: &str) -> ArchiverResult<(String, String)> {
     }
 }
 
-// todo 疑似apply没有效果？
 /// 将alias应用到一串路径字符串里
 pub fn apply(path_str: &str) -> String {
     for (alias, origin) in CONFIG.alias_map.iter() {

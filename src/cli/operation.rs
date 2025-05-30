@@ -17,10 +17,6 @@ pub struct Operation {
     #[serde(rename = "s", skip_serializing_if = "Option::is_none")]
     pub sub: Option<String>,
 
-    /// 指令，比如config alias add的add
-    #[serde(rename = "d", skip_serializing_if = "Option::is_none")]
-    pub directive: Option<String>,
-
     /// 参数，直接跟在主/子命令后面的
     /// - 有了子命令时，主命令不会有参数
     #[serde(rename = "a", skip_serializing_if = "Option::is_none")]
@@ -54,7 +50,6 @@ impl Operation {
         Self {
             main: main.to_string(),
             sub: None,
-            directive: None,
             args,
             opts,
             source: OperSource::User,
@@ -64,14 +59,12 @@ impl Operation {
     pub fn new(
         main: &str,
         sub: Option<&str>,
-        directive: Option<&str>,
         args: Option<Vec<String>>,
         opts: Option<HashMap<String, Value>>,
     ) -> Self {
         Self {
             main: main.to_string(),
             sub: sub.map(|s| s.to_string()),
-            directive: directive.map(|d| d.to_string()),
             args,
             opts,
             source: OperSource::User,
@@ -81,14 +74,12 @@ impl Operation {
     pub fn sys(
         main: &str,
         sub: Option<&str>,
-        directive: Option<&str>,
         args: Option<Vec<String>>,
         opts: Option<HashMap<String, Value>>,
     ) -> Self {
         Self {
             main: main.to_string(),
             sub: sub.map(|s| s.to_string()),
-            directive: directive.map(|d| d.to_string()),
             args,
             opts,
             source: OperSource::System,

@@ -4,7 +4,7 @@ use std::fs;
 use std::os::unix::process::CommandExt;
 use std::{cmp::Ordering, process::Command}; // for exec
 
-use super::config::{CONFIG, auto_check_update};
+use super::config::{CONFIG, update_check};
 use crate::misc::{mark, paths};
 use crate::models::{error::ArchiverResult, types::Version};
 use crate::traits::{ForceToString, ResultExt};
@@ -16,12 +16,12 @@ const SCRIPT_URL: &str =
 /// 和上面的区别在于版本相同时静默
 pub fn auto_check() {
     // 只在config为真时进行
-    if CONFIG.auto_check_update == "off" {
+    if CONFIG.update_check == "off" {
         return;
     }
 
     // 一个月看一次
-    if !auto_check_update::time_passed(&CONFIG) {
+    if !update_check::time_passed(&CONFIG) {
         return;
     }
 
@@ -44,7 +44,7 @@ pub fn auto_check() {
     }
 
     // 检查过了更新，刷新一下检测记录
-    auto_check_update::refresh_last_date().allow_and_display();
+    update_check::refresh_last_date().allow_and_display();
 }
 
 pub fn prepare_versions() -> ArchiverResult<(Version, Version)> {

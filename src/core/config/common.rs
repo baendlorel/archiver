@@ -20,8 +20,8 @@ pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
     // 下面进行一些正规化
 
     // 保持这个开关不是on就是off
-    if config.auto_check_update != "on" {
-        config.auto_check_update = "off".to_string();
+    if config.update_check != "on" {
+        config.update_check = "off".to_string();
     }
 
     // alias_map增加默认的~路径
@@ -39,4 +39,4 @@ pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
 ///     - ListEntry的显示
 ///     - LogEntry的显示
 pub static VLT_ITEM_SEP: Lazy<String> =
-    Lazy::new(|| CONFIG.vault_item_seperator.styled_vault_item_seperator());
+    Lazy::new(|| CONFIG.vault_item_sep.styled_vault_item_seperator());

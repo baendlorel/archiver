@@ -25,7 +25,6 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
     Ok(())
 }
 
-// todo 利用stripansi的trait改造这里，最好能通用
 pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     let list = wrap_result!(select_all())?;
 

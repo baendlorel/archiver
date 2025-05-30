@@ -43,7 +43,7 @@ impl VaultAction {
     pub fn to_operation(&self) -> Operation {
         match self {
             VaultAction::Use { name } => {
-                Operation::new("vlt", Some("use"), None, Some(vec![name.clone()]), None)
+                Operation::new("vlt", Some("use"), Some(vec![name.clone()]), None)
             }
             VaultAction::Create { name, remark, u } => {
                 let mut opts = map![];
@@ -54,12 +54,12 @@ impl VaultAction {
                     opts.insert("use".to_string(), Value::String(String::new()));
                 }
                 let opts = if opts.len() == 0 { None } else { Some(opts) };
-                Operation::new("vlt", Some("create"), None, Some(vec![name.clone()]), opts)
+                Operation::new("vlt", Some("create"), Some(vec![name.clone()]), opts)
             }
             VaultAction::Remove { name } => {
-                Operation::new("vlt", Some("remove"), None, Some(vec![name.clone()]), None)
+                Operation::new("vlt", Some("remove"), Some(vec![name.clone()]), None)
             }
-            VaultAction::List => Operation::new("vlt", Some("list"), None, None, None),
+            VaultAction::List => Operation::new("vlt", Some("list"), None, None),
         }
     }
 }

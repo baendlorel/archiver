@@ -15,7 +15,7 @@ pub fn set(status: &str) -> ArchiverResult<()> {
     }
 
     let mut config = CONFIG.clone();
-    config.auto_check_update = status.to_string();
+    config.update_check = status.to_string();
     wrap_result!(sl::save(&config))?;
 
     Ok(())
@@ -24,7 +24,7 @@ pub fn set(status: &str) -> ArchiverResult<()> {
 /// 超过特定时间再检查更新
 pub fn time_passed(config: &ArchiverConfig) -> bool {
     let today = dt::now_d();
-    let last = &config.last_check_update_date;
+    let last = &config.last_update_check;
 
     let months_passed =
         (today.year() - last.year()) * 12 + (today.month() as i32 - last.month() as i32);
@@ -35,7 +35,7 @@ pub fn time_passed(config: &ArchiverConfig) -> bool {
 
 pub fn refresh_last_date() -> ArchiverResult<()> {
     let mut config = CONFIG.clone();
-    config.last_check_update_date = dt::now_d();
+    config.last_update_check = dt::now_d();
     wrap_result!(sl::save(&config))?;
     Ok(())
 }

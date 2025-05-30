@@ -1,9 +1,7 @@
 use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
 
-use crate::cli::{
-    AliasAction, AutoCheckUpdateAction, ConfigAction, VaultAction, VaultItemSeperatorAction,
-};
+use crate::cli::{ConfigAction, VaultAction};
 use crate::core::{archive, config, log, update, vault};
 use crate::misc::{dedup_and_log, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
@@ -138,31 +136,35 @@ pub fn log(range: &Option<String>) {
 pub fn config(action: &ConfigAction) {
     match action {
         ConfigAction::List => config::display(),
-        ConfigAction::Alias(action) => match action {
-            AliasAction::Set { alias } => config::alias::set(alias).ok_then_or_log(|_| {
-                let msg = format!("Alias '{}' is set successfully", alias);
-                log::succ(None, None, &msg);
-            }),
-            AliasAction::Remove { alias } => config::alias::remove(&alias).ok_then_or_log(|_| {
-                let msg = format!("Alias '{}' is removed successfully", alias);
-                log::succ(None, None, &msg);
-            }),
-        },
-        ConfigAction::AutoCheckUpdate(action) => match action {
-            AutoCheckUpdateAction::Set { status } => config::auto_check_update::set(&status)
-                .ok_then_or_log(|_| {
-                    let msg = format!("Auto check update is set to '{}'", status);
+        ConfigAction::Alias { entry, remove } => {
+            if *remove {
+                config::alias::remove(&entry).ok_then_or_log(|_| {
+                    let msg = format!("Alias '{}' is removed successfully", entry);
                     log::succ(None, None, &msg);
-                }),
-        },
-        ConfigAction::VaultItemSeperator(action) => match action {
-            VaultItemSeperatorAction::Set { seperator } => {
-                config::vault_item_seperator::set(seperator).ok_then_or_log(|_| {
-                    let msg = format!("Vault item separator is set to '{}'", seperator);
+                })
+            } else {
+                config::alias::set(entry).ok_then_or_log(|_| {
+                    let msg = format!("Alias '{}' is added successfully", entry);
                     log::succ(None, None, &msg);
                 })
             }
-        },
+        }
+        ConfigAction::UpdateCheck { status } => {
+            config::update_check::set(&status).ok_then_or_log(|_| {
+                let msg = if status == "on" {
+                    format!("Update check is turned {}", status.green().bold())
+                } else {
+                    format!("Update check is turned {}", status.red().bold())
+                };
+                log::succ(None, None, &msg);
+            })
+        }
+        ConfigAction::VaultItemSep { sep } => {
+            config::vault_item_sep::set(sep).ok_then_or_log(|_| {
+                let msg = format!("Vault-item separator is set to '{}'", sep);
+                log::succ(None, None, &msg);
+            })
+        }
     }
 }
 

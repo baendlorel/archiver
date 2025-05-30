@@ -14,10 +14,10 @@ pub struct ArchiverConfig {
     pub current_vault_id: u32,
 
     /// 自动检查更新的开关，默认为on
-    pub auto_check_update: String,
+    pub update_check: String,
 
     /// 上次检查更新的时间
-    pub last_check_update_date: NaiveDate,
+    pub last_update_check: NaiveDate,
 
     /// 别名映射表
     pub alias_map: std::collections::HashMap<String, String>,
@@ -27,17 +27,17 @@ pub struct ArchiverConfig {
     /// - 会影响
     ///     - ListEntry的显示
     ///     - LogEntry的显示
-    pub vault_item_seperator: String,
+    pub vault_item_sep: String,
 }
 
 impl ArchiverConfig {
     pub fn default() -> ArchiverConfig {
         Self {
             current_vault_id: 0,
-            auto_check_update: "on".to_string(),
-            last_check_update_date: dt::now_d(),
+            update_check: "on".to_string(),
+            last_update_check: dt::now_d(),
             alias_map: map![],
-            vault_item_seperator: ":".to_string(),
+            vault_item_sep: ":".to_string(),
         }
     }
 
@@ -96,16 +96,16 @@ impl ArchiverConfig {
                 }
             }),
             (
-                "auto-check-update",
-                "AutoCheckUpdate",
-                if self.auto_check_update == "on" {
+                "update-check",
+                "UpdateCheck",
+                if self.update_check == "on" {
                     "on".green().to_string()
                 } else {
                     "off".red().to_string()
                 },
             ),
-            ("vault-item-seperator", "VaultItemSeperator", {
-                format!("\"{}\"", self.vault_item_seperator).styled_json_string()
+            ("vault-item-sep", "VaultItemSep", {
+                format!("\"{}\"", self.vault_item_sep).styled_json_string()
             }),
         ];
 

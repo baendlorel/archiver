@@ -143,7 +143,7 @@ arv lg  [range]
 Configure some properties of Archiver. You can set the following items:
 
 1. `alias` : set an alias for a path
-2. `auto-check-update`: enable or disable auto check for updates
+2. `update-check`: enable or disable auto check for updates
 
 ### basic usage
 
@@ -165,12 +165,12 @@ arv config alias.add mytemp=/home/user/temp
 arv config alias.remove mytemp=/home/user/temp
 ```
 
-### auto-check-update
+### update-check
 
 Will check for updates automatically when you run `put`, `restore` and `config` command. Default value is `on`. If you want to disable this feature, you can set it to `off`.
 
 ```bash
-arv config auto-check-update.set off
+arv config update-check.set off
 ```
 
 ## update

@@ -1,115 +1,56 @@
 use clap::Subcommand;
 
-use crate::cli::Operation;
+use crate::{cli::Operation, map};
 
 #[derive(Subcommand)]
 pub enum ConfigAction {
     /// Show all configuration of Archiver
-    #[command(aliases = ["l", "ls"])]
+    #[command(aliases = ["l", "ls", "show"])]
     List,
 
     /// Set alias entries
-    #[command(subcommand)]
-    Alias(AliasAction),
+    Alias {
+        #[arg(value_name = "alias=path", required = true)]
+        entry: String,
 
-    /// Set auto check update
-    #[command(subcommand)]
-    AutoCheckUpdate(AutoCheckUpdateAction),
-
-    /// Set auto check update
-    #[command(subcommand)]
-    VaultItemSeperator(VaultItemSeperatorAction),
-}
-
-#[derive(Subcommand)]
-pub enum AliasAction {
-    /// Set an alias-origin map
-    Set {
-        #[arg(value_name = "alias", required = true)]
-        alias: String,
+        #[arg(short, long, help = "Remove alias")]
+        remove: bool,
     },
 
-    /// Remove an alias-origin map
-    Remove {
-        #[arg(value_name = "alias", required = true)]
-        alias: String,
-    },
-}
-
-#[derive(Subcommand)]
-pub enum AutoCheckUpdateAction {
-    /// Set auto check update on or off
-    Set {
-        #[arg(value_name = "on/off", required = true)]
+    /// Set auto check update
+    UpdateCheck {
+        #[arg(value_name = "on/off")]
         status: String,
     },
-}
 
-#[derive(Subcommand)]
-pub enum VaultItemSeperatorAction {
-    /// Set auto check update on or off
-    Set {
-        #[arg(value_name = "sep", required = true)]
-        seperator: String,
+    /// Set auto check update
+    VaultItemSep {
+        #[arg(value_name = "separator")]
+        sep: String,
     },
 }
 
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            ConfigAction::List => Operation::new("cfg", Some("list"), None, None, None),
-            ConfigAction::Alias(action) => action.to_operation(),
-            ConfigAction::AutoCheckUpdate(action) => action.to_operation(),
-            ConfigAction::VaultItemSeperator(action) => action.to_operation(),
-        }
-    }
-}
-
-impl AliasAction {
-    pub fn to_operation(&self) -> Operation {
-        match self {
-            AliasAction::Set { alias } => Operation::new(
+            ConfigAction::List => Operation::new("cfg", Some("list"), None, None),
+            ConfigAction::Alias { entry, remove } => {
+                let opts = if *remove {
+                    Some(map!("remove".to_string() => serde_json::Value::Bool(*remove)))
+                } else {
+                    None
+                };
+                Operation::new("cfg", Some("alias"), Some(vec![entry.clone()]), opts)
+            }
+            ConfigAction::UpdateCheck { status } => Operation::new(
                 "cfg",
-                Some("alias"),
-                Some("set"),
-                Some(vec![alias.clone()]),
-                None,
-            ),
-            AliasAction::Remove { alias } => Operation::new(
-                "cfg",
-                Some("alias"),
-                Some("remove"),
-                Some(vec![alias.clone()]),
-                None,
-            ),
-        }
-    }
-}
-
-impl AutoCheckUpdateAction {
-    pub fn to_operation(&self) -> Operation {
-        match self {
-            AutoCheckUpdateAction::Set { status } => Operation::new(
-                "cfg",
-                Some("auto-check-update"),
-                Some("set"),
+                Some("update-check"),
                 Some(vec![status.clone()]),
                 None,
             ),
-        }
-    }
-}
-
-impl VaultItemSeperatorAction {
-    pub fn to_operation(&self) -> Operation {
-        match self {
-            VaultItemSeperatorAction::Set { seperator } => Operation::new(
-                "cfg",
-                Some("vault-item-seperator"),
-                Some("set"),
-                Some(vec![seperator.clone()]),
-                None,
-            ),
+            ConfigAction::VaultItemSep { sep } => {
+                Operation::new("cfg", Some("vault-item-sep"), Some(vec![sep.clone()]), None)
+            }
         }
     }
 }
