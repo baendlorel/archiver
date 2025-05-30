@@ -78,6 +78,6 @@ impl ArchiverError {
     }
 
     pub fn display(&self) {
-        println!("{} {}", self.level.to_mark(), self.to_string());
+        println!("{} {}", self.level.to_clap_mark(), self.to_string());
     }
 }

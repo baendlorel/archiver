@@ -1,7 +1,7 @@
 use crate::{err_error, wrap_result};
 
 use crate::cli::Operation;
-use crate::misc::mark;
+use crate::misc::clap_mark;
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
 use crate::traits::ResultExt;
@@ -14,7 +14,7 @@ mod sl;
 /// 写入成功的日志
 /// - 会继承入参msg对象的信息
 pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, message: &String) {
-    println!("{} {}", mark::succ(), message);
+    println!("{} {}", clap_mark::succ(), message);
 
     // message没必要写入，因为level和operation已携带成功信息
     sl::save(LogLevel::Success, archive_id, vault_id, None).allow_and_display();

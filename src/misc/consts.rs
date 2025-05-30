@@ -23,3 +23,27 @@ pub mod mark {
         "i".cyan().bold().to_string()
     }
 }
+
+pub mod clap_mark {
+    use owo_colors::OwoColorize;
+
+    pub fn succ() -> String {
+        " succ:".green().bold().to_string()
+    }
+
+    pub fn error() -> String {
+        "error:".red().bold().to_string()
+    }
+
+    pub fn fatal() -> String {
+        "fatal:".bright_red().bold().underline().to_string()
+    }
+
+    pub fn warn() -> String {
+        " warn:".yellow().to_string()
+    }
+
+    pub fn info() -> String {
+        " info:".cyan().bold().to_string()
+    }
+}

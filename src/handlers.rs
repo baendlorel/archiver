@@ -143,7 +143,7 @@ pub fn config(action: &ConfigAction) {
                     log::succ(None, None, &msg);
                 })
             } else {
-                config::alias::set(entry).ok_then_or_log(|_| {
+                config::alias::add(entry).ok_then_or_log(|_| {
                     let msg = format!("Alias '{}' is added successfully", entry);
                     log::succ(None, None, &msg);
                 })

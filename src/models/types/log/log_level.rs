@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::misc::mark;
+use crate::misc::{clap_mark, mark};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum LogLevel {
@@ -32,6 +32,16 @@ impl LogLevel {
             LogLevel::Warn => mark::warn(),
             LogLevel::Error => mark::error(),
             LogLevel::Fatal => mark::fatal(),
+        }
+    }
+
+    pub fn to_clap_mark(&self) -> String {
+        match self {
+            LogLevel::Success => clap_mark::succ(),
+            LogLevel::Info => clap_mark::info(),
+            LogLevel::Warn => clap_mark::warn(),
+            LogLevel::Error => clap_mark::error(),
+            LogLevel::Fatal => clap_mark::fatal(),
         }
     }
 }

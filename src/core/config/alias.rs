@@ -30,9 +30,13 @@ pub fn remove(alias_entry: &str) -> ArchiverResult<()> {
     Ok(())
 }
 
-pub fn set(alias_entry: &str) -> ArchiverResult<()> {
+pub fn add(alias_entry: &str) -> ArchiverResult<()> {
     let (alias, origin) = wrap_result!(parse(alias_entry))?;
     let mut config = CONFIG.clone();
+
+    if origin.is_empty() {
+        return warn!("No origin path detected in alias entry '{}'.", alias_entry);
+    }
 
     // 检查是否已经存在相同的别名或原始路径
     let value = config.alias_map.get(&alias);
