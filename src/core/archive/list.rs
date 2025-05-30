@@ -1,11 +1,9 @@
 use crate::wrap_result;
 
-use owo_colors::OwoColorize;
-
+use crate::misc::console::table::{Column, Table, TableRow};
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
-use crate::models::types::{ListColumnLen, ListEntry, ListRow};
-use crate::traits::StripAnsi;
+use crate::models::types::ListEntry;
 
 // pub fn select(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
 //     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
@@ -31,55 +29,23 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     let rows = list
         .iter()
         .filter(|entry| all || (restored == entry.is_restored()))
-        .map(|entry| entry.to_row())
-        .collect::<Vec<ListRow>>();
+        .map(|entry| entry.to_table_row())
+        .collect::<Vec<TableRow>>();
 
     if rows.len() == 0 {
         println!("No archived object found");
     }
 
     // 下面开始输出对好了空格的列表
-    // 字段名称
-    let field_archived_at = "Archived At";
-    let field_id = "ID";
-    let field_item = "Item";
-    let field_dir = "Directory";
-
-    let mut col_len = ListColumnLen {
-        archived_at: field_archived_at.len(),
-        id: field_id.len(),
-        item: field_item.len(),
-        dir: field_dir.len(),
-    };
-
-    for row in rows.iter() {
-        let cur = row.get_len();
-        col_len.archived_at = col_len.archived_at.max(cur.archived_at);
-        col_len.id = col_len.id.max(cur.id);
-        col_len.item = col_len.item.max(cur.item);
-        col_len.dir = col_len.dir.max(cur.dir);
-    }
-
-    println!(
-        "{}",
-        format!(
-            "{field_archived_at}{} {field_id}{} {field_item}{} {field_dir}{}",
-            " ".repeat(col_len.archived_at - field_archived_at.true_len()),
-            " ".repeat(col_len.id - field_id.true_len()),
-            " ".repeat(col_len.item - field_item.true_len()),
-            " ".repeat(col_len.dir - field_dir.true_len()),
-            field_archived_at = field_archived_at,
-            field_id = field_id,
-            field_item = field_item,
-            field_dir = field_dir,
-        )
-        .bold()
-        .underline()
+    Table::display(
+        vec![
+            Column::with_name("Archived At"),
+            Column::with_name("ID"),
+            Column::with_name("Item"),
+            Column::with_name("Directory"),
+        ],
+        rows,
     );
-
-    for row in rows.iter() {
-        println!("{}", row.to_display(&col_len));
-    }
 
     Ok(())
 }

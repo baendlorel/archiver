@@ -3,10 +3,10 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::{auto_incr, config, vault};
+use crate::misc::console::table::TableRow;
 use crate::misc::dt;
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::traits::CustomColors;
-use crate::traits::StripAnsi;
 
 /// 归档列表的条目
 /// - 这样的字段排序是为了序列化的时候jsonl文件也可以是这个顺序
@@ -59,21 +59,6 @@ pub enum ListStatus {
     Restored,
 }
 
-/// 专门输出表格用的
-pub struct ListRow {
-    pub archived_at: String,
-    pub id: String,
-    pub item: String,
-    pub dir: String,
-}
-
-pub struct ListColumnLen {
-    pub archived_at: usize,
-    pub id: usize,
-    pub item: usize,
-    pub dir: usize,
-}
-
 impl ListEntry {
     pub fn new(item: String, is_dir: bool, dir: String, message: String, vault_id: u32) -> Self {
         Self {
@@ -97,7 +82,11 @@ impl ListEntry {
         format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, &self.item)
     }
 
-    pub fn to_row(&self) -> ListRow {
+    pub fn is_restored(&self) -> bool {
+        matches!(self.status, ListStatus::Restored)
+    }
+
+    pub fn to_table_row(&self) -> TableRow {
         let item = {
             let t = if self.is_dir {
                 format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
@@ -113,43 +102,11 @@ impl ListEntry {
             let v = vault::get_name(self.vault_id).styled_vault();
             format!("{}{}{}{}", v, *config::VLT_ITEM_SEP, t, r)
         };
-
-        ListRow {
-            archived_at: dt::to_dt_string(&self.archived_at)
-                .bright_black()
-                .to_string(),
-            id: self.id.styled_archive_id(),
-            item,
-            dir: config::alias::apply(&self.dir).bright_grey(),
-        }
-    }
-
-    pub fn is_restored(&self) -> bool {
-        matches!(self.status, ListStatus::Restored)
-    }
-}
-
-impl ListRow {
-    pub fn get_len(&self) -> ListColumnLen {
-        ListColumnLen {
-            archived_at: self.archived_at.true_len(),
-            id: self.id.true_len(),
-            item: self.item.true_len(),
-            dir: self.dir.true_len(),
-        }
-    }
-
-    pub fn to_display(&self, max_len: &ListColumnLen) -> String {
-        let cl = self.get_len();
-        format!(
-            "{}{} {}{} {}{} {}",
-            self.archived_at.bright_black(),
-            " ".repeat(max_len.archived_at - cl.archived_at),
-            self.id.styled_archive_id(),
-            " ".repeat(max_len.id - cl.id),
-            self.item,
-            " ".repeat(max_len.item - cl.item),
-            self.dir.bright_black(),
-        )
+        let archived_at = dt::to_dt_string(&self.archived_at)
+            .bright_black()
+            .to_string();
+        let id = self.id.styled_archive_id();
+        let dir = config::alias::apply(&self.dir).bright_grey();
+        TableRow::new(vec![archived_at, id, item, dir])
     }
 }

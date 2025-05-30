@@ -1,11 +1,13 @@
-use crate::traits::StripAnsi;
+use owo_colors::OwoColorize;
+
+use crate::{misc::clap_mark, traits::StripAnsi};
 
 // todo 编写统一的table组件
 #[derive(Clone)]
 pub struct Column {
-    pub name: String,
+    name: String,
     pub align: ColumnAlign,
-    pub min_width: usize,
+    width: usize,
 }
 
 #[derive(Clone)]
@@ -16,87 +18,75 @@ pub enum ColumnAlign {
 }
 
 pub struct TableRow {
-    pub cells: Vec<String>,
-    pub widths: Vec<usize>,
+    cells: Vec<String>,
+}
+
+pub struct Table {
+    columns: Vec<Column>,
+    rows: Vec<TableRow>,
+}
+
+impl Column {
+    pub fn new(name: &str, align: ColumnAlign, width: usize) -> Self {
+        Self {
+            name: name.to_string(),
+            align,
+            width,
+        }
+    }
+
+    pub fn with_name(name: &str) -> Self {
+        Self::new(name, ColumnAlign::Left, name.len())
+    }
 }
 
 impl TableRow {
     pub fn new(cells: Vec<String>) -> Self {
-        let widths = cells.iter().map(|cell| cell.true_len()).collect();
-        Self { cells, widths }
-    }
-
-    pub fn refresh_cell_widths(&mut self) {
-        let widths = self.cells.iter().map(|cell| cell.true_len()).collect();
-        self.widths = widths;
+        Self { cells }
     }
 }
 
-pub trait TableDisplay {
-    /// 定义表格的列结构
-    fn columns() -> Vec<Column>;
-
-    /// 将对象转换为表格行
-    fn to_table_row(&self) -> TableRow;
-
-    /// 显示多行数据的表格
-    fn display_table(items: &[Self]) -> String
-    where
-        Self: Sized,
-    {
-        if items.is_empty() {
-            return String::new();
+impl Table {
+    fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
+        // 确保列数不为0
+        if columns.is_empty() {
+            panic!("{} Columns vec cannot be empty", clap_mark::fatal());
         }
 
-        let columns = Self::columns();
-        let rows: Vec<TableRow> = items.iter().map(|item| item.to_table_row()).collect();
-
-        // 计算每列的最大宽度
-        let mut max_widths: Vec<usize> = columns.iter().map(|col| col.min_width).collect();
-
+        // 确保每行的单元格数量与列数一致
         for row in &rows {
-            for (i, width) in row.widths.iter().enumerate() {
-                if i < max_widths.len() {
-                    max_widths[i] = max_widths[i].max(*width);
-                }
+            if row.cells.len() != columns.len() {
+                panic!(
+                    "{} Row cell count does not match column count",
+                    clap_mark::fatal()
+                );
+            }
+            for i in 0..columns.len() {
+                columns[i].width = columns[i].width.max(row.cells[i].true_len());
             }
         }
-
-        // 生成表格字符串
-        let mut result = String::new();
-
-        // 表头（可选）
-        // result.push_str(&Self::format_header(&columns, &max_widths));
-        // result.push('\n');
-
-        // 数据行
-        for row in rows {
-            result.push_str(&Self::format_row(&row, &columns, &max_widths));
-            result.push('\n');
-        }
-
-        result
+        Self { columns, rows }
     }
 
-    /// 格式化单行数据
-    fn format_row(row: &TableRow, columns: &[Column], max_widths: &[usize]) -> String {
-        let mut formatted_cells = Vec::new();
+    // todo 可以改成只要实现了to_table_row这个函数的都可以使用，即rows: Vec<T>
+    pub fn display(columns: Vec<Column>, rows: Vec<TableRow>) {
+        let table = Self::new(columns, rows);
+        table.display_header();
+        table.display_rows();
+    }
 
-        for (i, cell) in row.cells.iter().enumerate() {
-            if i >= columns.len() || i >= max_widths.len() {
-                break;
-            }
-
-            let col = &columns[i];
-            let max_width = max_widths[i];
+    pub fn format_row(&self, cells: &[String]) -> String {
+        let mut formatted: Vec<String> = vec![];
+        for i in 0..self.columns.len() {
+            let col = &self.columns[i];
+            let cell = &cells[i];
             let cell_width = cell.true_len();
-            let padding = if max_width > cell_width {
-                max_width - cell_width
+            let padding = if col.width > cell_width {
+                col.width - cell_width
             } else {
                 0
             };
-
-            let formatted_cell = match col.align {
+            let s = match col.align {
                 ColumnAlign::Left => format!("{}{}", cell, " ".repeat(padding)),
                 ColumnAlign::Right => format!("{}{}", " ".repeat(padding), cell),
                 ColumnAlign::Center => {
@@ -105,10 +95,25 @@ pub trait TableDisplay {
                     format!("{}{}{}", " ".repeat(left_pad), cell, " ".repeat(right_pad))
                 }
             };
-
-            formatted_cells.push(formatted_cell);
+            formatted.push(s);
         }
+        formatted.join(" ")
+    }
 
-        formatted_cells.join(" ")
+    fn display_header(&self) {
+        let cells = self
+            .columns
+            .iter()
+            .map(|col| col.name.clone())
+            .collect::<Vec<String>>();
+        println!("{}", &self.format_row(&cells).bold().underline());
+    }
+
+    fn display_rows(&self) {
+        let mut rows: Vec<String> = vec![];
+        for row in &self.rows {
+            rows.push(self.format_row(&row.cells));
+        }
+        println!("{}", rows.join("\n"));
     }
 }
