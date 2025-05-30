@@ -1,3 +1,4 @@
+use crate::core::config::alias;
 use crate::map;
 
 use chrono::NaiveDate;
@@ -43,74 +44,87 @@ impl ArchiverConfig {
 
     pub fn display(&self) {
         // 保留map以供未来扩展
+        // 此为3元组的数组，依次是（字段名，字段值，注释文本）
         let m = vec![
             (
-                "root",
                 "ArchiverPath",
-                paths::ROOT_DIR.force_to_string().styled_const(),
+                alias::apply(&paths::ROOT_DIR.force_to_string()).styled_const(),
+                "Archived items, configs, etc. are here.",
             ),
-            ("alias", "Alias", {
-                // 按键排序后遍历
-                let mut aliases: Vec<String> = vec![];
-                let mut max_alias_width = 0;
-                self.alias_map
-                    .iter()
-                    .for_each(|(alias, _)| max_alias_width = max_alias_width.max(alias.len()));
-                for (alias, origin) in &self.alias_map {
-                    let styled = if alias == "~" {
-                        format!(
-                            "{}{} => {}",
-                            alias.styled_const(),
-                            " ".repeat(max_alias_width - alias.len()),
-                            origin.styled_const()
-                        )
-                    } else {
-                        format!(
-                            "{}{} => {}",
-                            alias.styled_json_string(),
-                            " ".repeat(max_alias_width - alias.len()),
-                            origin.styled_json_string()
-                        )
-                    };
-                    aliases.push(styled);
-                }
-                aliases.sort_by(|a, b| {
-                    use crate::traits::StripAnsi;
-                    // 去除 ANSI 代码后再比较
-                    let a_clean = a.strip_ansi();
-                    let b_clean = b.strip_ansi();
-
-                    // ~ 别名排在最前面
-                    if a_clean.starts_with('~') && !b_clean.starts_with('~') {
-                        std::cmp::Ordering::Less
-                    } else if !a_clean.starts_with('~') && b_clean.starts_with('~') {
-                        std::cmp::Ordering::Greater
-                    } else {
-                        a_clean.cmp(&b_clean)
-                    }
-                });
-                if aliases.is_empty() {
-                    "{}".to_string()
-                } else {
-                    format!("{{\n  {}\n}}", aliases.join(",\n  "))
-                }
-            }),
             (
-                "update-check",
+                "Alias",
+                {
+                    // 按键排序后遍历
+                    let mut aliases: Vec<String> = vec![];
+                    let mut max_alias_width = 0;
+                    self.alias_map
+                        .iter()
+                        .for_each(|(alias, _)| max_alias_width = max_alias_width.max(alias.len()));
+                    for (alias, origin) in &self.alias_map {
+                        let styled = if alias == "~" {
+                            format!(
+                                "{}{} => {}",
+                                alias.styled_const(),
+                                " ".repeat(max_alias_width - alias.len()),
+                                origin.styled_const()
+                            )
+                        } else {
+                            format!(
+                                "{}{} => {}",
+                                alias.styled_string_value(),
+                                " ".repeat(max_alias_width - alias.len()),
+                                origin.styled_string_value()
+                            )
+                        };
+                        aliases.push(styled);
+                    }
+                    aliases.sort_by(|a, b| {
+                        use crate::traits::StripAnsi;
+                        // 去除 ANSI 代码后再比较
+                        let a_clean = a.strip_ansi();
+                        let b_clean = b.strip_ansi();
+
+                        // ~ 别名排在最前面
+                        if a_clean.starts_with('~') && !b_clean.starts_with('~') {
+                            std::cmp::Ordering::Less
+                        } else if !a_clean.starts_with('~') && b_clean.starts_with('~') {
+                            std::cmp::Ordering::Greater
+                        } else {
+                            a_clean.cmp(&b_clean)
+                        }
+                    });
+                    if aliases.is_empty() {
+                        "{}".to_string()
+                    } else {
+                        format!("{{\n  {}\n}}", aliases.join(",\n  "))
+                    }
+                },
+                "Shorten the paths displayed.",
+            ),
+            (
                 "UpdateCheck",
                 if self.update_check == "on" {
                     "on".green().to_string()
                 } else {
                     "off".red().to_string()
                 },
+                "Automically check updates.",
             ),
-            ("vault-item-sep", "VaultItemSep", {
-                format!("\"{}\"", self.vault_item_sep).styled_json_string()
-            }),
+            (
+                "VaultItemSep",
+                { format!("\"{}\"", self.vault_item_sep).styled_string_value() },
+                "Shows as {vault}{sep}{item}.",
+            ),
         ];
 
-        m.iter().for_each(|(_, field, value)| {
-            println!("{}: {}", field.styled_config_field(), value);
+        m.iter().for_each(|(field, value, comment)| {
+            println!(
+                "{}: {}  {}{}",
+                field.styled_config_field(),
+                value,
+                "// ".styled_comment(),
+                comment.styled_comment()
+            );
         });
 
         println!();
