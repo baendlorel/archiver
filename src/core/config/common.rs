@@ -18,10 +18,17 @@ pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
     );
 
     // 下面进行一些正规化
+
     // 保持这个开关不是on就是off
     if config.auto_check_update != "on" {
         config.auto_check_update = "off".to_string();
     }
+
+    // alias_map增加默认的~路径
+    config.alias_map.insert(
+        "~".to_string(),
+        paths::HOME_DIR.to_string_lossy().to_string(),
+    );
 
     config
 });

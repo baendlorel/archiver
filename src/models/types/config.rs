@@ -50,16 +50,50 @@ impl ArchiverConfig {
                 paths::ROOT_DIR.force_to_string().styled_const(),
             ),
             ("alias", "Alias", {
-                let mut result: Vec<String> = vec![];
-                result.push(format!(
-                    "{}{}",
-                    "~=".styled_const(),
-                    paths::HOME_DIR.to_string_lossy().styled_const(),
-                ));
+                // 按键排序后遍历
+                let mut aliases: Vec<String> = vec![];
+                let mut max_alias_width = 0;
+                self.alias_map
+                    .iter()
+                    .for_each(|(alias, _)| max_alias_width = max_alias_width.max(alias.len()));
                 for (alias, origin) in &self.alias_map {
-                    result.push(format!("{}={}", alias, origin).bright_black().to_string());
+                    let styled = if alias == "~" {
+                        format!(
+                            "{}{} => {}",
+                            alias.styled_const(),
+                            " ".repeat(max_alias_width - alias.len()),
+                            origin.styled_const()
+                        )
+                    } else {
+                        format!(
+                            "{}{} => {}",
+                            alias.styled_json_string(),
+                            " ".repeat(max_alias_width - alias.len()),
+                            origin.styled_json_string()
+                        )
+                    };
+                    aliases.push(styled);
                 }
-                format!("[{}]", result.join(", "))
+                aliases.sort_by(|a, b| {
+                    use crate::traits::StripAnsi;
+                    // 去除 ANSI 代码后再比较
+                    let a_clean = a.strip_ansi();
+                    let b_clean = b.strip_ansi();
+
+                    // ~ 别名排在最前面
+                    if a_clean.starts_with('~') && !b_clean.starts_with('~') {
+                        std::cmp::Ordering::Less
+                    } else if !a_clean.starts_with('~') && b_clean.starts_with('~') {
+                        std::cmp::Ordering::Greater
+                    } else {
+                        a_clean.cmp(&b_clean)
+                    }
+                });
+                if aliases.is_empty() {
+                    "{}".to_string()
+                } else {
+                    format!("{{\n  {}\n}}", aliases.join(",\n  "))
+                }
             }),
             (
                 "auto-check-update",
@@ -71,12 +105,18 @@ impl ArchiverConfig {
                 },
             ),
             ("vault-item-seperator", "VaultItemSeperator", {
-                format!("\"{}\"", self.vault_item_seperator)
+                format!("\"{}\"", self.vault_item_seperator).styled_json_string()
             }),
         ];
 
         m.iter().for_each(|(_, field, value)| {
             println!("{}: {}", field.styled_config_field(), value);
         });
+
+        println!();
+        println!(
+            "{} means you cannot modify it.",
+            "This color".styled_const().underline()
+        );
     }
 }

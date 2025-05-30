@@ -44,6 +44,11 @@ pub trait CustomColors: std::fmt::Display {
     fn styled_const(&self) -> String {
         self.fg_rgb::<81, 195, 255>().to_string()
     }
+
+    /// rgb(207,148,124)
+    fn styled_json_string(&self) -> String {
+        self.fg_rgb::<207, 148, 124>().to_string()
+    }
 }
 
 impl CustomColors for String {}
