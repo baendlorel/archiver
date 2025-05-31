@@ -76,11 +76,11 @@ pub fn restore(ids: &[u32]) {
     // 去重以防止重复操作同一目标
     let set: HashSet<u32> = ids.iter().cloned().collect();
     for id in set {
-        println!("Restoring id: {}", id.styled_archive_id());
+        println!("Restoring id: {}", id.styled_id());
         archive::restore(id).ok_then_or_log(|entry| {
             let msg = format!(
                 "(id: {}, vault: {}) is successfully restored to '{}'",
-                entry.id.styled_archive_id(),
+                entry.id.styled_id(),
                 vault::get_name(entry.vault_id).styled_vault(),
                 entry.get_item_path_string()
             );

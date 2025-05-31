@@ -138,6 +138,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         name.styled_vault(),
         verify_code
     );
+
     if !console::confirm_str("> ", &verify_code) {
         return info!("Confirmation failed, exit");
     }

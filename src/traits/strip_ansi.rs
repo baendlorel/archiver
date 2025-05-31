@@ -3,7 +3,13 @@ use strip_ansi_escapes::strip_str;
 pub trait StripAnsi {
     fn strip_ansi(&self) -> String;
     fn true_len(&self) -> usize {
-        self.strip_ansi().len()
+        match self.strip_ansi().as_str() {
+            // & 特殊处理这些长度为3的符号
+            "✓" => 1,
+            "✗" => 1,
+            "⚠" => 1,
+            _ => self.strip_ansi().len(),
+        }
     }
 }
 

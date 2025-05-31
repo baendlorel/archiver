@@ -3,7 +3,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::{auto_incr, config, vault};
-use crate::misc::console::table::TableRow;
+use crate::misc::console::table::{TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::traits::CustomColors;
@@ -85,8 +85,10 @@ impl ListEntry {
     pub fn is_restored(&self) -> bool {
         matches!(self.status, ListStatus::Restored)
     }
+}
 
-    pub fn to_table_row(&self) -> TableRow {
+impl TableRowify for ListEntry {
+    fn to_table_row(&self) -> TableRow {
         let item = {
             let t = if self.is_dir {
                 format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
@@ -105,7 +107,7 @@ impl ListEntry {
         let archived_at = dt::to_dt_string(&self.archived_at)
             .bright_black()
             .to_string();
-        let id = self.id.styled_archive_id();
+        let id = self.id.styled_id();
         let dir = config::alias::apply(&self.dir).bright_grey();
         TableRow::new(vec![archived_at, id, item, dir])
     }

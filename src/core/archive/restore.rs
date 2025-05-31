@@ -12,7 +12,7 @@ pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     let mut list = wrap_result!(list::select_all())?;
     let index = list.iter().position(|entry| entry.id == id);
     if index.is_none() {
-        return info!("id: {} cannot be found", id.styled_archive_id());
+        return info!("id: {} cannot be found", id.styled_id());
     }
 
     let index = index.unwrap();
@@ -21,7 +21,7 @@ pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     if matches!(entry.status, ListStatus::Archived) {
         return info!(
             "id: {} has already been restored to '{}'",
-            id.styled_archive_id(),
+            id.styled_id(),
             entry.get_item_path_string()
         );
     }

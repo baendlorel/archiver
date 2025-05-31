@@ -3,14 +3,18 @@ use owo_colors::OwoColorize;
 use crate::{misc::clap_mark, traits::StripAnsi};
 
 // todo 编写统一的table组件
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Column {
     name: String,
     pub align: ColumnAlign,
+
+    /// 列宽，用来计算padding
+    /// - 会根据rows中每一格的宽度更新
+    /// - 为0的宽度不会进行padding
     width: usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ColumnAlign {
     Left,
     Right,
@@ -53,6 +57,23 @@ impl Table {
             panic!("{} Columns vec cannot be empty", clap_mark::fatal());
         }
 
+        // 确保columns数组的width属性，只有末尾的任意个允许为0,不允许穿插0和非0
+        // 因为为0的宽度不会进行padding
+        let mut zero_found = false;
+        for col in &columns {
+            if zero_found == false && col.width == 0 {
+                zero_found = true;
+                continue;
+            }
+
+            if zero_found && col.width != 0 {
+                panic!(
+                    "{} Columns width cannot have non-zero after zero",
+                    clap_mark::fatal()
+                );
+            }
+        }
+
         // 确保每行的单元格数量与列数一致
         for row in &rows {
             if row.cells.len() != columns.len() {
@@ -61,16 +82,26 @@ impl Table {
                     clap_mark::fatal()
                 );
             }
+
+            // 宽度为0的，不格式化
             for i in 0..columns.len() {
-                columns[i].width = columns[i].width.max(row.cells[i].true_len());
+                if columns[i].width != 0 {
+                    columns[i].width = columns[i].width.max(row.cells[i].true_len());
+                }
             }
         }
         Self { columns, rows }
     }
 
-    // todo 可以改成只要实现了to_table_row这个函数的都可以使用，即rows: Vec<T>
-    pub fn display(columns: Vec<Column>, rows: Vec<TableRow>) {
-        let table = Self::new(columns, rows);
+    pub fn display<T>(columns: Vec<Column>, rows: &Vec<T>)
+    where
+        T: TableRowify,
+    {
+        let table_rows = rows
+            .iter()
+            .map(|r| r.to_table_row())
+            .collect::<Vec<TableRow>>();
+        let table = Self::new(columns, table_rows);
         table.display_header();
         table.display_rows();
     }
@@ -80,6 +111,11 @@ impl Table {
         for i in 0..self.columns.len() {
             let col = &self.columns[i];
             let cell = &cells[i];
+            // 宽度为0不参与padding
+            if col.width == 0 {
+                formatted.push(cell.to_string());
+                continue;
+            }
             let cell_width = cell.true_len();
             let padding = if col.width > cell_width {
                 col.width - cell_width
@@ -116,4 +152,8 @@ impl Table {
         }
         println!("{}", rows.join("\n"));
     }
+}
+
+pub trait TableRowify {
+    fn to_table_row(&self) -> TableRow;
 }

@@ -1,15 +1,15 @@
 use crate::wrap_result;
 
-use crate::misc::console::table::{Column, Table, TableRow};
+use crate::misc::console::table::{Column, ColumnAlign, Table};
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::ListEntry;
 
-// pub fn select(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
-//     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
-//     let list = list.into_iter().filter(|entry| condition(entry)).collect();
-//     Ok(list)
-// }
+pub fn select(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
+    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+    let list = list.into_iter().filter(|entry| condition(entry)).collect();
+    Ok(list)
+}
 
 pub fn select_all() -> ArchiverResult<Vec<ListEntry>> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
@@ -24,15 +24,9 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
 }
 
 pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
-    let list = wrap_result!(select_all())?;
+    let list = wrap_result!(select(|entry| all || (restored == entry.is_restored())))?;
 
-    let rows = list
-        .iter()
-        .filter(|entry| all || (restored == entry.is_restored()))
-        .map(|entry| entry.to_table_row())
-        .collect::<Vec<TableRow>>();
-
-    if rows.len() == 0 {
+    if list.len() == 0 {
         println!("No archived object found");
     }
 
@@ -42,9 +36,9 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
             Column::with_name("Archived At"),
             Column::with_name("ID"),
             Column::with_name("Item"),
-            Column::with_name("Directory"),
+            Column::new("Directory", ColumnAlign::Left, 0),
         ],
-        rows,
+        &list,
     );
 
     Ok(())

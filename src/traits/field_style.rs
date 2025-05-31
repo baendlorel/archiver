@@ -15,6 +15,11 @@ pub trait CustomColors: std::fmt::Display {
         self.fg_rgb::<146, 100, 14>().to_string()
     }
 
+    /// rgb(255, 80, 164)
+    fn styled_id(&self) -> String {
+        self.fg_rgb::<255, 80, 164>().to_string()
+    }
+
     /// rgb(194, 241, 118)
     fn styled_vault(&self) -> String {
         self.fg_rgb::<194, 241, 118>().to_string()
@@ -23,11 +28,6 @@ pub trait CustomColors: std::fmt::Display {
     /// rgb(170, 239, 58)
     fn styled_vault_item_seperator(&self) -> String {
         self.fg_rgb::<170, 239, 58>().to_string()
-    }
-
-    /// rgb(255, 80, 164)
-    fn styled_archive_id(&self) -> String {
-        self.fg_rgb::<255, 80, 164>().to_string()
     }
 
     /// rgb(43, 225, 201)

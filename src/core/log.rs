@@ -2,6 +2,7 @@ use crate::{err_error, wrap_result};
 
 use crate::cli::Operation;
 use crate::misc::clap_mark;
+use crate::misc::console::table::{Column, ColumnAlign, Table};
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
 use crate::traits::ResultExt;
@@ -49,10 +50,16 @@ pub fn sys(
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {
-    let (logs, reach_casual_limit) = wrap_result!(sl::load(range))?;
-    logs.iter()
-        .rev()
-        .for_each(|l| println!("{}", l.to_display()));
+    let (mut logs, reach_casual_limit) = wrap_result!(sl::load(range))?;
+    logs.reverse();
+
+    let cols = vec![
+        Column::with_name("Time"),
+        Column::new("Lvl", ColumnAlign::Center, 3),
+        Column::with_name("Operation"),
+        Column::new("Remark", ColumnAlign::Left, 0),
+    ];
+    Table::display(cols, &logs);
 
     if reach_casual_limit {
         println!("Recent {} logs displayed.", logs.len());
