@@ -8,10 +8,11 @@ pub struct Column {
     name: String,
     pub align: ColumnAlign,
 
-    /// 列宽，用来计算padding
+    /// `（宽度，最大宽度）`，用来计算padding
+    /// - 超过最大宽度，会缩减为省略号
     /// - 会根据rows中每一格的宽度更新
     /// - 为0的宽度不会进行padding
-    width: usize,
+    width: (usize, usize),
 }
 
 #[derive(Clone, Debug)]
@@ -31,7 +32,7 @@ pub struct Table {
 }
 
 impl Column {
-    pub fn new(name: &str, align: ColumnAlign, width: usize) -> Self {
+    pub fn new(name: &str, align: ColumnAlign, width: (usize, usize)) -> Self {
         Self {
             name: name.to_string(),
             align,
@@ -39,8 +40,14 @@ impl Column {
         }
     }
 
-    pub fn with_name(name: &str) -> Self {
-        Self::new(name, ColumnAlign::Left, name.len())
+    // 快速创建左对齐的列
+    pub fn left(name: &str) -> Self {
+        Self::new(name, ColumnAlign::Left, (name.len(), usize::MAX))
+    }
+
+    // 快速创建居中对齐的列
+    pub fn center(name: &str) -> Self {
+        Self::new(name, ColumnAlign::Center, (name.len(), usize::MAX))
     }
 }
 
@@ -61,12 +68,12 @@ impl Table {
         // 因为为0的宽度不会进行padding
         let mut zero_found = false;
         for col in &columns {
-            if zero_found == false && col.width == 0 {
+            if zero_found == false && col.width.0 == 0 {
                 zero_found = true;
                 continue;
             }
 
-            if zero_found && col.width != 0 {
+            if zero_found && col.width.0 != 0 {
                 panic!(
                     "{} Columns width cannot have non-zero after zero",
                     clap_mark::fatal()
@@ -85,8 +92,12 @@ impl Table {
 
             // 宽度为0的，不格式化
             for i in 0..columns.len() {
-                if columns[i].width != 0 {
-                    columns[i].width = columns[i].width.max(row.cells[i].true_len());
+                if columns[i].width.0 != 0 {
+                    columns[i].width.0 = columns[i]
+                        .width
+                        .0
+                        .max(row.cells[i].true_len())
+                        .min(columns[i].width.1);
                 }
             }
         }
@@ -112,13 +123,25 @@ impl Table {
             let col = &self.columns[i];
             let cell = &cells[i];
             // 宽度为0不参与padding
-            if col.width == 0 {
+            if col.width.0 == 0 {
                 formatted.push(cell.to_string());
                 continue;
             }
+
             let cell_width = cell.true_len();
-            let padding = if col.width > cell_width {
-                col.width - cell_width
+            // 考虑cell内容过长，省略号的情形
+            let cell = if cell_width > col.width.0 {
+                // 已经撑满，不需要执行下面的padding了
+                // fixme 再写一个stripansi的trait里的函数，能够实现跳过ansi字符来掐字符串，并尽量保留ansi字符的另一头
+                println!("{}:{}  - {}", cell.true_len(), col.width.0, cell);
+                formatted.push(format!("{}..", &cell[..col.width.0 - 2]));
+                continue;
+            } else {
+                cell.to_string()
+            };
+
+            let padding = if col.width.0 > cell_width {
+                col.width.0 - cell_width
             } else {
                 0
             };

@@ -51,7 +51,7 @@ impl Vault {
 
     pub fn new(name: &str, remark: Option<String>) -> Self {
         Vault {
-            id: auto_incr::vault_id::next(),
+            id: auto_incr::next("vault_id"),
             name: name.to_string(),
             remark: remark.unwrap_or(String::new()),
             created_at: dt::now_dt(),

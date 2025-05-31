@@ -70,7 +70,7 @@ impl ListEntry {
             vault_id,
 
             // 这些是自动获取
-            id: auto_incr::archive_id::next(),
+            id: auto_incr::next("archive_id"),
             archived_at: dt::now_dt(),
             status: ListStatus::Archived,
             remark: String::new(),

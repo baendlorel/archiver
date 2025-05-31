@@ -98,7 +98,7 @@ macro_rules! must_ok {
         $e.unwrap_or_else(|error| {
             panic!(
                 "{} {}{}\n at {} {}:{}",
-                crate::misc::mark::fatal(),
+                crate::misc::clap_mark::fatal(),
                 if $s.is_empty() {
                     String::new()
                 } else {
@@ -122,7 +122,7 @@ macro_rules! must_some {
         $e.unwrap_or_else(|| {
             panic!(
                 "{} {}\n at {} {}:{}",
-                crate::misc::mark::fatal(),
+                crate::misc::clap_mark::fatal(),
                 $s,
                 file!(),
                 line!(),

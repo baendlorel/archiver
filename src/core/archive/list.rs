@@ -33,10 +33,10 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     // 下面开始输出对好了空格的列表
     Table::display(
         vec![
-            Column::with_name("Archived At"),
-            Column::with_name("ID"),
-            Column::with_name("Item"),
-            Column::new("Directory", ColumnAlign::Left, 0),
+            Column::left("Archived At"),
+            Column::left("ID"),
+            Column::left("Item"),
+            Column::left("Directory"),
         ],
         &list,
     );

@@ -54,10 +54,11 @@ pub fn display(range: &Option<String>) -> ArchiverResult<()> {
     logs.reverse();
 
     let cols = vec![
-        Column::with_name("Time"),
-        Column::new("Lvl", ColumnAlign::Center, 3),
-        Column::with_name("Operation"),
-        Column::new("Remark", ColumnAlign::Left, 0),
+        Column::left("ID"),
+        Column::left("Time"),
+        Column::center("Lvl"),
+        Column::left("Operation"),
+        Column::new("Remark", ColumnAlign::Left, (6, 15)),
     ];
     Table::display(cols, &logs);
 
