@@ -33,14 +33,14 @@ pub enum ConfigAction {
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            ConfigAction::List => Operation::new("cfg", Some("list"), None, None),
+            ConfigAction::List => Operation::new("cfg", "list", None, None),
             ConfigAction::Alias { entry, remove } => {
                 let opts = if *remove {
                     Some(map!("remove".to_string() => serde_json::Value::Bool(*remove)))
                 } else {
                     None
                 };
-                Operation::new("cfg", Some("alias"), Some(vec![entry.clone()]), opts)
+                Operation::new("cfg", "alias", vec![entry.clone()], opts)
             }
             ConfigAction::UpdateCheck { status } => Operation::new(
                 "cfg",
@@ -49,7 +49,7 @@ impl ConfigAction {
                 None,
             ),
             ConfigAction::VaultItemSep { sep } => {
-                Operation::new("cfg", Some("vault-item-sep"), Some(vec![sep.clone()]), None)
+                Operation::new("cfg", "vault-item-sep", vec![sep.clone()], None)
             }
         }
     }

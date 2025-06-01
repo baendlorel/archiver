@@ -1,3 +1,6 @@
+use serde_json::Value;
+use std::collections::HashMap;
+
 use crate::misc::mark;
 
 /// 快速创建一个map
@@ -15,7 +18,53 @@ macro_rules! map {
     }};
 }
 
-// todo 需要一个把Option内容解包并制作成容器的函数，None不纳入，Some纳入
+#[macro_export]
+macro_rules! opt_map {
+    () => { None };
+    ( $( $var:ident ),* $(,)? ) => {{
+        let mut map = std::collections::HashMap::new();
+        $(
+            if let Some($val) = $var {
+                map.insert(stringify!($var), $val);
+            }
+        )*
+        map
+    }};
+}
+
+/// 从一个Option的数组中提取Some的值组成新数组
+/// - 返回的数组是Option的，如果原数组一个Some都没有，那么返回None
+/// - 目前专门用在Operation构建方法的args参数构建
+pub fn some_to_vec<T>(arr: Vec<Option<T>>) -> Option<Vec<T>> {
+    let mut result: Vec<T> = vec![];
+    for a in arr {
+        if let Some(item) = a {
+            result.push(item);
+        }
+    }
+    if result.len() == 0 {
+        None
+    } else {
+        Some(result)
+    }
+}
+
+/// 从一个(key,Option<value>))元组的数组中提取value是Some的值组成HashMap
+/// - 如果一个Some都没有，那么返回None
+/// - 目前专门用在Operation构建方法的opts参数构建
+pub fn some_to_map(arr: Vec<(&str, &Option<Value>)>) -> Option<HashMap<String, Value>> {
+    let mut result: HashMap<String, Value> = HashMap::new();
+    for (key, some_value) in arr {
+        if let Some(value) = some_value {
+            result.insert(key.to_string(), value.clone());
+        }
+    }
+    if result.len() == 0 {
+        None
+    } else {
+        Some(result)
+    }
+}
 
 /// 将数组去重
 /// - 将消费arr

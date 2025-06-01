@@ -1,6 +1,6 @@
-use crate::map;
+use crate::{map, misc::some_to_vec};
 
-use clap::Subcommand;
+use clap::{Subcommand, ValueEnum};
 use serde_json::Value;
 use std::{collections::HashMap, vec};
 
@@ -88,50 +88,33 @@ impl ArchiverCommand {
                 message,
                 vault,
             } => {
-                let mut opts: HashMap<String, Value> = map![];
-                if let Some(m) = message {
-                    opts.insert("message".to_string(), Value::String(m.clone()));
-                }
-                if let Some(v) = vault {
-                    opts.insert("vault".to_string(), Value::String(v.clone()));
-                }
-                let opts = if opts.len() == 0 { None } else { Some(opts) };
+                let opts = vec![("message", message), ("vault", vault)];
 
-                Operation::simple(short::main::PUT, Some(items.clone()), opts)
+                Operation::simple(short::main::PUT, items.clone(), opts)
             }
             ArchiverCommand::Restore { ids } => Operation::simple(
                 short::main::RESTORE,
-                Some(ids.iter().map(|id| id.to_string()).collect::<Vec<String>>()),
+                ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
                 None,
             ),
             ArchiverCommand::Move { ids, to } => Operation::simple(
                 short::main::MOVE,
-                Some(ids.iter().map(|id| id.to_string()).collect::<Vec<String>>()),
-                Some(map!["to".to_string() => Value::String(to.clone())]),
+                ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
+                map!["to".to_string() => Value::String(to.clone())],
             ),
             ArchiverCommand::Vault(action) => action.to_operation(),
-            ArchiverCommand::List { all, restored } => Operation::simple("lst", None, {
-                let mut opts: HashMap<String, Value> = HashMap::new();
-                if *all {
-                    opts.insert("all".to_string(), Value::Bool(true));
-                }
-                if *restored {
-                    opts.insert("restored".to_string(), Value::Bool(true));
-                }
-                if opts.len() == 0 { None } else { Some(opts) }
-            }),
+            ArchiverCommand::List { all, restored } => {
+                // fixme 找出可以通用的，制作opts的方法
+                let opts = vec![("all", all), ("restored", restored)];
+                Operation::simple("lst", None, opts)
+            }
             ArchiverCommand::Log { range, id } => {
-                let args = if let Some(range) = range {
-                    Some(vec![range.clone()])
-                } else {
-                    None
-                };
                 let opts = if let Some(id) = id {
                     Some(map!["id".to_string() => Value::Number((*id).into())])
                 } else {
                     None
                 };
-                Operation::simple(short::main::LOG, args, opts)
+                Operation::simple(short::main::LOG, some_to_vec(vec![range.clone()]), opts)
             }
             ArchiverCommand::Config(action) => action.to_operation(),
             ArchiverCommand::Update => Operation::simple(short::main::UPDATE, None, None),

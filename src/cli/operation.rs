@@ -44,29 +44,30 @@ pub enum OperSource {
 impl Operation {
     pub fn simple(
         main: &str,
-        args: Option<Vec<String>>,
-        opts: Option<HashMap<String, Value>>,
+        args: impl Into<Option<Vec<String>>>,
+        opts: impl Into<Option<HashMap<String, Value>>>,
     ) -> Self {
         Self {
             main: main.to_string(),
             sub: None,
-            args,
-            opts,
+            args: args.into(),
+            opts: opts.into(),
             source: OperSource::User,
         }
     }
 
-    pub fn new(
+    pub fn new<'a>(
         main: &str,
-        sub: Option<&str>,
-        args: Option<Vec<String>>,
-        opts: Option<HashMap<String, Value>>,
+        sub: impl Into<Option<&'a str>>,
+        // sub: Option<&str>,
+        args: impl Into<Option<Vec<String>>>,
+        opts: impl Into<Option<HashMap<String, Value>>>,
     ) -> Self {
         Self {
             main: main.to_string(),
-            sub: sub.map(|s| s.to_string()),
-            args,
-            opts,
+            sub: sub.into().map(|s| s.to_string()),
+            args: args.into(),
+            opts: opts.into(),
             source: OperSource::User,
         }
     }
@@ -111,7 +112,7 @@ impl Operation {
             for (key, value) in opts {
                 let k = key.chars().next().unwrap();
                 let entry = match value {
-                    Value::String(s) => format!("-{} {}", k, s),
+                    Value::String(s) => format!("-{}\"{}\"", k, s),
                     Value::Bool(b) => {
                         if *b {
                             format!("-{}", k)
@@ -153,7 +154,7 @@ impl Operation {
         if let Some(opts) = &self.opts {
             for (key, value) in opts {
                 let entry = match value {
-                    Value::String(s) => format!("--{}={}", key, s),
+                    Value::String(s) => format!("--{}=\"{}\"", key, s),
                     Value::Bool(b) => {
                         if *b {
                             format!("--{}", key)

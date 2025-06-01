@@ -1,6 +1,6 @@
 use serde::{Serialize, de::DeserializeOwned};
 
-// todo 这段有问题，可以参考重写
+// HACK 这段有问题，可以参考重写
 /// 剥离JSON字符串中的注释（支持 // 和 /* */ 风格的注释）
 fn strip_json_comments(json_str: &str) -> String {
     let mut result = String::new();

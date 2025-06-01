@@ -54,6 +54,7 @@ impl LogEntry {
         }
     }
 
+    /// 单条输出，可用于按照log_id展示日志
     pub fn display(&self) {
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
@@ -61,9 +62,7 @@ impl LogEntry {
             TableRow::new(vec!["ID".styled_field(), self.id.styled_id()]),
             TableRow::new(vec![
                 "Opered At".styled_field(),
-                dt::to_omitted_dt_string(&self.opered_at)
-                    .bright_black()
-                    .to_string(),
+                dt::to_dt_string(&self.opered_at).bright_black().to_string(),
             ]),
             TableRow::new(vec!["Level".styled_field(), self.level.to_styled_string()]),
             TableRow::new(vec![
@@ -149,7 +148,7 @@ impl TableRowify for LogEntry {
 
         // 下面处理remark、archive_id和vault_name的显示
         let rav = match (self.remark.is_empty(), avid.is_empty()) {
-            (true, true) => "".to_string(),
+            (true, true) => String::new(),
             (false, true) => remark.bright_black().to_string(),
             (true, false) => avid,
             (false, false) => format!("{} {}", remark.bright_black(), avid),
