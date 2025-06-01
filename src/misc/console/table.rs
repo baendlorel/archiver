@@ -2,8 +2,7 @@ use owo_colors::OwoColorize;
 
 use crate::{misc::clap_mark, traits::StripAnsi};
 
-// todo 编写统一的table组件
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Column {
     name: String,
     pub align: ColumnAlign,
@@ -15,13 +14,14 @@ pub struct Column {
     width: (usize, usize),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum ColumnAlign {
     Left,
     Right,
     Center,
 }
 
+#[derive(Clone)]
 pub struct TableRow {
     cells: Vec<String>,
 }
@@ -58,7 +58,7 @@ impl TableRow {
 }
 
 impl Table {
-    fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
+    pub fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
         // 确保列数不为0
         if columns.is_empty() {
             panic!("{} Columns vec cannot be empty", clap_mark::fatal());
@@ -132,9 +132,11 @@ impl Table {
             // 考虑cell内容过长，省略号的情形
             let cell = if cell_width > col.width.0 {
                 // 已经撑满，不需要执行下面的padding了
-                // fixme 再写一个stripansi的trait里的函数，能够实现跳过ansi字符来掐字符串，并尽量保留ansi字符的另一头
-                println!("{}:{}  - {}", cell.true_len(), col.width.0, cell);
-                formatted.push(format!("{}..", &cell[..col.width.0 - 2]));
+                formatted.push(format!(
+                    "{}{}",
+                    cell.omit_skip_ansi(col.width.0 - 2),
+                    "..".bright_black(), // 不管怎么变化，末尾的省略号永远使用灰色
+                ));
                 continue;
             } else {
                 cell.to_string()
@@ -159,7 +161,7 @@ impl Table {
         formatted.join(" ")
     }
 
-    fn display_header(&self) {
+    pub fn display_header(&self) {
         let cells = self
             .columns
             .iter()
@@ -168,7 +170,7 @@ impl Table {
         println!("{}", &self.format_row(&cells).bold().underline());
     }
 
-    fn display_rows(&self) {
+    pub fn display_rows(&self) {
         let mut rows: Vec<String> = vec![];
         for row in &self.rows {
             rows.push(self.format_row(&row.cells));

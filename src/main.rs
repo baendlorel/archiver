@@ -24,7 +24,7 @@ fn handle(command: &AC) {
         AC::Vault(action) => handlers::vault(&action),
         AC::Move { ids, to } => handlers::mv(ids, to),
         AC::List { all, restored } => handlers::list(*all, *restored),
-        AC::Log { range } => handlers::log(range),
+        AC::Log { range, id } => handlers::log(range, id),
         AC::Config(action) => handlers::config(&action),
         AC::Update => handlers::update(),
     }
@@ -37,7 +37,7 @@ fn auto_check_update(command: &AC) {
             all: _,
             restored: _,
         } => false,
-        AC::Log { range: _ } => false,
+        AC::Log { range: _, id: _ } => false,
         _ => true,
     };
 

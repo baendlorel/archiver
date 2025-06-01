@@ -36,7 +36,7 @@ pub trait CustomColors: std::fmt::Display {
     }
 
     /// rgb(159,221,254)
-    fn styled_config_field(&self) -> String {
+    fn styled_field(&self) -> String {
         self.fg_rgb::<159, 221, 254>().to_string()
     }
 

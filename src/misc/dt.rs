@@ -9,10 +9,8 @@ pub const MIN_DT: NaiveDateTime = NaiveDateTime::MIN;
 
 pub const MAX_DT: NaiveDateTime = NaiveDateTime::MAX;
 
-#[allow(dead_code)]
 pub const MIN_D: NaiveDate = NaiveDate::MIN;
 
-#[allow(dead_code)]
 pub const MAX_D: NaiveDate = NaiveDate::MAX;
 
 /// 获取1970年1月1日的日期时间
@@ -73,6 +71,18 @@ pub fn to_d_string(date: &NaiveDate) -> String {
 /// - 格式：2000-01-01 00:00:00
 pub fn to_dt_string(date_time: &NaiveDateTime) -> String {
     date_time.format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+/// 将无时区日期时间转化为字符串
+/// - 格式：
+///     - 2000-01-01 00:00:00
+///     - 01-01 00:00:00 如果今年和年份相等
+pub fn to_omitted_dt_string(date_time: &NaiveDateTime) -> String {
+    if Local::now().year() == date_time.year() {
+        date_time.format("%m-%d %H:%M:%S").to_string()
+    } else {
+        date_time.format("%Y-%m-%d %H:%M:%S").to_string()
+    }
 }
 
 /// 将字符串转化为无时区日期

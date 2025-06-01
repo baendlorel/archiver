@@ -9,7 +9,7 @@ use crate::models::types::{ListEntry, ListStatus};
 use crate::traits::{CustomColors, ForceToString};
 
 pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
-    let mut list = wrap_result!(list::select_all())?;
+    let mut list = wrap_result!(list::find_all())?;
     let index = list.iter().position(|entry| entry.id == id);
     if index.is_none() {
         return info!("id: {} cannot be found", id.styled_id());

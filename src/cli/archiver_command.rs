@@ -67,6 +67,9 @@ pub enum ArchiverCommand {
         /// YYYYMM (display logs of this month), YYYYMM-YYYYMM
         #[arg(value_name = "time-range")]
         range: Option<String>,
+
+        #[arg(short, long)]
+        id: Option<u32>,
     },
 
     /// Set or show configurations, use `arv config -h` to see more
@@ -117,13 +120,18 @@ impl ArchiverCommand {
                 }
                 if opts.len() == 0 { None } else { Some(opts) }
             }),
-            ArchiverCommand::Log { range } => {
+            ArchiverCommand::Log { range, id } => {
                 let args = if let Some(range) = range {
                     Some(vec![range.clone()])
                 } else {
                     None
                 };
-                Operation::simple(short::main::LOG, args, None)
+                let opts = if let Some(id) = id {
+                    Some(map!["id".to_string() => Value::Number((*id).into())])
+                } else {
+                    None
+                };
+                Operation::simple(short::main::LOG, args, opts)
             }
             ArchiverCommand::Config(action) => action.to_operation(),
             ArchiverCommand::Update => Operation::simple(short::main::UPDATE, None, None),

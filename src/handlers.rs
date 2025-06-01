@@ -3,7 +3,7 @@ use std::{cmp::Ordering, collections::HashSet};
 
 use crate::cli::{ConfigAction, VaultAction};
 use crate::core::{archive, config, log, update, vault};
-use crate::misc::{dedup_and_log, mark};
+use crate::misc::{clap_mark, dedup_and_log, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
 use crate::traits::{CustomColors, ResultExt};
 
@@ -129,8 +129,19 @@ pub fn list(all: bool, restored: bool) {
     archive::list::display(all, restored).allow_and_display();
 }
 
-pub fn log(range: &Option<String>) {
-    log::display(range).allow_and_display();
+pub fn log(range: &Option<String>, id: &Option<u32>) {
+    if let Some(id) = id {
+        if range.is_some() {
+            println!(
+                "{} No need to enter [range] when using `--id` option.",
+                clap_mark::info()
+            );
+        }
+        // 如果指定了id，则显示单条日志
+        log::display_by_id(*id).allow_and_display();
+    } else {
+        log::display(range).allow_and_display();
+    }
 }
 
 pub fn config(action: &ConfigAction) {

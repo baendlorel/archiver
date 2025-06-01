@@ -1,3 +1,4 @@
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::misc::{clap_mark, mark};
@@ -42,6 +43,16 @@ impl LogLevel {
             LogLevel::Warn => clap_mark::warn(),
             LogLevel::Error => clap_mark::error(),
             LogLevel::Fatal => clap_mark::fatal(),
+        }
+    }
+
+    pub fn to_styled_string(&self) -> String {
+        match self {
+            LogLevel::Success => "success".green().bold().to_string(),
+            LogLevel::Info => "info".cyan().bold().to_string(),
+            LogLevel::Warn => "warn".yellow().bold().to_string(),
+            LogLevel::Error => "error".red().bold().to_string(),
+            LogLevel::Fatal => "fatal".red().bold().underline().to_string(),
         }
     }
 }

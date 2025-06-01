@@ -6,7 +6,7 @@ use strip_ansi_escapes::strip_str;
 use super::LogLevel;
 use crate::cli::{Operation, short};
 use crate::core::{auto_incr, config, vault};
-use crate::misc::console::table::{TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -53,16 +53,64 @@ impl LogEntry {
             vault_id,
         }
     }
+
+    pub fn display(&self) {
+        // 此处恰好也可以用表格来输出
+        let cols = vec![Column::left("Prop"), Column::left("Value")];
+        let rows = vec![
+            TableRow::new(vec!["ID".styled_field(), self.id.styled_id()]),
+            TableRow::new(vec![
+                "Opered At".styled_field(),
+                dt::to_omitted_dt_string(&self.opered_at)
+                    .bright_black()
+                    .to_string(),
+            ]),
+            TableRow::new(vec!["Level".styled_field(), self.level.to_styled_string()]),
+            TableRow::new(vec![
+                "Operation".styled_field(),
+                self.oper.to_detailed_display(),
+            ]),
+            TableRow::new(vec![
+                "Archive ID".styled_field(),
+                if let Some(archive_id) = self.archive_id {
+                    archive_id.styled_id()
+                } else {
+                    "None".styled_id()
+                },
+            ]),
+            TableRow::new(vec![
+                "Vault ID".styled_field(),
+                if let Some(vault_id) = self.vault_id {
+                    let name = vault::get_name(vault_id);
+                    format!("(id:{}){}", vault_id.styled_vault(), name.styled_vault())
+                } else {
+                    "None".styled_vault()
+                },
+            ]),
+            TableRow::new(vec![
+                "remark".styled_field(),
+                self.remark
+                    .replace("\n", "\\n")
+                    .to_string()
+                    .styled_string_value(),
+            ]),
+        ];
+        let table = Table::new(cols, rows);
+        table.display_rows();
+    }
 }
 
 impl TableRowify for LogEntry {
     fn to_table_row(&self) -> crate::misc::console::table::TableRow {
         let mut cells = vec![
             self.id.styled_id(),
-            dt::to_dt_string(&self.opered_at).bright_black().to_string(),
+            dt::to_omitted_dt_string(&self.opered_at)
+                .bright_black()
+                .to_string(),
             self.level.to_mark(),
             self.oper.to_display(),
         ];
+
         let archive_id = if let Some(archive_id) = self.archive_id {
             if self.oper.main == short::main::PUT {
                 archive_id.to_string()

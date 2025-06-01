@@ -1,17 +1,17 @@
 use crate::wrap_result;
 
-use crate::misc::console::table::{Column, ColumnAlign, Table};
+use crate::misc::console::table::{Column, Table};
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::ListEntry;
 
-pub fn select(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
+pub fn find(condition: impl Fn(&ListEntry) -> bool) -> ArchiverResult<Vec<ListEntry>> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
     let list = list.into_iter().filter(|entry| condition(entry)).collect();
     Ok(list)
 }
 
-pub fn select_all() -> ArchiverResult<Vec<ListEntry>> {
+pub fn find_all() -> ArchiverResult<Vec<ListEntry>> {
     let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
     Ok(list)
 }
@@ -24,7 +24,7 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
 }
 
 pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
-    let list = wrap_result!(select(|entry| all || (restored == entry.is_restored())))?;
+    let list = wrap_result!(find(|entry| all || (restored == entry.is_restored())))?;
 
     if list.len() == 0 {
         println!("No archived object found");

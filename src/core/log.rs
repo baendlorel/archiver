@@ -1,11 +1,11 @@
-use crate::{err_error, wrap_result};
+use crate::{err_error, info, wrap_result};
 
 use crate::cli::Operation;
 use crate::misc::clap_mark;
 use crate::misc::console::table::{Column, ColumnAlign, Table};
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
-use crate::traits::ResultExt;
+use crate::traits::{CustomColors, ResultExt};
 
 mod parser;
 mod sl;
@@ -56,14 +56,35 @@ pub fn display(range: &Option<String>) -> ArchiverResult<()> {
     let cols = vec![
         Column::left("ID"),
         Column::left("Time"),
-        Column::center("Lvl"),
+        Column::center("⚑"),
         Column::left("Operation"),
-        Column::new("Remark", ColumnAlign::Left, (6, 15)),
+        Column::new("Remark", ColumnAlign::Left, (6, 25)),
     ];
     Table::display(cols, &logs);
 
     if reach_casual_limit {
         println!("Recent {} logs displayed.", logs.len());
+    }
+
+    Ok(())
+}
+
+pub fn display_by_id(id: u32) -> ArchiverResult<()> {
+    // 这里没办法只能加载全部logs
+    let logs = wrap_result!(sl::find(|entry| entry.id == id))?;
+    if logs.len() == 0 {
+        return info!("Log with id: {} not found.", id.styled_id());
+    }
+    if logs.len() > 1 {
+        println!(
+            "{} Multiple logs found with id: {}. Will display all of them.",
+            clap_mark::warn(),
+            id
+        );
+    }
+
+    for log in logs {
+        log.display();
     }
 
     Ok(())

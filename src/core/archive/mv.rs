@@ -17,7 +17,7 @@ use crate::models::types::{ListEntry, LogLevel};
 ///
 /// ! 必须在vault_id确认存在时方可调用
 pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> ArchiverResult<usize> {
-    let mut list = wrap_result!(list::select_all())?;
+    let mut list = wrap_result!(list::find_all())?;
 
     let mut count: usize = 0;
     for entry in list.iter_mut() {

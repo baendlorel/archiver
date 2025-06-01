@@ -79,6 +79,31 @@ pub fn save(
     Ok(())
 }
 
+pub fn find(condition: impl Fn(&LogEntry) -> bool) -> ArchiverResult<Vec<LogEntry>> {
+    let years = paths::get_years_desc();
+    let mut logs: Vec<LogEntry> = vec![];
+    for year in years {
+        let log_file_path = paths::get_log_path(year);
+        // 这里不应该没有，严谨起见做判定输出
+        if !log_file_path.exists() {
+            println!(
+                "{} path '{}' not found",
+                mark::warn(),
+                log_file_path.force_to_string()
+            );
+            continue;
+        }
+        let cur_logs = jsonl::load::<LogEntry>(&log_file_path)?;
+        for log in cur_logs {
+            if condition(&log) {
+                logs.push(log);
+            }
+        }
+    }
+
+    Ok(logs)
+}
+
 /// 加载日志
 ///
 /// 返回值为元组：（日志数组，是否到达随便看看限制）
@@ -86,7 +111,6 @@ pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool)> {
     // 是否随便看看，如果没有给定range，那么别输出过多条数
     let casual = range.is_none();
 
-    // 考虑到日期本质上是一个不定型进制数，可以考虑直接转为数字来对比大小
     let (a, b) = wrap_result!(parser::normalize_range(range))?;
     let (ya, yb) = (a.year(), b.year());
 

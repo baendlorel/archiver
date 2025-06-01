@@ -120,7 +120,7 @@ impl ArchiverConfig {
         m.iter().for_each(|(field, value, comment)| {
             println!(
                 "{}: {}  {}{}",
-                field.styled_config_field(),
+                field.styled_field(),
                 value,
                 "// ".styled_comment(),
                 comment.styled_comment()

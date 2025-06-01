@@ -87,6 +87,50 @@ impl Operation {
     }
 
     pub fn to_display(&self) -> String {
+        // 不同的指令给不同的颜色，更好看
+        let main = match self.main.as_str() {
+            short::main::PUT => self.main.bright_green().to_string(),
+            short::main::RESTORE => self.main.orange().to_string(),
+            short::main::MOVE => self.main.cyan().to_string(),
+            short::main::VAULT => self.main.purple().to_string(),
+            short::main::CONFIG => self.main.yellow().to_string(),
+            short::main::UPDATE => self.main.magenta().to_string(),
+            _ => self.main.clone(), // 默认不变
+        };
+
+        let mut result: Vec<String> = vec![main];
+        if let Some(sub) = &self.sub {
+            result.push(sub.bright_black().to_string());
+        }
+
+        if let Some(args) = &self.args {
+            result.append(args.clone().as_mut());
+        }
+
+        if let Some(opts) = &self.opts {
+            for (key, value) in opts {
+                let k = key.chars().next().unwrap();
+                let entry = match value {
+                    Value::String(s) => format!("-{} {}", k, s),
+                    Value::Bool(b) => {
+                        if *b {
+                            format!("-{}", k)
+                        } else {
+                            continue;
+                        }
+                    }
+                    _ => continue, // 其他类型不处理
+                };
+
+                result.push(entry.dimmed_orange());
+            }
+        }
+
+        result.join(" ")
+    }
+
+    pub fn to_detailed_display(&self) -> String {
+        // 不同的指令给不同的颜色，更好看
         let main = match self.main.as_str() {
             short::main::PUT => self.main.bright_green().to_string(),
             short::main::RESTORE => self.main.orange().to_string(),
