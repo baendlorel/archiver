@@ -1,4 +1,4 @@
-use crate::map;
+use crate::{map, opt_map};
 
 use clap::Subcommand;
 use serde_json::Value;
@@ -51,7 +51,7 @@ impl VaultAction {
                 if *u {
                     opts.insert("use".to_string(), Value::String(String::new()));
                 }
-                let opts = if opts.len() == 0 { None } else { Some(opts) };
+                let opts = opt_map![remark, *u];
                 Operation::new("vlt", "create", vec![name.clone()], opts)
             }
             VaultAction::Remove { name } => {

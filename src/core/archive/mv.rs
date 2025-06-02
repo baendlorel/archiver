@@ -34,7 +34,7 @@ pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> Archiv
         let oper = Operation::sys(
             short::main::MOVE,
             None,
-            Some(vec![entry.id.to_string()]),
+            vec![entry.id.to_string()],
             Some(map!["to".to_string() => json!(vault_id)]),
         );
 

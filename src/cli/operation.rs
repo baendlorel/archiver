@@ -1,9 +1,9 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::cli::short;
+use crate::models::serde_custom::opt;
 use crate::traits::CustomColors;
 
 /// 完整操作信息，包含主命令、子命令、指令、参数和选项等
@@ -24,7 +24,7 @@ pub struct Operation {
 
     /// 选项，类似于--key=value的形式，不会保存“--”
     #[serde(rename = "opt", skip_serializing_if = "Option::is_none")]
-    pub opts: Option<HashMap<String, Value>>,
+    pub opts: Option<HashMap<String, Opt>>,
 
     /// 操作来源，可能是系统生成的
     /// - 例如 arv vault remove aaa，会导致生成将aaa中的对象move到默认库的操作
@@ -41,11 +41,20 @@ pub enum OperSource {
     System = 2,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub enum Opt {
+    /// 选项的值是字符串
+    String(String),
+
+    /// 选项的值是布尔值
+    Bool(bool),
+}
+
 impl Operation {
     pub fn simple(
         main: &str,
         args: impl Into<Option<Vec<String>>>,
-        opts: impl Into<Option<HashMap<String, Value>>>,
+        opts: impl Into<Option<HashMap<String, Opt>>>,
     ) -> Self {
         Self {
             main: main.to_string(),
@@ -59,9 +68,8 @@ impl Operation {
     pub fn new<'a>(
         main: &str,
         sub: impl Into<Option<&'a str>>,
-        // sub: Option<&str>,
         args: impl Into<Option<Vec<String>>>,
-        opts: impl Into<Option<HashMap<String, Value>>>,
+        opts: impl Into<Option<HashMap<String, Opt>>>,
     ) -> Self {
         Self {
             main: main.to_string(),
@@ -72,17 +80,17 @@ impl Operation {
         }
     }
 
-    pub fn sys(
+    pub fn sys<'a>(
         main: &str,
-        sub: Option<&str>,
-        args: Option<Vec<String>>,
-        opts: Option<HashMap<String, Value>>,
+        sub: impl Into<Option<&'a str>>,
+        args: impl Into<Option<Vec<String>>>,
+        opts: impl Into<Option<HashMap<String, Opt>>>,
     ) -> Self {
         Self {
             main: main.to_string(),
-            sub: sub.map(|s| s.to_string()),
-            args,
-            opts,
+            sub: sub.into().map(|s| s.to_string()),
+            args: args.into(),
+            opts: opts.into(),
             source: OperSource::System,
         }
     }
@@ -112,8 +120,8 @@ impl Operation {
             for (key, value) in opts {
                 let k = key.chars().next().unwrap();
                 let entry = match value {
-                    Value::String(s) => format!("-{}\"{}\"", k, s),
-                    Value::Bool(b) => {
+                    Opt::String(s) => format!("-{}\"{}\"", k, s),
+                    Opt::Bool(b) => {
                         if *b {
                             format!("-{}", k)
                         } else {
@@ -154,8 +162,8 @@ impl Operation {
         if let Some(opts) = &self.opts {
             for (key, value) in opts {
                 let entry = match value {
-                    Value::String(s) => format!("--{}=\"{}\"", key, s),
-                    Value::Bool(b) => {
+                    Opt::String(s) => format!("--{}=\"{}\"", key, s),
+                    Opt::Bool(b) => {
                         if *b {
                             format!("--{}", key)
                         } else {

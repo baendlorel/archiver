@@ -1,4 +1,4 @@
-use crate::{map, misc::some_to_vec};
+use crate::{map, misc::some_to_vec, opt_map};
 
 use clap::{Subcommand, ValueEnum};
 use serde_json::Value;
@@ -87,11 +87,7 @@ impl ArchiverCommand {
                 items,
                 message,
                 vault,
-            } => {
-                let opts = vec![("message", message), ("vault", vault)];
-
-                Operation::simple(short::main::PUT, items.clone(), opts)
-            }
+            } => Operation::simple(short::main::PUT, items.clone(), opt_map![]),
             ArchiverCommand::Restore { ids } => Operation::simple(
                 short::main::RESTORE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
@@ -100,21 +96,15 @@ impl ArchiverCommand {
             ArchiverCommand::Move { ids, to } => Operation::simple(
                 short::main::MOVE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
-                map!["to".to_string() => Value::String(to.clone())],
+                opt_map![],
             ),
             ArchiverCommand::Vault(action) => action.to_operation(),
             ArchiverCommand::List { all, restored } => {
                 // fixme 找出可以通用的，制作opts的方法
-                let opts = vec![("all", all), ("restored", restored)];
-                Operation::simple("lst", None, opts)
+                Operation::simple("lst", None, opt_map![])
             }
             ArchiverCommand::Log { range, id } => {
-                let opts = if let Some(id) = id {
-                    Some(map!["id".to_string() => Value::Number((*id).into())])
-                } else {
-                    None
-                };
-                Operation::simple(short::main::LOG, some_to_vec(vec![range.clone()]), opts)
+                Operation::simple(short::main::LOG, range.clone().map(|r| vec![r]), opt_map![])
             }
             ArchiverCommand::Config(action) => action.to_operation(),
             ArchiverCommand::Update => Operation::simple(short::main::UPDATE, None, None),

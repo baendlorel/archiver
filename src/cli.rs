@@ -9,7 +9,7 @@ mod vault_action;
 pub use archiver_command::ArchiverCommand;
 pub use args::FULL_CMD;
 pub mod short;
-pub use operation::{OperSource, Operation};
+pub use operation::{OperSource, Operation, Opt};
 
 // 子命令
 pub use config_action::ConfigAction;

@@ -7,9 +7,9 @@ where
     s.serialize_u8(if *b { 1 } else { 0 })
 }
 
-pub fn deserialize<'de, D>(d: D) -> Result<bool, D::Error>
+pub fn deserialize<'a, D>(d: D) -> Result<bool, D::Error>
 where
-    D: Deserializer<'de>,
+    D: Deserializer<'a>,
 {
     let v = u8::deserialize(d)?;
     match v {

@@ -14,3 +14,5 @@ pub mod boolean;
 /// - 用法：`#[serde(with = "naive_date_time")]`
 /// - 序列化格式为"YYYY-MM-DD HH:MM:SS"
 pub mod naive_date_time;
+
+pub mod opt;
