@@ -33,3 +33,11 @@ macro_rules! impl_for {
     };
 }
 impl_for!(String, bool, u32);
+
+/// ensure_option对'static &str的情况直接包装为Some(String)
+impl EnsureOption for &str {
+    type Output = Option<String>;
+    fn ensure_option(self) -> Self::Output {
+        Some(self.to_string())
+    }
+}

@@ -53,32 +53,32 @@ pub enum Opt {
 }
 
 impl Operation {
-    pub fn new<'a>(
+    pub fn new(
         main: &str,
-        sub: impl Into<Option<&'a str>>,
-        args: impl Into<Option<Vec<String>>>,
-        opts: impl Into<Option<HashMap<String, Opt>>>,
+        sub: Option<String>,
+        args: Option<Vec<String>>,
+        opts: Option<HashMap<String, Opt>>,
     ) -> Self {
         Self {
             main: main.to_string(),
-            sub: sub.into().map(|s| s.to_string()),
-            args: args.into(),
-            opts: opts.into(),
+            sub,
+            args,
+            opts,
             source: OperSource::User,
         }
     }
 
-    pub fn sys<'a>(
+    pub fn sys(
         main: &str,
-        sub: impl Into<Option<&'a str>>,
-        args: impl Into<Option<Vec<String>>>,
-        opts: impl Into<Option<HashMap<String, Opt>>>,
+        sub: Option<String>,
+        args: Option<Vec<String>>,
+        opts: Option<HashMap<String, Opt>>,
     ) -> Self {
         Self {
             main: main.to_string(),
-            sub: sub.into().map(|s| s.to_string()),
-            args: args.into(),
-            opts: opts.into(),
+            sub,
+            args,
+            opts,
             source: OperSource::System,
         }
     }
@@ -168,88 +168,33 @@ impl Operation {
 /// 只有一个
 #[macro_export]
 macro_rules! oper {
-    // 只有主命令
+    // * 不带$args处理的情形
     ($main:expr) => {{ Operation::new($main, None, None, None) }};
+    ($main:expr,None,$opts:expr) => {{ Operation::new($main, None, None, $opts) }};
+    ($main:expr,$sub:expr,None,None) => {{
+        use crate::traits::EnsureOption;
+        Operation::new($main, $sub.ensure_option(), None, None)
+    }};
 
-    // 有主命令和参数
-    ($main:expr,$args:expr) => {{
+    // * 带$args处理的情形
+    ($main:expr,$args:expr) => {{ oper!($main, None, $args, None) }};
+    ($main:expr,$args:expr,$opts:expr) => {{ oper!($main, None, $args, $opts) }};
+    ($main:expr,$sub:expr,$args:expr,$opts:expr) => {{ oper!($main, $sub, $args, $opts, "user") }};
+
+    // & 完整参数，带有source区分
+    ($main:expr,$sub:expr,$args:expr,$opts:expr,$src:expr) => {{
         use crate::traits::EnsureOption;
         let mut args = vec![];
         for a in $args {
-            let cloned = a.clone();
-            let optioned = cloned.ensure_option();
-            if let Some(a) = optioned {
+            if let Some(a) = a.clone().ensure_option() {
                 args.push(format!("{}", a));
             }
         }
-        Operation::new($main, None, args.ensure_option(), None)
-    }};
 
-    // 主命令、选项
-    ($main:expr,None,$opts:expr) => {{
-        Operation::new(
-            $main, None, None,
-            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
-        )
-    }};
-
-    // 主命令、参数、选项
-    ($main:expr,$args:expr,$opts:expr) => {{
-        use crate::traits::EnsureOption;
-        let mut args = vec![];
-        for a in $args {
-            let cloned = a.clone();
-            let optioned = cloned.ensure_option();
-            if let Some(a) = optioned {
-                args.push(format!("{}", a));
-            }
+        if $src == "sys" {
+            Operation::sys($main, $sub.ensure_option(), args.ensure_option(), $opts)
+        } else {
+            Operation::new($main, $sub.ensure_option(), args.ensure_option(), $opts)
         }
-        Operation::new(
-            $main,
-            None,
-            args.ensure_option(),
-            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
-        )
-    }};
-
-    // 完整参数
-    ($main:expr,$sub:expr,None,None) => {{ Operation::new($main, $sub, None, None) }};
-
-    // 完整参数
-    ($main:expr,$sub:expr,$args:expr,$opts:expr) => {{
-        use crate::traits::EnsureOption;
-        let mut args = vec![];
-        for a in $args {
-            let cloned = a.clone();
-            let optioned = cloned.ensure_option();
-            if let Some(a) = optioned {
-                args.push(format!("{}", a));
-            }
-        }
-        Operation::new(
-            $main,
-            $sub,
-            args.ensure_option(),
-            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
-        )
-    }};
-
-    // 完整参数
-    ($main:expr,$sub:expr,$args:expr,$opts:expr,"sys") => {{
-        use crate::traits::EnsureOption;
-        let mut args = vec![];
-        for a in $args {
-            let cloned = a.clone();
-            let optioned = cloned.ensure_option();
-            if let Some(a) = optioned {
-                args.push(format!("{}", a));
-            }
-        }
-        Operation::sys(
-            $main,
-            $sub,
-            args.ensure_option(),
-            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
-        )
     }};
 }
