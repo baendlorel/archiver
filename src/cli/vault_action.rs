@@ -4,6 +4,7 @@ use clap::Subcommand;
 use serde_json::Value;
 
 use crate::cli::Operation;
+use crate::traits::EnsureOption;
 
 #[derive(Subcommand)]
 pub enum VaultAction {
@@ -24,8 +25,8 @@ pub enum VaultAction {
         remark: Option<String>,
 
         /// Use the new vault at once
-        #[arg(short)]
-        u: bool,
+        #[arg(short, long)]
+        activate: bool,
     },
 
     /// Remove a vault by name
@@ -43,7 +44,11 @@ impl VaultAction {
     pub fn to_operation(&self) -> Operation {
         match self {
             VaultAction::Use { name } => Operation::new("vlt", "use", vec![name.clone()], None),
-            VaultAction::Create { name, remark, u } => {
+            VaultAction::Create {
+                name,
+                remark,
+                activate: u,
+            } => {
                 let mut opts = map![];
                 if let Some(remark) = remark {
                     opts.insert("remark".to_string(), Value::String(remark.clone()));
@@ -51,7 +56,7 @@ impl VaultAction {
                 if *u {
                     opts.insert("use".to_string(), Value::String(String::new()));
                 }
-                let opts = opt_map![remark, *u];
+                let opts = opt_map![remark, u];
                 Operation::new("vlt", "create", vec![name.clone()], opts)
             }
             VaultAction::Remove { name } => {

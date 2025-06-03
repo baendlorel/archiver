@@ -62,7 +62,7 @@ pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
 }
 
 /// 创建一个新的 vault，不能重名
-pub fn create(name: &str, use_at_once: bool, remark: &Option<String>) -> ArchiverResult<Vault> {
+pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverResult<Vault> {
     if let Some(vault) = find_by_name(name) {
         if vault.name == DEFAULT_VLT_NAME {
             // 如果是默认库，则不允许创建同名库
@@ -83,7 +83,7 @@ pub fn create(name: &str, use_at_once: bool, remark: &Option<String>) -> Archive
     // 此函数可以用于创建
     let _ = paths::get_vault_path(vault.id);
 
-    if use_at_once {
+    if activate {
         // 如果需要立即使用这个vault
         wrap_result!(use_by_name(name))?;
     }

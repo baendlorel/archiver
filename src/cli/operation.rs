@@ -48,6 +48,9 @@ pub enum Opt {
 
     /// 选项的值是布尔值
     Bool(bool),
+
+    /// 选项的值是布尔值
+    U32(u32),
 }
 
 impl Operation {

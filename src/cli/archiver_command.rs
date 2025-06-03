@@ -1,8 +1,7 @@
-use crate::{map, misc::some_to_vec, opt_map};
+use crate::opt_map;
 
-use clap::{Subcommand, ValueEnum};
-use serde_json::Value;
-use std::{collections::HashMap, vec};
+use clap::Subcommand;
+use std::vec;
 
 use super::{config_action::ConfigAction, short, vault_action::VaultAction};
 use crate::cli::Operation;
@@ -87,7 +86,7 @@ impl ArchiverCommand {
                 items,
                 message,
                 vault,
-            } => Operation::simple(short::main::PUT, items.clone(), opt_map![]),
+            } => Operation::simple(short::main::PUT, items.clone(), opt_map![message, vault]),
             ArchiverCommand::Restore { ids } => Operation::simple(
                 short::main::RESTORE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
@@ -96,16 +95,17 @@ impl ArchiverCommand {
             ArchiverCommand::Move { ids, to } => Operation::simple(
                 short::main::MOVE,
                 ids.iter().map(|id| id.to_string()).collect::<Vec<String>>(),
-                opt_map![],
+                opt_map![to],
             ),
             ArchiverCommand::Vault(action) => action.to_operation(),
             ArchiverCommand::List { all, restored } => {
-                // fixme 找出可以通用的，制作opts的方法
-                Operation::simple("lst", None, opt_map![])
+                Operation::simple("lst", None, opt_map![all, restored])
             }
-            ArchiverCommand::Log { range, id } => {
-                Operation::simple(short::main::LOG, range.clone().map(|r| vec![r]), opt_map![])
-            }
+            ArchiverCommand::Log { range, id } => Operation::simple(
+                short::main::LOG,
+                range.clone().map(|r| vec![r]),
+                opt_map![id],
+            ),
             ArchiverCommand::Config(action) => action.to_operation(),
             ArchiverCommand::Update => Operation::simple(short::main::UPDATE, None, None),
         }

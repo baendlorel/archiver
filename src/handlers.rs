@@ -12,8 +12,8 @@ pub fn vault(action: &VaultAction) {
         VaultAction::Create {
             name,
             remark,
-            u: use_at_once,
-        } => vault::create(name, *use_at_once, remark).ok_then_or_log(|v| {
+            activate,
+        } => vault::create(name, *activate, remark).ok_then_or_log(|v| {
             let msg = format!(
                 "Vault '{}' is successfully created, vault id: {}",
                 name,

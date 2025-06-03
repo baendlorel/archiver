@@ -1,6 +1,6 @@
 use clap::Subcommand;
 
-use crate::{cli::Operation, map};
+use crate::{cli::Operation, opt_map};
 
 #[derive(Subcommand)]
 pub enum ConfigAction {
@@ -35,19 +35,11 @@ impl ConfigAction {
         match self {
             ConfigAction::List => Operation::new("cfg", "list", None, None),
             ConfigAction::Alias { entry, remove } => {
-                let opts = if *remove {
-                    Some(map!("remove".to_string() => serde_json::Value::Bool(*remove)))
-                } else {
-                    None
-                };
-                Operation::new("cfg", "alias", vec![entry.clone()], opts)
+                Operation::new("cfg", "alias", vec![entry.clone()], opt_map![remove])
             }
-            ConfigAction::UpdateCheck { status } => Operation::new(
-                "cfg",
-                Some("update-check"),
-                Some(vec![status.clone()]),
-                None,
-            ),
+            ConfigAction::UpdateCheck { status } => {
+                Operation::new("cfg", "update-check", vec![status.clone()], None)
+            }
             ConfigAction::VaultItemSep { sep } => {
                 Operation::new("cfg", "vault-item-sep", vec![sep.clone()], None)
             }
