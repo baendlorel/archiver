@@ -14,7 +14,6 @@ where
     }
 }
 
-// fixme 会有报错，可能是未正常应用：Failed to parse line as JSON: unknown variant `justfortest2`, expected one of `String`, `Bool`, `U32` at line 1 column 128
 pub fn deserialize<'a, D>(d: D) -> Result<Opt, D::Error>
 where
     D: Deserializer<'a>,

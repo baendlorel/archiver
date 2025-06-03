@@ -1,8 +1,9 @@
 use owo_colors::OwoColorize;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 
 use crate::cli::short;
+use crate::models::serde_custom::opt;
 use crate::traits::CustomColors;
 
 /// 完整操作信息，包含主命令、子命令、指令、参数和选项等
@@ -40,7 +41,7 @@ pub enum OperSource {
     System = 2,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
 pub enum Opt {
     /// 选项的值是字符串
     String(String),
@@ -197,4 +198,22 @@ macro_rules! oper {
             Operation::new($main, $sub.ensure_option(), args.ensure_option(), $opts)
         }
     }};
+}
+
+impl Serialize for Opt {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        opt::serialize(self, serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Opt {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        opt::deserialize(deserializer)
+    }
 }
