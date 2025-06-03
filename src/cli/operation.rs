@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::cli::short;
-use crate::models::serde_custom::opt;
 use crate::traits::CustomColors;
 
 /// 完整操作信息，包含主命令、子命令、指令、参数和选项等
@@ -54,20 +53,6 @@ pub enum Opt {
 }
 
 impl Operation {
-    pub fn simple<T>(
-        main: &str,
-        args: impl Into<Option<Vec<String>>>,
-        opts: impl Into<Option<HashMap<String, Opt>>>,
-    ) -> Self {
-        Self {
-            main: main.to_string(),
-            sub: None,
-            args: args.into(),
-            opts: opts.into(),
-            source: OperSource::User,
-        }
-    }
-
     pub fn new<'a>(
         main: &str,
         sub: impl Into<Option<&'a str>>,
@@ -170,7 +155,6 @@ impl Operation {
                             continue;
                         }
                     }
-                    _ => continue, // 其他类型不处理
                 };
 
                 result.push(entry.dimmed_orange());

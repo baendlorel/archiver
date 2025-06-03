@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::misc::mark;
 
 /// 快速创建一个map
@@ -14,32 +12,6 @@ macro_rules! map {
         let mut m = std::collections::HashMap::new();
         $( m.insert($key, $val); )*
         m
-    }};
-}
-
-/// 快速创建一个Option<Vec<String>>
-/// - 将所有传入参数确定地clone为Option<T>
-/// - 若为None，则不会加入vec
-/// - 若vec为空，则返回None。vec不为空返回Some(vec)
-#[macro_export]
-macro_rules! opt_vec {
-    () => { None };
-    ( $( $e:expr ),* $(,)? ) => {{
-        use crate::traits::{EnsureOption};
-        let mut m: Vec<String> = vec![];
-        $(
-            let cloned = $e.clone();
-            let optioned = cloned.ensure_option();
-            if let Some(v) = optioned {
-                m.push(format!("{}", v));
-            }
-        )*
-
-        if m.len() == 0 {
-            None
-        } else {
-            Some(m)
-        }
     }};
 }
 

@@ -1,7 +1,6 @@
 use crate::traits::ForceToString;
-use crate::{as_fatal, map, oper, opt_map, wrap_result};
+use crate::{as_fatal, oper, opt_map, wrap_result};
 
-use serde_json::json;
 use std::fs;
 
 use super::{list, sl};

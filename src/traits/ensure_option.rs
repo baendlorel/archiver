@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 pub trait EnsureOption {
     type Output;
     fn ensure_option(self) -> Self::Output;

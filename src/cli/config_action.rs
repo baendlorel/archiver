@@ -33,19 +33,20 @@ pub enum ConfigAction {
     },
 }
 
+macro_rules! ca_oper {
+    ($($args:tt)*) => {
+        oper!(main::CONFIG, $($args)*)
+    };
+}
+
+type CA = ConfigAction;
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            ConfigAction::List => oper!(main::CONFIG, "list", None, None),
-            ConfigAction::Alias { entry, remove } => {
-                oper!(main::CONFIG, "alias", [entry], opt_map![remove])
-            }
-            ConfigAction::UpdateCheck { status } => {
-                oper!(main::CONFIG, "update-check", [status], None)
-            }
-            ConfigAction::VaultItemSep { sep } => {
-                oper!(main::CONFIG, "vault-item-sep", [sep], None)
-            }
+            CA::List => ca_oper!("list", None, None),
+            CA::Alias { entry, remove } => ca_oper!("alias", [entry], opt_map![remove]),
+            CA::UpdateCheck { status } => ca_oper!("update-check", [status], None),
+            CA::VaultItemSep { sep } => ca_oper!("vault-item-sep", [sep], None),
         }
     }
 }

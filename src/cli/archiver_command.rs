@@ -90,12 +90,8 @@ impl ArchiverCommand {
             C::Restore { ids } => oper!(main::RESTORE, ids),
             C::Move { ids, to } => oper!(main::MOVE, ids, opt_map![to]),
             C::Vault(action) => action.to_operation(),
-            C::List { all, restored } => {
-                oper!(main::LIST, None, opt_map![all, restored])
-            }
-            C::Log { range, id } => {
-                oper!(main::LOG, [range], opt_map![id])
-            }
+            C::List { all, restored } => oper!(main::LIST, None, opt_map![all, restored]),
+            C::Log { range, id } => oper!(main::LOG, [range], opt_map![id]),
             C::Config(action) => action.to_operation(),
             C::Update => oper!(main::UPDATE),
         }

@@ -44,7 +44,7 @@ impl LogEntry {
         vault_id: Option<u32>,
     ) -> Self {
         Self {
-            id: auto_incr::next("log"),
+            id: auto_incr::next("log_id"),
             opered_at: dt::now_dt(),
             oper,
             level,

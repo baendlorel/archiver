@@ -1,6 +1,5 @@
 mod ensure_option;
 mod field_style;
-mod get_type;
 mod no_loss_path;
 mod opt_builder;
 mod result_ext;

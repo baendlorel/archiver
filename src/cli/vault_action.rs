@@ -38,19 +38,24 @@ pub enum VaultAction {
     List,
 }
 
+macro_rules! va_oper {
+    ($($args:tt)*) => {
+        oper!(main::VAULT, $($args)*)
+    };
+}
+
+type VA = VaultAction;
 impl VaultAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            VaultAction::Use { name } => oper!(main::VAULT, "use", [name], None),
-            VaultAction::Create {
+            VA::Use { name } => va_oper!("use", [name], None),
+            VA::Create {
                 name,
                 remark,
                 activate,
-            } => oper!(main::VAULT, "create", [name], opt_map![remark, activate]),
-            VaultAction::Remove { name } => {
-                oper!(main::VAULT, "remove", [name], None)
-            }
-            VaultAction::List => oper!(main::VAULT, "list", None, None),
+            } => va_oper!("create", [name], opt_map![remark, activate]),
+            VA::Remove { name } => va_oper!("remove", [name], None),
+            VA::List => va_oper!("list", None, None),
         }
     }
 }
