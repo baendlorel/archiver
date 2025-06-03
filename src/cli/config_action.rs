@@ -1,6 +1,9 @@
+use crate::{oper, opt_map};
+
 use clap::Subcommand;
 
-use crate::{cli::Operation, opt_map};
+use crate::cli::Operation;
+use crate::cli::short::main;
 
 #[derive(Subcommand)]
 pub enum ConfigAction {
@@ -33,15 +36,15 @@ pub enum ConfigAction {
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            ConfigAction::List => Operation::new("cfg", "list", None, None),
+            ConfigAction::List => oper!(main::CONFIG, "list", None, None),
             ConfigAction::Alias { entry, remove } => {
-                Operation::new("cfg", "alias", vec![entry.clone()], opt_map![remove])
+                oper!(main::CONFIG, "alias", [entry], opt_map![remove])
             }
             ConfigAction::UpdateCheck { status } => {
-                Operation::new("cfg", "update-check", vec![status.clone()], None)
+                oper!(main::CONFIG, "update-check", [status], None)
             }
             ConfigAction::VaultItemSep { sep } => {
-                Operation::new("cfg", "vault-item-sep", vec![sep.clone()], None)
+                oper!(main::CONFIG, "vault-item-sep", [sep], None)
             }
         }
     }

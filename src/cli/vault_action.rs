@@ -1,10 +1,8 @@
-use crate::{map, opt_map};
+use crate::{oper, opt_map};
 
 use clap::Subcommand;
-use serde_json::Value;
 
-use crate::cli::Operation;
-use crate::traits::EnsureOption;
+use crate::cli::{Operation, short::main};
 
 #[derive(Subcommand)]
 pub enum VaultAction {
@@ -43,26 +41,16 @@ pub enum VaultAction {
 impl VaultAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            VaultAction::Use { name } => Operation::new("vlt", "use", vec![name.clone()], None),
+            VaultAction::Use { name } => oper!(main::VAULT, "use", [name], None),
             VaultAction::Create {
                 name,
                 remark,
-                activate: u,
-            } => {
-                let mut opts = map![];
-                if let Some(remark) = remark {
-                    opts.insert("remark".to_string(), Value::String(remark.clone()));
-                }
-                if *u {
-                    opts.insert("use".to_string(), Value::String(String::new()));
-                }
-                let opts = opt_map![remark, u];
-                Operation::new("vlt", "create", vec![name.clone()], opts)
-            }
+                activate,
+            } => oper!(main::VAULT, "create", [name], opt_map![remark, activate]),
             VaultAction::Remove { name } => {
-                Operation::new("vlt", "remove", vec![name.clone()], None)
+                oper!(main::VAULT, "remove", [name], None)
             }
-            VaultAction::List => Operation::new("vlt", "list", None, None),
+            VaultAction::List => oper!(main::VAULT, "list", None, None),
         }
     }
 }

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub trait EnsureOption {
     type Output;
     fn ensure_option(self) -> Self::Output;
@@ -8,6 +10,14 @@ impl<T> EnsureOption for Option<T> {
     type Output = Self;
     fn ensure_option(self) -> Self::Output {
         self
+    }
+}
+
+// 在对Vec使用ensure_option时，如果Vec为空，则返回None，否则返回Some(Vec)
+impl<T> EnsureOption for Vec<T> {
+    type Output = Option<Self>;
+    fn ensure_option(self) -> Self::Output {
+        if self.is_empty() { None } else { Some(self) }
     }
 }
 

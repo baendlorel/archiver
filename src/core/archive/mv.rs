@@ -1,4 +1,5 @@
-use crate::{as_fatal, map, wrap_result};
+use crate::traits::ForceToString;
+use crate::{as_fatal, map, oper, opt_map, wrap_result};
 
 use serde_json::json;
 use std::fs;
@@ -29,14 +30,10 @@ pub fn batch_mv(satisfies: impl Fn(&ListEntry) -> bool, vault_id: u32) -> Archiv
         let to = paths::get_archived_path(entry.id, vault_id);
 
         // 移动后写日志，移动一条写一条，方便中断后追查
-        as_fatal!(fs::rename(from, to))?;
+        as_fatal!(fs::rename(&from, &to))?;
 
-        let oper = Operation::sys(
-            short::main::MOVE,
-            None,
-            vec![entry.id.to_string()],
-            Some(map!["to".to_string() => json!(vault_id)]),
-        );
+        let to = &to.force_to_string();
+        let oper = oper!(short::main::MOVE, None, [entry.id], opt_map![to], "sys");
 
         log::sys(
             oper,

@@ -54,7 +54,7 @@ pub enum Opt {
 }
 
 impl Operation {
-    pub fn simple(
+    pub fn simple<T>(
         main: &str,
         args: impl Into<Option<Vec<String>>>,
         opts: impl Into<Option<HashMap<String, Opt>>>,
@@ -98,9 +98,8 @@ impl Operation {
         }
     }
 
-    pub fn to_display(&self) -> String {
-        // 不同的指令给不同的颜色，更好看
-        let main = match self.main.as_str() {
+    fn get_main(&self) -> String {
+        match self.main.as_str() {
             short::main::PUT => self.main.bright_green().to_string(),
             short::main::RESTORE => self.main.orange().to_string(),
             short::main::MOVE => self.main.cyan().to_string(),
@@ -108,7 +107,12 @@ impl Operation {
             short::main::CONFIG => self.main.yellow().to_string(),
             short::main::UPDATE => self.main.magenta().to_string(),
             _ => self.main.clone(), // 默认不变
-        };
+        }
+    }
+
+    pub fn to_display(&self) -> String {
+        // 不同的指令给不同的颜色，更好看
+        let main = self.get_main();
 
         let mut result: Vec<String> = vec![main];
         if let Some(sub) = &self.sub {
@@ -124,6 +128,7 @@ impl Operation {
                 let k = key.chars().next().unwrap();
                 let entry = match value {
                     Opt::String(s) => format!("-{}\"{}\"", k, s),
+                    Opt::U32(u) => format!("-{}\"{}\"", k, u),
                     Opt::Bool(b) => {
                         if *b {
                             format!("-{}", k)
@@ -131,7 +136,6 @@ impl Operation {
                             continue;
                         }
                     }
-                    _ => continue, // 其他类型不处理
                 };
 
                 result.push(entry.dimmed_orange());
@@ -143,15 +147,7 @@ impl Operation {
 
     pub fn to_detailed_display(&self) -> String {
         // 不同的指令给不同的颜色，更好看
-        let main = match self.main.as_str() {
-            short::main::PUT => self.main.bright_green().to_string(),
-            short::main::RESTORE => self.main.orange().to_string(),
-            short::main::MOVE => self.main.cyan().to_string(),
-            short::main::VAULT => self.main.purple().to_string(),
-            short::main::CONFIG => self.main.yellow().to_string(),
-            short::main::UPDATE => self.main.magenta().to_string(),
-            _ => self.main.clone(), // 默认不变
-        };
+        let main = self.get_main();
 
         let mut result: Vec<String> = vec![main];
         if let Some(sub) = &self.sub {
@@ -166,6 +162,7 @@ impl Operation {
             for (key, value) in opts {
                 let entry = match value {
                     Opt::String(s) => format!("--{}=\"{}\"", key, s),
+                    Opt::U32(u) => format!("--{}=\"{}\"", key, u),
                     Opt::Bool(b) => {
                         if *b {
                             format!("--{}", key)
@@ -182,4 +179,93 @@ impl Operation {
 
         result.join(" ")
     }
+}
+
+/// 只有一个
+#[macro_export]
+macro_rules! oper {
+    // 只有主命令
+    ($main:expr) => {{ Operation::new($main, None, None, None) }};
+
+    // 有主命令和参数
+    ($main:expr,$args:expr) => {{
+        use crate::traits::EnsureOption;
+        let mut args = vec![];
+        for a in $args {
+            let cloned = a.clone();
+            let optioned = cloned.ensure_option();
+            if let Some(a) = optioned {
+                args.push(format!("{}", a));
+            }
+        }
+        Operation::new($main, None, args.ensure_option(), None)
+    }};
+
+    // 主命令、选项
+    ($main:expr,None,$opts:expr) => {{
+        Operation::new(
+            $main, None, None,
+            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
+        )
+    }};
+
+    // 主命令、参数、选项
+    ($main:expr,$args:expr,$opts:expr) => {{
+        use crate::traits::EnsureOption;
+        let mut args = vec![];
+        for a in $args {
+            let cloned = a.clone();
+            let optioned = cloned.ensure_option();
+            if let Some(a) = optioned {
+                args.push(format!("{}", a));
+            }
+        }
+        Operation::new(
+            $main,
+            None,
+            args.ensure_option(),
+            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
+        )
+    }};
+
+    // 完整参数
+    ($main:expr,$sub:expr,None,None) => {{ Operation::new($main, $sub, None, None) }};
+
+    // 完整参数
+    ($main:expr,$sub:expr,$args:expr,$opts:expr) => {{
+        use crate::traits::EnsureOption;
+        let mut args = vec![];
+        for a in $args {
+            let cloned = a.clone();
+            let optioned = cloned.ensure_option();
+            if let Some(a) = optioned {
+                args.push(format!("{}", a));
+            }
+        }
+        Operation::new(
+            $main,
+            $sub,
+            args.ensure_option(),
+            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
+        )
+    }};
+
+    // 完整参数
+    ($main:expr,$sub:expr,$args:expr,$opts:expr,"sys") => {{
+        use crate::traits::EnsureOption;
+        let mut args = vec![];
+        for a in $args {
+            let cloned = a.clone();
+            let optioned = cloned.ensure_option();
+            if let Some(a) = optioned {
+                args.push(format!("{}", a));
+            }
+        }
+        Operation::sys(
+            $main,
+            $sub,
+            args.ensure_option(),
+            $opts, // 没有必要ensure_option，因为都是opt_map!宏生成的
+        )
+    }};
 }
