@@ -8,4 +8,3 @@ mod consts;
 mod containers;
 
 pub use consts::{clap_mark, mark};
-pub use containers::dedup_and_log;

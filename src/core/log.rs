@@ -14,7 +14,11 @@ mod sl;
 
 /// 写入成功的日志
 /// - 会继承入参msg对象的信息
-pub fn succ(archive_id: Option<u32>, vault_id: Option<u32>, message: &String) {
+pub fn succ(
+    archive_id: impl Into<Option<u32>>,
+    vault_id: impl Into<Option<u32>>,
+    message: &String,
+) {
     println!("{} {}", clap_mark::succ(), message);
 
     // message没必要写入，因为level和operation已携带成功信息
@@ -27,7 +31,7 @@ pub fn error(e: ArchiverError) {
     e.display();
     let str = e.to_string();
     let level = e.level;
-    sl::save(level, None, None, Some(str)).allow_and_display();
+    sl::save(level, None, None, str).allow_and_display();
 }
 
 /// 输出一段字符串

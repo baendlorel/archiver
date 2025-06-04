@@ -2,8 +2,9 @@ use owo_colors::OwoColorize;
 use std::{cmp::Ordering, collections::HashSet};
 
 use crate::cli::{ConfigAction, VaultAction};
+use crate::core::config::CONFIG;
 use crate::core::{archive, config, log, update, vault};
-use crate::misc::{clap_mark, dedup_and_log, mark};
+use crate::misc::{clap_mark, mark};
 use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
 use crate::traits::{CustomColors, ResultExt};
 
@@ -19,17 +20,17 @@ pub fn vault(action: &VaultAction) {
                 name,
                 v.id.styled_vault()
             );
-            log::succ(None, Some(v.id), &msg);
+            log::succ(None, v.id, &msg);
         }),
         VaultAction::List => vault::display(),
         VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
             let msg = format!("Vault '{}' is successfully set as current vault", name);
-            log::succ(None, Some(vault_id), &msg);
+            log::succ(None, vault_id, &msg);
         }),
         VaultAction::Remove { name } => {
             vault::use_by_name(name).ok_then_or_log(|vault_id| {
                 let msg = format!("Vault '{}' is successfully removed", name);
-                log::succ(None, Some(vault_id), &msg);
+                log::succ(None, vault_id, &msg);
             });
         }
     }
@@ -47,8 +48,10 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
         None => DEFAULT_VLT_ID, // 默认使用0号vault
     };
 
-    // 去重以防止重复操作同一目标
-    let items = dedup_and_log(items);
+    if let Err(e) = archive::put_check(items) {
+        e.display();
+        return;
+    }
 
     let mut count: usize = 0;
     items.iter().for_each(|item| {
@@ -61,7 +64,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                 entry.id,
                 vault::get_name(entry.vault_id),
             );
-            log::succ(Some(entry.id), Some(entry.vault_id), &msg);
+            log::succ(entry.id, entry.vault_id, &msg);
             count += 1;
         });
     });
@@ -79,12 +82,13 @@ pub fn restore(ids: &[u32]) {
         println!("Restoring id: {}", id.styled_id());
         archive::restore(id).ok_then_or_log(|entry| {
             let msg = format!(
-                "(id: {}, vault: {}) is successfully restored to '{}'",
+                "({}{}{}) is successfully restored to '{}'",
                 entry.id.styled_id(),
+                CONFIG.vault_item_sep.styled_vault_item_seperator(),
                 vault::get_name(entry.vault_id).styled_vault(),
                 entry.get_item_path_string()
             );
-            log::succ(Some(entry.id), Some(entry.vault_id), &msg);
+            log::succ(entry.id, entry.vault_id, &msg);
         });
     }
 }
@@ -108,7 +112,7 @@ pub fn mv(ids: &[u32], to: &str) {
                 to,
                 vault_id.styled_vault()
             );
-            log::succ(None, Some(vault_id), &msg);
+            log::succ(None, vault_id, &msg);
             count
         }
         Err(e) => {

@@ -8,6 +8,21 @@ use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus};
 use crate::traits::{CustomColors, ForceToString};
 
+pub fn restore_check(ids: &[u32]) -> ArchiverResult<()> {
+    if ids.is_empty() {
+        return info!("No ids provided for restoration");
+    }
+
+    let mut set: std::collections::HashSet<u32> = std::collections::HashSet::new();
+    for &id in ids {
+        if !set.insert(id) {
+            return info!("Duplicate id detected: {}", id.styled_id());
+        }
+    }
+
+    Ok(())
+}
+
 pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     let mut list = wrap_result!(list::find_all())?;
     let index = list.iter().position(|entry| entry.id == id);

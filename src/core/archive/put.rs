@@ -8,11 +8,10 @@ use crate::misc::paths;
 use crate::models::{error::ArchiverResult, types::ListEntry};
 use crate::traits::ForceToString;
 
-// todo 可能要把判断逻辑放到外面去，先全部校验items，防止有写法不一样的重复路径，并确保合法性，再进入处理
 /// 检查put的路径数组是否合法
 /// - unallowed不行
 /// - 重复的不行
-pub fn put_check(items: &[&str]) -> ArchiverResult<()> {
+pub fn put_check(items: &[String]) -> ArchiverResult<()> {
     let mut set: HashSet<PathBuf> = HashSet::new();
     // 检查每个路径是否存在
     for item in items {
