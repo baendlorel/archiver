@@ -8,13 +8,29 @@ use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus};
 use crate::traits::{CustomColors, ForceToString};
 
+/// 校验用于restore的id列表
+/// - id必须存在
+/// - 状态必须是`ListStatus::Archived`
 pub fn restore_check(ids: &[u32]) -> ArchiverResult<()> {
     if ids.is_empty() {
         return info!("No ids provided for restoration");
     }
 
+    let list = wrap_result!(list::find_all())?;
     let mut set: std::collections::HashSet<u32> = std::collections::HashSet::new();
     for &id in ids {
+        let entry = list.iter().find(|entry| entry.id == id);
+        if entry.is_none() {
+            return info!("id: {} cannot be found in the archive list", id.styled_id());
+        }
+        let entry = entry.unwrap();
+        if matches!(entry.status, ListStatus::Archived) {
+            return info!(
+                "id: {} has already been restored to '{}'",
+                id.styled_id(),
+                entry.get_item_path_string()
+            );
+        }
         if !set.insert(id) {
             return info!("Duplicate id detected: {}", id.styled_id());
         }
@@ -25,21 +41,9 @@ pub fn restore_check(ids: &[u32]) -> ArchiverResult<()> {
 
 pub fn restore(id: u32) -> ArchiverResult<ListEntry> {
     let mut list = wrap_result!(list::find_all())?;
-    let index = list.iter().position(|entry| entry.id == id);
-    if index.is_none() {
-        return info!("id: {} cannot be found", id.styled_id());
-    }
-
-    let index = index.unwrap();
+    // & ids数组是经过校验的，一定会找到，而且没有restore过
+    let index = list.iter().position(|entry| entry.id == id).unwrap();
     let entry = &list[index];
-
-    if matches!(entry.status, ListStatus::Archived) {
-        return info!(
-            "id: {} has already been restored to '{}'",
-            id.styled_id(),
-            entry.get_item_path_string()
-        );
-    }
 
     let item_name = OsString::from(&entry.item);
     let dir = PathBuf::from(OsString::from(&entry.dir));

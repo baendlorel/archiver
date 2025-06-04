@@ -38,5 +38,4 @@ pub static CONFIG: Lazy<ArchiverConfig> = Lazy::new(|| {
 /// - 会影响
 ///     - ListEntry的显示
 ///     - LogEntry的显示
-pub static VLT_ITEM_SEP: Lazy<String> =
-    Lazy::new(|| CONFIG.vault_item_sep.styled_vault_item_seperator());
+pub static VLT_ITEM_SEP: Lazy<String> = Lazy::new(|| CONFIG.vault_item_sep.styled_vault_item_sep());

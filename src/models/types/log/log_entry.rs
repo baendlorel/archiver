@@ -54,6 +54,7 @@ impl LogEntry {
         }
     }
 
+    // todo 加入关联查询，比如put和restore关联到list记录一并展示
     /// 单条输出，可用于按照log_id展示日志
     pub fn display(&self) {
         // 此处恰好也可以用表格来输出

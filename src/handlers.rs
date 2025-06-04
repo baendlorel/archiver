@@ -1,11 +1,13 @@
-use owo_colors::OwoColorize;
-use std::{cmp::Ordering, collections::HashSet};
+use crate::{oper, opt_map};
 
+use owo_colors::OwoColorize;
+use std::cmp::Ordering;
+
+use crate::cli::short::main;
 use crate::cli::{ConfigAction, VaultAction};
-use crate::core::config::CONFIG;
 use crate::core::{archive, config, log, update, vault};
-use crate::misc::{clap_mark, mark};
-use crate::models::types::{DEFAULT_VLT_ID, ListEntry};
+use crate::misc::clap_mark;
+use crate::models::types::{LogLevel, vault_defaults};
 use crate::traits::{CustomColors, ResultExt};
 
 pub fn vault(action: &VaultAction) {
@@ -45,7 +47,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                 return;
             }
         },
-        None => DEFAULT_VLT_ID, // 默认使用0号vault
+        None => vault_defaults::ID, // 默认使用0号vault
     };
 
     if let Err(e) = archive::put_check(items) {
@@ -70,31 +72,50 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
     });
 
     if items.len() > 1 {
-        println!("{}/{} items are successfully archived", count, items.len());
+        println!(
+            "{} {}/{} items are successfully archived",
+            clap_mark::succ(),
+            count,
+            items.len()
+        );
     }
-    println!("Use `arv list` to check the archived list");
+    println!("You can use `arv list` to check the details.");
 }
 
 pub fn restore(ids: &[u32]) {
-    // 去重以防止重复操作同一目标
-    let set: HashSet<u32> = ids.iter().cloned().collect();
-    for id in set {
+    if let Err(e) = archive::restore_check(ids) {
+        return e.display();
+    }
+
+    let mut count: i32 = 0;
+    for id in ids {
         println!("Restoring id: {}", id.styled_id());
-        archive::restore(id).ok_then_or_log(|entry| {
+        archive::restore(*id).ok_then_or_log(|entry| {
+            count += 1;
             let msg = format!(
-                "({}{}{}) is successfully restored to '{}'",
-                entry.id.styled_id(),
-                CONFIG.vault_item_sep.styled_vault_item_seperator(),
+                "{}{}{}({}) is successfully restored to '{}'",
                 vault::get_name(entry.vault_id).styled_vault(),
+                config::CONFIG.vault_item_sep.styled_vault_item_sep(),
+                entry.id.styled_id(),
+                entry.item,
                 entry.get_item_path_string()
             );
             log::succ(entry.id, entry.vault_id, &msg);
         });
     }
+
+    if count == 0 {
+        log::fail("No items were restored. Please check the ids.");
+        return;
+    }
+
+    // todo 改成像mov一样的count和len的输出机制
+    if ids.len() > 1 {
+        println!("{} {}/{} are restored", clap_mark::succ(), count, ids.len());
+    }
 }
 
-pub fn mv(ids: &[u32], to: &str) {
-    // 去重以防止重复操作同一目标
+pub fn mov(ids: &[u32], to: &str) {
     let vault_id = match vault::find_by_name(to) {
         Some(v) => v.id,
         None => {
@@ -103,29 +124,57 @@ pub fn mv(ids: &[u32], to: &str) {
         }
     };
 
-    let satisfies = |entry: &ListEntry| ids.contains(&entry.id) && entry.vault_id != vault_id;
-    let count = match archive::batch_mv(satisfies, vault_id) {
-        Ok(count) => {
+    if let Err(e) = archive::mov_check(ids, vault_id) {
+        e.display();
+        return;
+    }
+
+    let is_sys = ids.len() > 1;
+    let mut count = 0;
+    for id in ids {
+        println!("Moving id: {} into {}", id.styled_id(), to.styled_vault());
+        match archive::mov(*id, vault_id) {
+            Ok(_) => {
+                if is_sys {
+                    let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
+                    log::sys(oper, LogLevel::Success, *id, vault_id, String::new());
+                } else {
+                    // 此分支只可能在总数为1，且成功1个的时候进入
+                    let msg = format!("id: {} is now in '{}'", id.styled_id(), to.styled_vault());
+                    log::succ(None, vault_id, &msg);
+                }
+                count += 1;
+            }
+            Err(e) => {
+                log::error(e);
+                println!(
+                    "{} Moving process has been terminated. Please use `arv log` for details.",
+                    clap_mark::error()
+                );
+                return;
+            }
+        }
+    }
+
+    match count {
+        0 => {
+            log::fail("No items were moved. Please check the ids and vault name.");
+        }
+        _ => {
+            // 如果是总共1个成功1个，就不需要总结了
+            if ids.len() == 1 {
+                return;
+            }
+
+            // 做一下总结
             let msg = format!(
-                "{} objects are successfully moved to vault '{}', id: {}",
+                "{}/{} objects are successfully moved to vault '{}'",
                 count,
-                to,
-                vault_id.styled_vault()
+                ids.len(),
+                to.styled_vault(),
             );
             log::succ(None, vault_id, &msg);
-            count
         }
-        Err(e) => {
-            log::error(e);
-            println!("{} Please use `arv log` for details.", mark::info());
-            return;
-        }
-    };
-
-    // 如果没有任何对象被移动，输出错误信息
-    if count == 0 {
-        log::fail("No satisfied archived object found");
-        return;
     }
 }
 
@@ -198,10 +247,13 @@ pub fn update() {
 
     match latest.cmp(&current) {
         Ordering::Greater => {
-            println!("{} New version available! Now updating...", mark::warn());
+            println!(
+                "{} New version available! Now updating...",
+                clap_mark::warn()
+            );
             update::reinstall();
         }
-        Ordering::Equal => println!("{} You are using the latest version.", mark::succ()),
-        Ordering::Less => println!("{} How could you use a newer version?", mark::warn()),
+        Ordering::Equal => println!("{} You are using the latest version.", clap_mark::succ()),
+        Ordering::Less => println!("{} How could you use a newer version?", clap_mark::warn()),
     }
 }

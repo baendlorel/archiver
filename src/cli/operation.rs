@@ -170,11 +170,11 @@ impl Operation {
 #[macro_export]
 macro_rules! oper {
     // * 不带$args处理的情形
-    ($main:expr) => {{ Operation::new($main, None, None, None) }};
-    ($main:expr,None,$opts:expr) => {{ Operation::new($main, None, None, $opts) }};
+    ($main:expr) => {{ crate::cli::Operation::new($main, None, None, None) }};
+    ($main:expr,None,$opts:expr) => {{ crate::cli::Operation::new($main, None, None, $opts) }};
     ($main:expr,$sub:expr,None,None) => {{
         use crate::traits::EnsureOption;
-        Operation::new($main, $sub.ensure_option(), None, None)
+        crate::cli::Operation::new($main, $sub.ensure_option(), None, None)
     }};
 
     // * 带$args处理的情形
@@ -184,7 +184,9 @@ macro_rules! oper {
 
     // & 完整参数，带有source区分
     ($main:expr,$sub:expr,$args:expr,$opts:expr,$src:expr) => {{
+        use crate::cli::Operation;
         use crate::traits::EnsureOption;
+
         let mut args = vec![];
         for a in $args {
             if let Some(a) = a.clone().ensure_option() {

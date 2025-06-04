@@ -28,13 +28,13 @@ pub fn put_check(items: &[String]) -> ArchiverResult<()> {
             );
         }
 
+        // 不直接判定insert结果是因为item_path会被消费，而我们还需要它的force_to_string()结果
         if set.contains(&item_path) {
             return warn!(
                 "Duplicate path detected: '{}'. Please ensure all paths are unique.",
                 item_path.force_to_string()
             );
         }
-
         set.insert(item_path);
     }
 

@@ -1,9 +1,9 @@
-mod mv;
+mod mov;
 mod put;
 mod restore;
 
 pub mod list;
 pub mod sl;
-pub use mv::batch_mv;
+pub use mov::{batch_mov, mov, mov_check};
 pub use put::{put, put_check};
-pub use restore::restore;
+pub use restore::{restore, restore_check};

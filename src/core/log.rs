@@ -10,10 +10,11 @@ use crate::traits::{CustomColors, ResultExt};
 mod parser;
 mod sl;
 
-/// ! 写入失败时只会输出到控制台，不会重试写入
+// ! 写入失败时只会输出到控制台，不会重试写入
 
-/// 写入成功的日志
-/// - 会继承入参msg对象的信息
+/// 写一条操作成功的日志
+/// - 入参message仅供控制台展示
+///     - 因为操作本身的成功已经蕴含了message的信息
 pub fn succ(
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
@@ -39,18 +40,18 @@ pub fn fail(message: &str) {
     let e = err_error!("{}", message);
     let str = e.to_string();
     let level = e.level;
-    sl::save(level, None, None, Some(str)).allow_and_display();
+    sl::save(level, None, None, str).allow_and_display();
 }
 
 /// 保存系统自动生成的操作的日志
 pub fn sys(
     oper: Operation,
     level: LogLevel,
-    archive_id: Option<u32>,
-    vault_id: Option<u32>,
+    archive_id: impl Into<Option<u32>>,
+    vault_id: impl Into<Option<u32>>,
     remark: String,
 ) {
-    sl::save_system_oper(oper, level, archive_id, vault_id, remark).allow_and_display();
+    sl::save_sys(oper, level, archive_id, vault_id, remark).allow_and_display();
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {

@@ -8,8 +8,7 @@ use super::config;
 use crate::core::archive;
 use crate::misc::{console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
-use crate::models::types::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME};
-use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus};
+use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus, vault_defaults};
 use crate::traits::CustomColors;
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
@@ -64,11 +63,11 @@ pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
 /// 创建一个新的 vault，不能重名
 pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverResult<Vault> {
     if let Some(vault) = find_by_name(name) {
-        if vault.name == DEFAULT_VLT_NAME {
+        if vault.name == vault_defaults::NAME {
             // 如果是默认库，则不允许创建同名库
             return info!(
                 "'{}' means default vault, please choose another name",
-                DEFAULT_VLT_NAME
+                vault_defaults::NAME
             );
         }
         return info!(
@@ -124,7 +123,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         "All archived objects in '{}' {}{}{} (which is the default vault).",
         name.styled_vault(),
         "shall be moved to '".underline().bold(),
-        DEFAULT_VLT_NAME.styled_vault().underline().bold(),
+        vault_defaults::NAME.styled_vault().underline().bold(),
         "'".underline().bold()
     );
     if !console::confirm("Are you sure?") {
@@ -150,7 +149,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         matches!(entry.status, ListStatus::Archived) && entry.vault_id == vaults[index].id
     };
 
-    wrap_result!(archive::batch_mv(satisfies, DEFAULT_VLT_ID))?;
+    wrap_result!(archive::batch_mov(satisfies, vault_defaults::ID))?;
 
     // 修改vaults.jsonl
     vaults[index].status = VaultStatus::Removed;

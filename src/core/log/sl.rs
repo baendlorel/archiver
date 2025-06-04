@@ -4,7 +4,7 @@ use chrono::Datelike;
 use std::u32;
 
 use super::parser;
-use crate::cli::{FULL_CMD, OperSource, Operation, short};
+use crate::cli::{FULL_CMD, OperSource, Operation};
 use crate::misc::{dt, jsonl, mark, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{LogEntry, LogLevel};
@@ -14,11 +14,12 @@ use crate::traits::ForceToString;
 /// 避免日志太多
 const CASUAL_LIMIT: usize = 15;
 
-pub fn save_system_oper(
+/// 保存系统自动生成的操作的日志
+pub fn save_sys(
     oper: Operation,
     level: LogLevel,
-    archive_id: Option<u32>,
-    vault_id: Option<u32>,
+    archive_id: impl Into<Option<u32>>,
+    vault_id: impl Into<Option<u32>>,
     remark: String,
 ) -> ArchiverResult<()> {
     // 保证是系统生成的操作才能调用
@@ -30,7 +31,7 @@ pub fn save_system_oper(
     }
 
     // 准备日志内容
-    let log_entry = LogEntry::new(oper, level, remark, archive_id, vault_id);
+    let log_entry = LogEntry::new(oper, level, remark, archive_id.into(), vault_id.into());
 
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
@@ -133,30 +134,4 @@ pub fn load(range: &Option<String>) -> ArchiverResult<(Vec<LogEntry>, bool)> {
     }
 
     Ok((logs, reach_casual_limit))
-}
-
-// todo 不要多此一举了，无意义
-fn generate_remark(level: &LogLevel, remark: Option<String>, oper: &Operation) -> String {
-    if oper.main != short::main::PUT || !level.is_succ() || oper.args.is_none() {
-        return remark.unwrap_or(String::new());
-    };
-
-    let args = oper.args.as_ref().unwrap();
-
-    let full_paths: Vec<String> = args
-        .iter()
-        .map(|a| match paths::CWD.join(a).canonicalize() {
-            Ok(p) => p.force_to_string(),
-            Err(e) => {
-                println!(
-                    "{} Failed to canonicalize path '{}': {}",
-                    mark::warn(),
-                    a,
-                    e
-                );
-                a.clone() // 如果失败，保留原路径
-            }
-        })
-        .collect();
-    full_paths.join(" ")
 }

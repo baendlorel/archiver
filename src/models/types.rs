@@ -9,5 +9,5 @@ pub use auto_incr_vars::AutoIncrVars;
 pub use config::ArchiverConfig;
 pub use list_entry::{ListEntry, ListStatus};
 pub use log::{LogEntry, LogLevel};
-pub use vault::{DEFAULT_VLT_ID, DEFAULT_VLT_NAME, Vault, VaultStatus};
+pub use vault::{Vault, VaultStatus, vault_defaults};
 pub use version::Version;

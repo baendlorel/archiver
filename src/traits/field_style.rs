@@ -26,7 +26,7 @@ pub trait CustomColors: std::fmt::Display {
     }
 
     /// rgb(170, 239, 58)
-    fn styled_vault_item_seperator(&self) -> String {
+    fn styled_vault_item_sep(&self) -> String {
         self.fg_rgb::<170, 239, 58>().to_string()
     }
 
