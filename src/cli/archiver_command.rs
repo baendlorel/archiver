@@ -76,6 +76,9 @@ pub enum ArchiverCommand {
 
     #[command(visible_aliases = ["u", main::UPDATE])]
     Update,
+
+    #[command(visible_aliases = [main::CHECK])]
+    Check,
 }
 
 type C = ArchiverCommand;
@@ -94,6 +97,7 @@ impl ArchiverCommand {
             C::Log { range, id } => oper!(main::LOG, [range], opt_map![id]),
             C::Config(action) => action.to_operation(),
             C::Update => oper!(main::UPDATE),
+            C::Check => oper!(main::CHECK),
         }
     }
 }

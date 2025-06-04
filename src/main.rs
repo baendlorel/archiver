@@ -27,17 +27,15 @@ fn handle(command: &AC) {
         AC::Log { range, id } => handlers::log(range, id),
         AC::Config(action) => handlers::config(&action),
         AC::Update => handlers::update(),
+        AC::Check => {} // todo 补充check逻辑
     }
 }
 
 fn auto_check_update(command: &AC) {
     let need_checking = match command {
         AC::Update => false,
-        AC::List {
-            all: _,
-            restored: _,
-        } => false,
-        AC::Log { range: _, id: _ } => false,
+        AC::List { .. } => false,
+        AC::Log { .. } => false,
         _ => true,
     };
 

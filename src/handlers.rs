@@ -50,7 +50,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
         None => vault_defaults::ID, // 默认使用0号vault
     };
 
-    if let Err(e) = archive::put_check(items) {
+    if let Err(e) = archive::put_check(items, vault_id) {
         e.display();
         return;
     }

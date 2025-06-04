@@ -7,6 +7,7 @@ pub mod main {
     pub const LOG: &str = "lg";
     pub const CONFIG: &str = "cfg";
     pub const UPDATE: &str = "upd";
+    pub const CHECK: &str = "chk";
 }
 
 pub mod sub {

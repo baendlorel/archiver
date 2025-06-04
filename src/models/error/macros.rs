@@ -17,6 +17,14 @@ macro_rules! err_error {
     };
 }
 
+/// 创建一个warn级别的ArchiverError的Result返回，支持字符串模板
+#[macro_export]
+macro_rules! err {
+    ($($arg:tt)*) => {
+        Err($crate::err_error!($($arg)*))
+    };
+}
+
 /// 创建一个fatal级别的ArchiverError，支持字符串模板
 #[macro_export]
 macro_rules! err_fatal {

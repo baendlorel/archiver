@@ -1,4 +1,5 @@
-use crate::{as_fatal, info, must_some, warn, wrap_result};
+use crate::core::auto_incr;
+use crate::{as_fatal, err, info, must_some, warn, wrap_result};
 
 use std::collections::HashSet;
 use std::{fs, path::PathBuf};
@@ -6,27 +7,42 @@ use std::{fs, path::PathBuf};
 use super::list;
 use crate::misc::paths;
 use crate::models::{error::ArchiverResult, types::ListEntry};
-use crate::traits::ForceToString;
+use crate::traits::{CustomColors, ForceToString};
 
 /// 检查put的路径数组是否合法
 /// - unallowed不行
 /// - 重复的不行
-pub fn put_check(items: &[String]) -> ArchiverResult<()> {
+pub fn put_check(items: &[String], vault_id: u32) -> ArchiverResult<()> {
     let mut set: HashSet<PathBuf> = HashSet::new();
+    let mut pre_id = auto_incr::peek_next("archive_id");
     // 检查每个路径是否存在
     for item in items {
         let item_path = as_fatal!(paths::CWD.join(item).canonicalize())?;
-
+        // 要归档的路径必须存在
         if !item_path.exists() {
             return info!("Non-exist path detected: '{}'", item_path.force_to_string());
         }
 
+        // 要归档的路径必须满足逻辑
         if is_unallowed_path(&item_path) {
             return warn!(
                 "Target cannot be the archiver directory, its parent, or its inner object. Got '{}'",
                 item
             );
         }
+
+        // 检查archiver内部的位置是否被占用
+        let archived_path = paths::get_archived_path(pre_id, vault_id);
+        if archived_path.exists() {
+            return err!(
+                "Item '{}' will use archive id: {}, but its position '{}' is already occupied. This shall not occur normally, please modify the {} to fix it. Or run `arv check` to see if something is wrong.",
+                item,
+                pre_id.styled_id(),
+                archived_path.force_to_string(),
+                paths::AUTO_INCR_FILE_PATH.force_to_string()
+            );
+        }
+        pre_id += 1;
 
         // 不直接判定insert结果是因为item_path会被消费，而我们还需要它的force_to_string()结果
         if set.contains(&item_path) {

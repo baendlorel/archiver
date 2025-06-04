@@ -6,6 +6,25 @@ use crate::misc::{clap_mark, paths};
 use crate::models::types::AutoIncrVars;
 use crate::models::{error::ArchiverResult, serde_custom::SerdeJson};
 
+/// 看一下自增主键的下一个值
+/// - 不会更新
+pub fn peek_next(name: &str) -> u32 {
+    let auto_incr = must_ok!(load(), "Failed to parse auto increment file");
+    match auto_incr {
+        AutoIncrVars(m) => {
+            if let Some(&id) = m.get(name) {
+                return id;
+            }
+            panic!(
+                "{} Unknown auto increment variable: {}",
+                clap_mark::error(),
+                name
+            );
+        }
+    }
+}
+
+/// 获取自增主键的下一个值，并更新自增变量
 pub fn next(name: &str) -> u32 {
     let auto_incr = must_ok!(load(), "Failed to parse auto increment file");
     match auto_incr {
