@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::misc::mark;
+use crate::misc::clap_mark;
 
 pub trait ForceToString {
     fn force_to_string(&self) -> String;
@@ -40,8 +40,8 @@ fn force_no_loss<T: AsRef<Path>>(t: &T) -> String {
     let lossy = t.as_ref().to_string_lossy();
     if lossy.contains('\u{FFFD}') {
         panic!(
-            "{} Failed to convert OsStr to String. Please use utf8 chars to name the target",
-            mark::error()
+            "{} Failed to convert OsStr to String. Please use utf8 chars to name the directories and files",
+            clap_mark::error()
         );
     } else {
         // 如果没有 �，可能是平台差异，允许返回

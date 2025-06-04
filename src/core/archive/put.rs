@@ -1,54 +1,59 @@
 use crate::{as_fatal, info, must_some, warn, wrap_result};
 
-use std::{ffi::OsStr, fs, path::PathBuf};
+use std::collections::HashSet;
+use std::{fs, path::PathBuf};
 
 use super::list;
 use crate::misc::paths;
 use crate::models::{error::ArchiverResult, types::ListEntry};
 use crate::traits::ForceToString;
 
+// todo 可能要把判断逻辑放到外面去，先全部校验items，防止有写法不一样的重复路径，并确保合法性，再进入处理
+/// 检查put的路径数组是否合法
+/// - unallowed不行
+/// - 重复的不行
+pub fn put_check(items: &[&str]) -> ArchiverResult<()> {
+    let mut set: HashSet<PathBuf> = HashSet::new();
+    // 检查每个路径是否存在
+    for item in items {
+        let item_path = as_fatal!(paths::CWD.join(item).canonicalize())?;
+
+        if !item_path.exists() {
+            return info!("Non-exist path detected: '{}'", item_path.force_to_string());
+        }
+
+        if is_unallowed_path(&item_path) {
+            return warn!(
+                "Target cannot be the archiver directory, its parent, or its inner object. Got '{}'",
+                item
+            );
+        }
+
+        if set.contains(&item_path) {
+            return warn!(
+                "Duplicate path detected: '{}'. Please ensure all paths are unique.",
+                item_path.force_to_string()
+            );
+        }
+
+        set.insert(item_path);
+    }
+
+    Ok(())
+}
+
 pub fn put(item: &str, message: Option<String>, vault_id: u32) -> ArchiverResult<ListEntry> {
-    // 不能trim不能检测为空，否则无法正确处理带空格的文件/文件夹名
+    // & 在put_check之后再调用函数，这里的path是已经校验过的
     let item_path = as_fatal!(paths::CWD.join(item).canonicalize())?;
 
-    // 目标不存在则报错
-    if !item_path.exists() {
-        return info!("'{}' does not exist.", item_path.force_to_string());
-    }
-
-    if paths::ROOT_DIR.starts_with(&item_path) {
-        return warn!(
-            "Target cannot be a parent directory of archiver or itself. Got '{}'",
-            item
-        );
-    }
-
-    // & 路径相关性检测：不能归档归档器本身、其父目录、其子目录
-    if is_unallowed_path(&item_path) {
-        return warn!(
-            "Target cannot be the archiver directory, its parent, or its inner object. Got '{}'",
-            item
-        );
-    }
-
     // 下面这段逻辑是否写在ListEntry::new()里？
-    // 必须无损转换OsString
     let item_dir = must_some!(item_path.parent(), "Fail to get item directory").force_to_string();
-
-    let item_name: &OsStr = must_some!(item_path.file_name(), "Fail to get item name");
-
-    // 必须无损转换OsString
-    let item_name_str = item_name.force_to_string();
+    let item_name = must_some!(item_path.file_name(), "Fail to get item name").force_to_string();
 
     // * 下面开始归档
-    // 准备字段
     let is_dir = item_path.is_dir(); // 不能在rename之后调用，否则目录已经没了，百分百不是
-    let message: String = if let Some(m) = message {
-        m
-    } else {
-        String::new()
-    };
-    let entry = ListEntry::new(item_name_str, is_dir, item_dir, message, vault_id);
+    let message = message.unwrap_or(String::new());
+    let entry = ListEntry::new(item_name, is_dir, item_dir, message, vault_id);
     let archived_path = paths::get_archived_path(entry.id, entry.vault_id);
 
     // 先移动再插表

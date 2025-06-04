@@ -5,5 +5,5 @@ mod restore;
 pub mod list;
 pub mod sl;
 pub use mv::batch_mv;
-pub use put::put;
+pub use put::{put, put_check};
 pub use restore::restore;
