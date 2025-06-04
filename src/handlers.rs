@@ -38,6 +38,14 @@ pub fn vault(action: &VaultAction) {
     }
 }
 
+// ^ 批量处理日志规则
+// count=0
+//   输出完全失败，直接返回
+// len=1, count=1
+//   不总结，输出单条user的
+// len>1, count>0
+//   输出单条sys，一条总结
+
 pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>) {
     let vault_id = match vault {
         Some(name) => match vault::find_by_name(&name) {
@@ -56,7 +64,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
     }
 
     let mut count: usize = 0;
-    items.iter().for_each(|item| {
+    for item in items {
         println!("Putting '{}' into archive", item);
         // 循环中使用message必须clone，否则move一次就没了
         archive::put(&item, message.clone(), vault_id).ok_then_or_log(|entry| {
@@ -69,7 +77,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
             log::succ(entry.id, entry.vault_id, &msg);
             count += 1;
         });
-    });
+    }
 
     if items.len() > 1 {
         println!(
@@ -129,6 +137,7 @@ pub fn mov(ids: &[u32], to: &str) {
         return;
     }
 
+    // 校验结束，开始处理
     let is_sys = ids.len() > 1;
     let mut count = 0;
     for id in ids {
@@ -156,26 +165,24 @@ pub fn mov(ids: &[u32], to: &str) {
         }
     }
 
-    match count {
-        0 => {
-            log::fail("No items were moved. Please check the ids and vault name.");
-        }
-        _ => {
-            // 如果是总共1个成功1个，就不需要总结了
-            if ids.len() == 1 {
-                return;
-            }
-
-            // 做一下总结
-            let msg = format!(
-                "{}/{} objects are successfully moved to vault '{}'",
-                count,
-                ids.len(),
-                to.styled_vault(),
-            );
-            log::succ(None, vault_id, &msg);
-        }
+    if count == 0 {
+        log::fail("No items were moved. Please check the ids and vault name.");
+        return;
     }
+
+    // 如果是总共1个（此处count一定为1，因为不为0），就不需要总结了
+    if ids.len() == 1 {
+        return;
+    }
+
+    // 做一下总结
+    let msg = format!(
+        "{}/{} objects are successfully moved to vault '{}'",
+        count,
+        ids.len(),
+        to.styled_vault(),
+    );
+    log::succ(None, vault_id, &msg);
 }
 
 pub fn list(all: bool, restored: bool) {

@@ -1,10 +1,10 @@
-use crate::{warn, wrap_result};
+use crate::wrap_result;
 
 use chrono::Datelike;
 use std::u32;
 
 use super::parser;
-use crate::cli::{FULL_CMD, OperSource, Operation};
+use crate::cli::{FULL_CMD, Operation};
 use crate::misc::{dt, jsonl, mark, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{LogEntry, LogLevel};
@@ -14,22 +14,14 @@ use crate::traits::ForceToString;
 /// 避免日志太多
 const CASUAL_LIMIT: usize = 16;
 
-/// 保存系统自动生成的操作的日志
-pub fn save_sys(
+/// 保存日志
+pub fn save(
     oper: Operation,
     level: LogLevel,
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
     remark: String,
 ) -> ArchiverResult<()> {
-    // 保证是系统生成的操作才能调用
-    match oper.source {
-        // 系统操作
-        OperSource::System => {}
-        // 用户操作
-        _ => return warn!("User operations should not call this function directly"),
-    }
-
     // 准备日志内容
     let log_entry = LogEntry::new(oper, level, remark, archive_id.into(), vault_id.into());
 
@@ -39,7 +31,8 @@ pub fn save_sys(
     Ok(())
 }
 
-pub fn save(
+/// 省略oper的保存日志
+pub fn save_simple(
     level: LogLevel,
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
@@ -47,13 +40,7 @@ pub fn save(
 ) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
     let remark = remark.into().unwrap_or(String::new());
-
-    // 准备日志内容
-    let log_entry = LogEntry::new(oper, level, remark, archive_id.into(), vault_id.into());
-
-    // 获取日志文件路径
-    let log_file_path = paths::get_log_path(dt::now_year());
-    wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
+    wrap_result!(save(oper, level, archive_id, vault_id, remark))?;
     Ok(())
 }
 

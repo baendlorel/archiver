@@ -1,6 +1,6 @@
-use crate::{err_error, info, wrap_result};
+use crate::{err_error, err_warn, info, wrap_result};
 
-use crate::cli::Operation;
+use crate::cli::{OperSource, Operation};
 use crate::misc::clap_mark;
 use crate::misc::console::table::{Column, ColumnAlign, Table};
 use crate::models::error::{ArchiverError, ArchiverResult};
@@ -23,7 +23,7 @@ pub fn succ(
     println!("{} {}", clap_mark::succ(), message);
 
     // message没必要写入，因为level和operation已携带成功信息
-    sl::save(LogLevel::Success, archive_id, vault_id, None).allow_and_display();
+    sl::save_simple(LogLevel::Success, archive_id, vault_id, None).allow_and_display();
 }
 
 /// 写入错误日志
@@ -32,7 +32,7 @@ pub fn error(e: ArchiverError) {
     e.display();
     let str = e.to_string();
     let level = e.level;
-    sl::save(level, None, None, str).allow_and_display();
+    sl::save_simple(level, None, None, str).allow_and_display();
 }
 
 /// 输出一段字符串
@@ -40,7 +40,7 @@ pub fn fail(message: &str) {
     let e = err_error!("{}", message);
     let str = e.to_string();
     let level = e.level;
-    sl::save(level, None, None, str).allow_and_display();
+    sl::save_simple(level, None, None, str).allow_and_display();
 }
 
 /// 保存系统自动生成的操作的日志
@@ -51,7 +51,13 @@ pub fn sys(
     vault_id: impl Into<Option<u32>>,
     remark: String,
 ) {
-    sl::save_sys(oper, level, archive_id, vault_id, remark).allow_and_display();
+    if !matches!(oper.source, OperSource::System) {
+        let e = err_warn!("User operations should not call this function directly");
+        e.display();
+        return;
+    }
+
+    sl::save(oper, level, archive_id, vault_id, remark).allow_and_display();
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {
