@@ -182,3 +182,10 @@ impl Table {
 pub trait TableRowify {
     fn to_table_row(&self) -> TableRow;
 }
+
+#[macro_export]
+macro_rules! kv_row {
+    ($k:expr,$v:expr) => {
+        crate::misc::console::table::TableRow::new(vec![$k.styled_field(), $v])
+    };
+}

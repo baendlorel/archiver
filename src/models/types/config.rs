@@ -71,9 +71,9 @@ impl ArchiverConfig {
                         } else {
                             format!(
                                 "{}{} => {}",
-                                alias.styled_string_value(),
+                                alias.styled_string(),
                                 " ".repeat(max_alias_width - alias.len()),
-                                origin.styled_string_value()
+                                origin.styled_string()
                             )
                         };
                         aliases.push(styled);
@@ -112,7 +112,7 @@ impl ArchiverConfig {
             ),
             (
                 "VaultItemSep",
-                { format!("\"{}\"", self.vault_item_sep).styled_string_value() },
+                { format!("\"{}\"", self.vault_item_sep).styled_string() },
                 "Shows as {vault}{sep}{item}.",
             ),
         ];

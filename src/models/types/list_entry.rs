@@ -1,9 +1,11 @@
+use crate::kv_row;
+
 use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::{auto_incr, config, vault};
-use crate::misc::console::table::{TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::traits::CustomColors;
@@ -85,6 +87,36 @@ impl ListEntry {
     pub fn is_restored(&self) -> bool {
         matches!(self.status, ListStatus::Restored)
     }
+
+    /// 用于单条记录详细信息的输出
+    pub fn display(&self) {
+        let item = {
+            let t = if self.is_dir {
+                format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
+            } else {
+                self.item.clone()
+            };
+        };
+
+        let archived_at = dt::to_dt_string(&self.archived_at)
+            .bright_black()
+            .to_string();
+        let dir = config::alias::apply(&self.dir).bright_grey();
+        let vault_info =
+            format!("{}({})", vault::get_name(self.vault_id), self.vault_id).styled_vault();
+
+        // 此处恰好也可以用表格来输出
+        let cols = vec![Column::left("Prop"), Column::left("Value")];
+        let rows = vec![
+            kv_row!("Archive Id", self.id.styled_id()),
+            kv_row!("Vault", vault_info),
+            kv_row!("Archived At", archived_at),
+            kv_row!("Source Dir", dir),
+            kv_row!("Item Name", item),
+            kv_row!("Status", self.status.to_display()),
+        ];
+        Table::new(cols, rows).display_rows();
+    }
 }
 
 impl TableRowify for ListEntry {
@@ -110,5 +142,14 @@ impl TableRowify for ListEntry {
         let id = self.id.styled_id();
         let dir = config::alias::apply(&self.dir).bright_grey();
         TableRow::new(vec![archived_at, id, item, dir])
+    }
+}
+
+impl ListStatus {
+    pub fn to_display(&self) -> String {
+        match self {
+            ListStatus::Archived => "Archived".bright_blue().to_string(),
+            ListStatus::Restored => "Restored".orange(),
+        }
     }
 }

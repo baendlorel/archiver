@@ -46,7 +46,7 @@ impl LogLevel {
         }
     }
 
-    pub fn to_styled_string(&self) -> String {
+    pub fn to_display(&self) -> String {
         match self {
             LogLevel::Success => "success".green().bold().to_string(),
             LogLevel::Info => "info".cyan().bold().to_string(),

@@ -1,13 +1,16 @@
+use crate::{kv_row, must_ok};
+
 use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use strip_ansi_escapes::strip_str;
 
 use super::LogLevel;
-use crate::cli::{OperSource, Operation, short};
-use crate::core::{auto_incr, config, vault};
+use crate::cli::short::main;
+use crate::cli::{OperSource, Operation};
+use crate::core::{archive, auto_incr, config, vault};
 use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
-use crate::misc::dt;
+use crate::misc::{clap_mark, dt};
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
 
@@ -60,50 +63,90 @@ impl LogEntry {
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
         let rows = vec![
-            TableRow::new(vec![
-                "Id".styled_field(),
+            kv_row!(
+                "Id",
                 if matches!(self.oper.source, OperSource::System) {
                     self.id.styled_sys_id()
                 } else {
                     self.id.styled_id()
-                },
-            ]),
-            TableRow::new(vec![
-                "Opered At".styled_field(),
-                dt::to_dt_string(&self.opered_at).bright_black().to_string(),
-            ]),
-            TableRow::new(vec!["Level".styled_field(), self.level.to_styled_string()]),
-            TableRow::new(vec![
-                "Operation".styled_field(),
-                self.oper.to_detailed_display(),
-            ]),
-            TableRow::new(vec![
-                "Archive Id".styled_field(),
+                }
+            ),
+            kv_row!(
+                "Opered At",
+                dt::to_dt_string(&self.opered_at).bright_black().to_string()
+            ),
+            kv_row!("Level", self.level.to_display()),
+            kv_row!("Operation", self.oper.to_detailed_display()),
+            kv_row!(
+                "Archive Id",
                 if let Some(archive_id) = self.archive_id {
                     archive_id.styled_id()
                 } else {
                     "None".styled_id()
-                },
-            ]),
-            TableRow::new(vec![
-                "Vault Id".styled_field(),
+                }
+            ),
+            kv_row!(
+                "Vault Id",
                 if let Some(vault_id) = self.vault_id {
                     let name = vault::get_name(vault_id);
                     format!("(id:{}){}", vault_id.styled_vault(), name.styled_vault())
                 } else {
                     "None".styled_vault()
-                },
-            ]),
-            TableRow::new(vec![
-                "remark".styled_field(),
-                self.message
-                    .replace("\n", "\\n")
-                    .to_string()
-                    .styled_string_value(),
-            ]),
+                }
+            ),
+            kv_row!("remark", self.message.replace("\n", "\\n").styled_string()),
         ];
         let table = Table::new(cols, rows);
         table.display_rows();
+
+        // 如果查询的是put、restore记录，那么关联查询list
+        match self.oper.main.as_str() {
+            main::RESTORE => {
+                if self.oper.args.is_none() {
+                    println!(
+                        "{} No args provided for `put` with log id: {}. This shall not happen normally. Logs might be modified manually.",
+                        clap_mark::fatal(),
+                        self.id.styled_id()
+                    );
+                    return;
+                }
+                let ids = self
+                    .oper
+                    .args
+                    .clone()
+                    .unwrap()
+                    .iter()
+                    .map(|id| match id.parse::<u32>() {
+                        Ok(n) => n,
+                        Err(e) => {
+                            println!(
+                                "{} Invalid id `{}` in args for `put`, {}",
+                                clap_mark::fatal(),
+                                id,
+                                e
+                            );
+                            0
+                        }
+                    })
+                    .filter(|id| *id != 0)
+                    .collect::<Vec<u32>>();
+
+                let list = must_ok!(
+                    archive::list::find(|entry| ids.contains(&entry.id)),
+                    format!(
+                        "Unable to find list entries for `put` operation with log id: {}",
+                        self.id
+                    )
+                );
+
+                if list.len() > 0 {
+                    println!("---");
+                    list.iter().for_each(|entry| entry.display());
+                }
+            }
+            _ => {}
+        }
+        if matches!(self.oper.main.as_str(), main::PUT | main::RESTORE) {}
     }
 }
 
@@ -123,7 +166,7 @@ impl TableRowify for LogEntry {
         ];
 
         let archive_id = if let Some(archive_id) = self.archive_id {
-            if self.oper.main == short::main::PUT {
+            if self.oper.main == main::PUT {
                 archive_id.to_string()
             } else {
                 String::new()
@@ -134,8 +177,7 @@ impl TableRowify for LogEntry {
 
         let vault_name = if let Some(vault_id) = self.vault_id {
             match self.oper.main.as_str() {
-                short::main::PUT => vault::get_name(vault_id),
-                short::main::VAULT => vault::get_name(vault_id),
+                main::PUT | main::VAULT => vault::get_name(vault_id),
                 _ => String::new(),
             }
         } else {
