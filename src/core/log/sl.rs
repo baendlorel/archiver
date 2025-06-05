@@ -18,12 +18,12 @@ const CASUAL_LIMIT: usize = 16;
 pub fn save(
     oper: Operation,
     level: LogLevel,
-    archive_id: impl Into<Option<u32>>,
-    vault_id: impl Into<Option<u32>>,
+    archive_ids: impl Into<Option<Vec<u32>>>,
+    vault_ids: impl Into<Option<Vec<u32>>>,
     message: String,
 ) -> ArchiverResult<()> {
     // 准备日志内容
-    let log_entry = LogEntry::new(oper, level, message, archive_id.into(), vault_id.into());
+    let log_entry = LogEntry::new(oper, level, message, archive_ids.into(), vault_ids.into());
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
     wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
@@ -33,13 +33,13 @@ pub fn save(
 /// 省略oper的保存日志
 pub fn save_simple(
     level: LogLevel,
-    archive_id: impl Into<Option<u32>>,
-    vault_id: impl Into<Option<u32>>,
+    archive_ids: impl Into<Option<Vec<u32>>>,
+    vault_ids: impl Into<Option<Vec<u32>>>,
     message: impl Into<Option<String>>,
 ) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
     let message = message.into().unwrap_or(String::new());
-    wrap_result!(save(oper, level, archive_id, vault_id, message))?;
+    wrap_result!(save(oper, level, archive_ids, vault_ids, message))?;
     Ok(())
 }
 

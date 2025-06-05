@@ -14,9 +14,9 @@ mod sl;
 
 /// 写一条操作成功的日志
 /// - 取消了入参message，因为不需要记入remark的字段不应该耦合于此
-pub fn succ(archive_id: impl Into<Option<u32>>, vault_id: impl Into<Option<u32>>) {
+pub fn succ(archive_ids: impl Into<Option<Vec<u32>>>, vault_ids: impl Into<Option<Vec<u32>>>) {
     // message没必要写入，因为level和operation已携带成功信息
-    sl::save_simple(LogLevel::Success, archive_id, vault_id, None).allow_and_display();
+    sl::save_simple(LogLevel::Success, archive_ids, vault_ids, None).allow_and_display();
 }
 
 /// 写入错误日志
@@ -41,15 +41,15 @@ pub fn fail(message: &str) {
 pub fn sys(
     oper: Operation,
     level: LogLevel,
-    archive_id: impl Into<Option<u32>>,
-    vault_id: impl Into<Option<u32>>,
+    archive_ids: impl Into<Option<Vec<u32>>>,
+    vault_ids: impl Into<Option<Vec<u32>>>,
 ) {
     if !matches!(oper.source, OperSource::System) {
         let e = err_warn!("User operations should not call this function directly");
         e.display();
         return;
     }
-    sl::save(oper, level, archive_id, vault_id, String::new()).allow_and_display();
+    sl::save(oper, level, archive_ids, vault_ids, String::new()).allow_and_display();
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {

@@ -10,7 +10,7 @@ use crate::cli::short::main;
 use crate::cli::{OperSource, Operation};
 use crate::core::{archive, auto_incr, config, vault};
 use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
-use crate::misc::{clap_mark, dt};
+use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
 
@@ -32,10 +32,10 @@ pub struct LogEntry {
     pub message: String, // 备注
 
     #[serde(rename = "aid", skip_serializing_if = "Option::is_none")]
-    pub archive_id: Option<u32>, // archive id，如果有的话
+    pub archive_ids: Option<Vec<u32>>, // archive id，如果有的话
 
     #[serde(rename = "vid", skip_serializing_if = "Option::is_none")]
-    pub vault_id: Option<u32>, // archive id，如果有的话
+    pub vault_ids: Option<Vec<u32>>, // archive id，如果有的话
 }
 
 impl LogEntry {
@@ -43,8 +43,8 @@ impl LogEntry {
         oper: Operation,
         level: LogLevel,
         message: String,
-        archive_id: Option<u32>,
-        vault_id: Option<u32>,
+        archive_ids: Option<Vec<u32>>,
+        vault_ids: Option<Vec<u32>>,
     ) -> Self {
         Self {
             id: auto_incr::next("log_id"),
@@ -52,8 +52,8 @@ impl LogEntry {
             oper,
             level,
             message: strip_str(message),
-            archive_id,
-            vault_id,
+            archive_ids,
+            vault_ids,
         }
     }
 
@@ -76,23 +76,8 @@ impl LogEntry {
             ),
             kv_row!("Level", self.level.to_display()),
             kv_row!("Operation", self.oper.to_detailed_display()),
-            kv_row!(
-                "Archive Id",
-                if let Some(archive_id) = self.archive_id {
-                    archive_id.styled_id()
-                } else {
-                    "None".styled_id()
-                }
-            ),
-            kv_row!(
-                "Vault Id",
-                if let Some(vault_id) = self.vault_id {
-                    let name = vault::get_name(vault_id);
-                    format!("(id:{}){}", vault_id.styled_vault(), name.styled_vault())
-                } else {
-                    "None".styled_vault()
-                }
-            ),
+            kv_row!("Archive Id", join_archive_ids(&self.archive_ids)),
+            kv_row!("Vault", join_vault_ids(&self.vault_ids)),
             kv_row!("remark", self.message.replace("\n", "\\n").styled_string()),
         ];
         let table = Table::new(cols, rows);
@@ -118,43 +103,38 @@ impl LogEntry {
 
         // 如果查询的是put、restore记录，那么关联查询list
         match self.oper.main.as_str() {
-            main::RESTORE if matches!(self.level, LogLevel::Success) => {
-                if self.oper.args.is_none() {
-                    println!(
-                        "{} No args provided for `put` with log id: {}. This shall not happen normally. Logs might be modified manually.",
-                        clap_mark::fatal(),
-                        self.id.styled_id()
-                    );
-                    return;
-                }
-                let ids = self
-                    .oper
-                    .args
-                    .clone()
-                    .unwrap()
-                    .iter()
-                    .map(|id| match id.parse::<u32>() {
-                        Ok(n) => n,
-                        Err(e) => {
-                            println!(
-                                "{} Invalid id `{}` in args for `put`, {}",
-                                clap_mark::fatal(),
-                                id,
-                                e
-                            );
-                            0
-                        }
-                    })
-                    .filter(|id| *id != 0)
-                    .collect::<Vec<u32>>();
+            // main::RESTORE if matches!(self.level, LogLevel::Success) => {
+            //     if self.oper.args.is_none() {
+            //         println!(
+            //             "{} No args provided for `put` with log id: {}. This shall not happen normally. Logs might be modified manually.",
+            //             clap_mark::fatal(),
+            //             self.id.styled_id()
+            //         );
+            //         return;
+            //     }
 
-                display_related_list_entries(&ids);
-            }
-            main::PUT if matches!(self.level, LogLevel::Success) => {
-                if self.archive_id.is_none() {
-                    return;
+            //     let ids = self
+            //         .oper
+            //         .args
+            //         .clone()
+            //         .unwrap()
+            //         .iter()
+            //         .map(|id| match id.parse::<u32>() {
+            //             Ok(n) => n,
+            //             Err(e) => {
+            //                 err_fatal!("Invalid id `{}` in args for `put`, {}", id, e).display();
+            //                 0
+            //             }
+            //         })
+            //         .filter(|id| *id != 0)
+            //         .collect::<Vec<u32>>();
+
+            //     display_related_list_entries(&ids);
+            // }
+            main::PUT | main::RESTORE if matches!(self.level, LogLevel::Success) => {
+                if let Some(ids) = &self.archive_ids {
+                    display_related_list_entries(ids);
                 }
-                display_related_list_entries(&[self.archive_id.unwrap()]);
             }
             _ => {}
         }
@@ -176,23 +156,10 @@ impl TableRowify for LogEntry {
             self.oper.to_display(),
         ];
 
-        let archive_id = if let Some(archive_id) = self.archive_id {
-            if self.oper.main == main::PUT {
-                archive_id.to_string()
-            } else {
-                String::new()
-            }
-        } else {
-            String::new()
-        };
-
-        let vault_name = if let Some(vault_id) = self.vault_id {
-            match self.oper.main.as_str() {
-                main::PUT | main::VAULT => vault::get_name(vault_id),
-                _ => String::new(),
-            }
-        } else {
-            String::new()
+        let archive_id = join_archive_ids(&self.archive_ids);
+        let vault_name = match self.oper.main.as_str() {
+            main::PUT | main::VAULT => join_vault_ids(&self.vault_ids),
+            _ => String::new(),
         };
 
         let message = config::alias::apply(&self.message)
@@ -222,5 +189,29 @@ impl TableRowify for LogEntry {
         cells.push(mav);
 
         TableRow::new(cells)
+    }
+}
+
+fn join_archive_ids(ids: &Option<Vec<u32>>) -> String {
+    if let Some(ids) = ids {
+        ids.iter()
+            .map(|id| id.to_string())
+            .collect::<Vec<String>>()
+            .join(", ")
+            .styled_id()
+    } else {
+        String::new()
+    }
+}
+
+fn join_vault_ids(ids: &Option<Vec<u32>>) -> String {
+    if let Some(ids) = ids {
+        ids.iter()
+            .map(|n| format!("{}({})", vault::get_name(*n), n))
+            .collect::<Vec<String>>()
+            .join(", ")
+            .styled_vault()
+    } else {
+        String::new()
     }
 }
