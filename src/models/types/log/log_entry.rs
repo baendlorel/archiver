@@ -57,7 +57,6 @@ impl LogEntry {
         }
     }
 
-    // todo 加入关联查询，比如put和restore关联到list记录一并展示
     /// 单条输出，可用于按照log_id展示日志
     pub fn display(&self) {
         // 此处恰好也可以用表格来输出
@@ -99,9 +98,27 @@ impl LogEntry {
         let table = Table::new(cols, rows);
         table.display_rows();
 
+        let display_related_list_entries = |ids: &[u32]| {
+            let list = must_ok!(
+                archive::list::find(|entry| ids.contains(&entry.id)),
+                format!(
+                    "Unable to find list entries for `put` operation with log id: {}",
+                    self.id
+                )
+            );
+
+            if list.len() > 0 {
+                println!("--- Related Archiver List Entries:");
+                list.iter().for_each(|entry| {
+                    entry.display();
+                    println!("---")
+                });
+            }
+        };
+
         // 如果查询的是put、restore记录，那么关联查询list
         match self.oper.main.as_str() {
-            main::RESTORE => {
+            main::RESTORE if matches!(self.level, LogLevel::Success) => {
                 if self.oper.args.is_none() {
                     println!(
                         "{} No args provided for `put` with log id: {}. This shall not happen normally. Logs might be modified manually.",
@@ -131,22 +148,16 @@ impl LogEntry {
                     .filter(|id| *id != 0)
                     .collect::<Vec<u32>>();
 
-                let list = must_ok!(
-                    archive::list::find(|entry| ids.contains(&entry.id)),
-                    format!(
-                        "Unable to find list entries for `put` operation with log id: {}",
-                        self.id
-                    )
-                );
-
-                if list.len() > 0 {
-                    println!("---");
-                    list.iter().for_each(|entry| entry.display());
+                display_related_list_entries(&ids);
+            }
+            main::PUT if matches!(self.level, LogLevel::Success) => {
+                if self.archive_id.is_none() {
+                    return;
                 }
+                display_related_list_entries(&[self.archive_id.unwrap()]);
             }
             _ => {}
         }
-        if matches!(self.oper.main.as_str(), main::PUT | main::RESTORE) {}
     }
 }
 

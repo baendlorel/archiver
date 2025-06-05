@@ -90,12 +90,10 @@ impl ListEntry {
 
     /// 用于单条记录详细信息的输出
     pub fn display(&self) {
-        let item = {
-            let t = if self.is_dir {
-                format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
-            } else {
-                self.item.clone()
-            };
+        let item = if self.is_dir {
+            format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
+        } else {
+            self.item.clone()
         };
 
         let archived_at = dt::to_dt_string(&self.archived_at)
