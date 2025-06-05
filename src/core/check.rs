@@ -1,7 +1,8 @@
+use owo_colors::OwoColorize;
 use std::collections::HashSet;
 use std::ops::Deref;
 
-use crate::core::{archive, auto_incr, config, vault};
+use crate::core::{archive, auto_incr, config};
 use crate::misc::{jsonl, mark, paths};
 use crate::models::types::{ListStatus, LogEntry, Vault, VaultStatus};
 use crate::traits::CustomColors;
@@ -17,6 +18,7 @@ pub trait OnPanic<T> {
     fn on_panic(self, msg: impl AsRef<str>);
 }
 
+// todo 可能需要增加check完成后的统计
 static mut INDEX: u32 = 0;
 static mut VERBOSE: bool = false;
 
@@ -29,7 +31,12 @@ impl<T> OnPanic<T> for std::thread::Result<T> {
             Ok(_) => unsafe {
                 if VERBOSE {
                     let idx = INDEX;
-                    println!("{} {}. {}", mark::succ(), idx.styled_const(), msg.as_ref());
+                    println!(
+                        "{} {}. {}",
+                        mark::succ(),
+                        idx.to_string().green(),
+                        msg.as_ref()
+                    );
                 }
             },
             Err(e) => {
@@ -45,11 +52,11 @@ impl<T> OnPanic<T> for std::thread::Result<T> {
                     let idx = INDEX;
                     // 错误的输出要开头结尾各多空出一行
                     println!(
-                        "\n{} {}. {}\n  {}\n",
+                        "\n{} {}. {}\n    {}\n",
                         mark::fatal(),
-                        idx.styled_const(),
+                        idx.to_string().red(),
                         msg.as_ref(),
-                        panic_msg
+                        panic_msg.replace("\n", "\n    ")
                     );
                 };
             }
@@ -69,6 +76,9 @@ pub fn check(verbose: bool) {
     unsafe {
         VERBOSE = verbose;
     };
+
+    // 防止panic输出到控制台，我要统一捕获
+    std::panic::set_hook(Box::new(|_| {}));
 
     // 各个目录
     it("Home directory is valid", || paths::HOME_DIR.exists());
@@ -144,13 +154,15 @@ pub fn check(verbose: bool) {
     // 自增数据是合理的
     // 不存在重复id
     it("Auto Increment is correct. No duplicated ids.", || {
+        let mut local_idx: u32 = 0;
         let mut errs: Vec<String> = vec![];
         macro_rules! add {
           ($($arg:tt)*) => {{
+              local_idx+=1;
               let msg = format!($($arg)*);
-              errs.push(format!("{}", msg));
+              errs.push(format!("{} - {}", local_idx.styled_const(), msg));
           }};
-      }
+        }
 
         let mut max_aid = 0;
         let mut aid_set: HashSet<u32> = HashSet::new();
@@ -181,7 +193,7 @@ pub fn check(verbose: bool) {
             arr.iter().for_each(|entry| {
                 max_lid = max_lid.max(entry.id);
                 if !lid_set.insert(entry.id) {
-                    add!("Duplicate archive id found: {}", entry.id.styled_id());
+                    add!("Duplicate log id found: {}", entry.id.styled_id());
                 }
             });
         }
@@ -210,6 +222,10 @@ pub fn check(verbose: bool) {
                 lid.styled_id(),
                 max_lid.styled_id()
             );
+        }
+
+        if errs.len() > 0 {
+            panic!("{}", errs.join("\n"));
         }
     });
 }

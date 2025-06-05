@@ -23,7 +23,11 @@ fn handle(command: &AC) {
         AC::Restore { ids } => handlers::restore(&ids),
         AC::Vault(action) => handlers::vault(&action),
         AC::Move { ids, to } => handlers::mov(ids, to),
-        AC::List { all, restored } => handlers::list(*all, *restored),
+        AC::List {
+            all,
+            restored,
+            vault,
+        } => handlers::list(*all, *restored),
         AC::Log { range, id } => handlers::log(range, id),
         AC::Config(action) => handlers::config(&action),
         AC::Update => handlers::update(),
