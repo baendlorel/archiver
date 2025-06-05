@@ -13,7 +13,7 @@ pub fn peek_next(name: &str) -> u32 {
     match auto_incr {
         AutoIncrVars(m) => {
             if let Some(&id) = m.get(name) {
-                return id;
+                return id + 1;
             }
             panic!(
                 "{} Unknown auto increment variable: {}",
