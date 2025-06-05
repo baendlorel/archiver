@@ -34,7 +34,7 @@ pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
     Table::display(
         vec![
             Column::left("Archived At"),
-            Column::left("ID"),
+            Column::left("Id"),
             Column::left("Item"),
             Column::left("Directory"),
         ],

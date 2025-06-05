@@ -15,13 +15,7 @@ mod sl;
 /// 写一条操作成功的日志
 /// - 入参message仅供控制台展示
 ///     - 因为操作本身的成功已经蕴含了message的信息
-pub fn succ(
-    archive_id: impl Into<Option<u32>>,
-    vault_id: impl Into<Option<u32>>,
-    message: &String,
-) {
-    println!("{} {}", clap_mark::succ(), message);
-
+pub fn succ(archive_id: impl Into<Option<u32>>, vault_id: impl Into<Option<u32>>) {
     // message没必要写入，因为level和operation已携带成功信息
     sl::save_simple(LogLevel::Success, archive_id, vault_id, None).allow_and_display();
 }
@@ -65,7 +59,7 @@ pub fn display(range: &Option<String>) -> ArchiverResult<()> {
     logs.reverse();
 
     let cols = vec![
-        Column::left("ID"),
+        Column::left("Id"),
         Column::left("Time"),
         Column::center("⚑"),
         Column::left("Operation"),

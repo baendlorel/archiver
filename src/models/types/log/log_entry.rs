@@ -60,7 +60,7 @@ impl LogEntry {
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
         let rows = vec![
-            TableRow::new(vec!["ID".styled_field(), self.id.styled_id()]),
+            TableRow::new(vec!["Id".styled_field(), self.id.styled_id()]),
             TableRow::new(vec![
                 "Opered At".styled_field(),
                 dt::to_dt_string(&self.opered_at).bright_black().to_string(),
@@ -71,7 +71,7 @@ impl LogEntry {
                 self.oper.to_detailed_display(),
             ]),
             TableRow::new(vec![
-                "Archive ID".styled_field(),
+                "Archive Id".styled_field(),
                 if let Some(archive_id) = self.archive_id {
                     archive_id.styled_id()
                 } else {
@@ -79,7 +79,7 @@ impl LogEntry {
                 },
             ]),
             TableRow::new(vec![
-                "Vault ID".styled_field(),
+                "Vault Id".styled_field(),
                 if let Some(vault_id) = self.vault_id {
                     let name = vault::get_name(vault_id);
                     format!("(id:{}){}", vault_id.styled_vault(), name.styled_vault())

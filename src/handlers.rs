@@ -10,6 +10,16 @@ use crate::misc::clap_mark;
 use crate::models::types::{LogLevel, vault_defaults};
 use crate::traits::{CustomColors, ResultExt};
 
+macro_rules! succ {
+    ($s:expr)=>{
+        println!("{} {}", clap_mark::succ(), $s)
+    };
+    ($($arg:tt)*) => {{
+        let s = format!($($arg)*);
+        println!("{} {}", clap_mark::succ(), s)
+    }};
+}
+
 pub fn vault(action: &VaultAction) {
     match action {
         VaultAction::Create {
@@ -17,28 +27,28 @@ pub fn vault(action: &VaultAction) {
             remark,
             activate,
         } => vault::create(name, *activate, remark).ok_then_or_log(|v| {
-            let msg = format!(
+            succ!(
                 "Vault '{}' is successfully created, vault id: {}",
                 name,
                 v.id.styled_vault()
             );
-            log::succ(None, v.id, &msg);
+            log::succ(None, v.id);
         }),
         VaultAction::List => vault::display(),
         VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
-            let msg = format!("Vault '{}' is successfully set as current vault", name);
-            log::succ(None, vault_id, &msg);
+            succ!("Vault '{}' is successfully set as current vault", name);
+            log::succ(None, vault_id);
         }),
         VaultAction::Remove { name } => {
             vault::use_by_name(name).ok_then_or_log(|vault_id| {
-                let msg = format!("Vault '{}' is successfully removed", name);
-                log::succ(None, vault_id, &msg);
+                succ!("Vault '{}' is successfully removed", name);
+                log::succ(None, vault_id);
             });
         }
     }
 }
 
-// ^ 批量处理日志规则
+// todo 批量处理日志规则，可能要支持日志一次加好多行这样
 // count=0
 //   输出完全失败，直接返回
 // len=1, count=1
@@ -63,29 +73,25 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
         return;
     }
 
-    let mut count: usize = 0;
+    // 校验结束，开始处理
+    let mut count = 0;
     for item in items {
         println!("Putting '{}' into archive", item);
         // 循环中使用message必须clone，否则move一次就没了
         archive::put(&item, message.clone(), vault_id).ok_then_or_log(|entry| {
-            let msg = format!(
-                "'{}' is successfully archived (id: {}, vault: {})",
+            succ!(
+                "'{}' is now archived (id: {}, vault: {})",
                 item,
-                entry.id,
-                vault::get_name(entry.vault_id),
+                entry.id.styled_id(),
+                vault::get_name(entry.vault_id).styled_vault(),
             );
-            log::succ(entry.id, entry.vault_id, &msg);
+            log::succ(entry.id, entry.vault_id);
             count += 1;
         });
     }
 
     if items.len() > 1 {
-        println!(
-            "{} {}/{} items are successfully archived",
-            clap_mark::succ(),
-            count,
-            items.len()
-        );
+        succ!("{}/{} items are successfully archived", count, items.len());
     }
     println!("You can use `arv list` to check the details.");
 }
@@ -95,20 +101,27 @@ pub fn restore(ids: &[u32]) {
         return e.display();
     }
 
-    let mut count: i32 = 0;
+    // 校验结束，开始处理
+    let is_sys = ids.len() > 1;
+    let mut count = 0;
     for id in ids {
         println!("Restoring id: {}", id.styled_id());
         archive::restore(*id).ok_then_or_log(|entry| {
+            if is_sys {
+                let oper = oper!(main::RESTORE, None, [id], None, "sys");
+                log::sys(oper, LogLevel::Success, *id, None, String::new());
+            } else {
+                succ!(
+                    "{}{}{}({}) is successfully restored to '{}'",
+                    vault::get_name(entry.vault_id).styled_vault(),
+                    config::CONFIG.vault_item_sep.styled_vault_item_sep(),
+                    entry.id.styled_id(),
+                    entry.item,
+                    entry.get_item_path_string()
+                );
+                log::succ(entry.id, entry.vault_id);
+            }
             count += 1;
-            let msg = format!(
-                "{}{}{}({}) is successfully restored to '{}'",
-                vault::get_name(entry.vault_id).styled_vault(),
-                config::CONFIG.vault_item_sep.styled_vault_item_sep(),
-                entry.id.styled_id(),
-                entry.item,
-                entry.get_item_path_string()
-            );
-            log::succ(entry.id, entry.vault_id, &msg);
         });
     }
 
@@ -117,7 +130,6 @@ pub fn restore(ids: &[u32]) {
         return;
     }
 
-    // todo 改成像mov一样的count和len的输出机制
     if ids.len() > 1 {
         println!("{} {}/{} are restored", clap_mark::succ(), count, ids.len());
     }
@@ -144,13 +156,13 @@ pub fn mov(ids: &[u32], to: &str) {
         println!("Moving id: {} into {}", id.styled_id(), to.styled_vault());
         match archive::mov(*id, vault_id) {
             Ok(_) => {
+                succ!("Id: {} is now in '{}'", id.styled_id(), to.styled_vault());
                 if is_sys {
                     let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
                     log::sys(oper, LogLevel::Success, *id, vault_id, String::new());
                 } else {
                     // 此分支只可能在总数为1，且成功1个的时候进入
-                    let msg = format!("id: {} is now in '{}'", id.styled_id(), to.styled_vault());
-                    log::succ(None, vault_id, &msg);
+                    log::succ(None, vault_id);
                 }
                 count += 1;
             }
@@ -176,13 +188,13 @@ pub fn mov(ids: &[u32], to: &str) {
     }
 
     // 做一下总结
-    let msg = format!(
+    succ!(
         "{}/{} objects are successfully moved to vault '{}'",
         count,
         ids.len(),
         to.styled_vault(),
     );
-    log::succ(None, vault_id, &msg);
+    log::succ(None, vault_id);
 }
 
 pub fn list(all: bool, restored: bool) {
@@ -210,30 +222,30 @@ pub fn config(action: &ConfigAction) {
         ConfigAction::Alias { entry, remove } => {
             if *remove {
                 config::alias::remove(&entry).ok_then_or_log(|_| {
-                    let msg = format!("Alias '{}' is removed successfully", entry);
-                    log::succ(None, None, &msg);
+                    succ!("Alias '{}' is removed successfully", entry);
+                    log::succ(None, None);
                 })
             } else {
                 config::alias::add(entry).ok_then_or_log(|_| {
-                    let msg = format!("Alias '{}' is added successfully", entry);
-                    log::succ(None, None, &msg);
+                    succ!("Alias '{}' is added successfully", entry);
+                    log::succ(None, None);
                 })
             }
         }
         ConfigAction::UpdateCheck { status } => {
             config::update_check::set(&status).ok_then_or_log(|_| {
-                let msg = if status == "on" {
-                    format!("Update check is turned {}", status.green().bold())
+                if status == "on" {
+                    succ!("Update check is turned {}", status.green().bold())
                 } else {
-                    format!("Update check is turned {}", status.red().bold())
-                };
-                log::succ(None, None, &msg);
+                    succ!("Update check is turned {}", status.red().bold())
+                }
+                log::succ(None, None);
             })
         }
         ConfigAction::VaultItemSep { sep } => {
             config::vault_item_sep::set(sep).ok_then_or_log(|_| {
-                let msg = format!("Vault-item separator is set to '{}'", sep);
-                log::succ(None, None, &msg);
+                succ!("Vault-item separator is set to '{}'", sep);
+                log::succ(None, None);
             })
         }
     }
@@ -264,3 +276,5 @@ pub fn update() {
         Ordering::Less => println!("{} How could you use a newer version?", clap_mark::warn()),
     }
 }
+
+pub fn check() {}
