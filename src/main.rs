@@ -27,7 +27,7 @@ fn handle(command: &AC) {
         AC::Log { range, id } => handlers::log(range, id),
         AC::Config(action) => handlers::config(&action),
         AC::Update => handlers::update(),
-        AC::Check => {} // todo 补充check逻辑
+        AC::Check { verbose } => handlers::check(verbose),
     }
 }
 
@@ -36,6 +36,7 @@ fn auto_check_update(command: &AC) {
         AC::Update => false,
         AC::List { .. } => false,
         AC::Log { .. } => false,
+        AC::Check { .. } => false,
         _ => true,
     };
 

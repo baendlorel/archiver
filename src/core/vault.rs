@@ -163,16 +163,17 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
     let succ = clap_mark::succ();
     for id in &ids {
         println!("Moving id: {} into {}", id.styled_id(), styled_to);
+
         let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
         match archive::mov(*id, vault_defaults::ID) {
             Ok(_) => {
                 println!("{} Id: {} is now in '{}'", succ, id.styled_id(), styled_to);
-                log::sys(oper, LogLevel::Success, *id, vault_defaults::ID);
+                log::sys(oper, LogLevel::Success, vec![*id], vec![vault_defaults::ID]);
                 count += 1;
             }
             Err(e) => {
                 e.display();
-                log::sys(oper, e.level, *id, vault_defaults::ID);
+                log::sys(oper, e.level, vec![*id], vec![vault_defaults::ID]);
             }
         }
     }

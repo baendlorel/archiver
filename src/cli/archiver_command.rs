@@ -74,11 +74,17 @@ pub enum ArchiverCommand {
     #[command(subcommand, visible_aliases = ["c", main::CONFIG])]
     Config(ConfigAction),
 
+    /// Check for the updates. And update Archiver when there is a newer version
     #[command(visible_aliases = ["u", main::UPDATE])]
     Update,
 
+    /// Check the integrity of Archiver's data. Will only display non-passed entries
     #[command(visible_aliases = [main::CHECK])]
-    Check,
+    Check {
+        /// Show every entry, including those passed the check
+        #[arg(short, long)]
+        verbose: bool,
+    },
 }
 
 type C = ArchiverCommand;
@@ -97,7 +103,7 @@ impl ArchiverCommand {
             C::Log { range, id } => oper!(main::LOG, [range], opt_map![id]),
             C::Config(action) => action.to_operation(),
             C::Update => oper!(main::UPDATE),
-            C::Check => oper!(main::CHECK),
+            C::Check { verbose } => oper!(main::CHECK, None, opt_map![verbose]),
         }
     }
 }

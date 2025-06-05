@@ -16,10 +16,11 @@ use crate::{oper, opt_map};
 
 use owo_colors::OwoColorize;
 use std::cmp::Ordering;
+use std::vec;
 
 use crate::cli::short::main;
 use crate::cli::{ConfigAction, VaultAction};
-use crate::core::{archive, config, log, update, vault};
+use crate::core::{archive, check, config, log, update, vault};
 use crate::misc::clap_mark;
 use crate::models::types::{LogLevel, vault_defaults};
 use crate::traits::{CustomColors, ResultExt};
@@ -46,17 +47,17 @@ pub fn vault(action: &VaultAction) {
                 name,
                 v.id.styled_vault()
             );
-            log::succ(None, v.id);
+            log::succ(None, vec![v.id]);
         }),
         VaultAction::List => vault::display(),
         VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
             succ!("Vault '{}' is successfully set as current vault", name);
-            log::succ(None, vault_id);
+            log::succ(None, vec![vault_id]);
         }),
         VaultAction::Remove { name } => {
             vault::remove(name).ok_then_or_log(|vault_id| {
                 succ!("Vault '{}' is removed", name);
-                log::succ(None, vault_id);
+                log::succ(None, vec![vault_id]);
             });
         }
     }
@@ -81,7 +82,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
 
     // 校验结束，开始处理
     let is_sys = items.len() > 1;
-    let mut count = 0;
+    let mut succ_ids: Vec<u32> = vec![];
     for item in items {
         println!("Putting '{}' into archive", item);
         let oper = oper!(main::PUT, None, [item], opt_map![message, vault], "sys");
@@ -95,16 +96,16 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                     vault::get_name(vault_id).styled_vault(),
                 );
                 if is_sys {
-                    log::sys(oper, LogLevel::Success, entry.id, vault_id);
+                    log::sys(oper, LogLevel::Success, vec![entry.id], vec![vault_id]);
                 } else {
-                    log::succ(entry.id, vault_id);
+                    log::succ(vec![entry.id], vec![vault_id]);
                 }
-                count += 1;
+                succ_ids.push(entry.id);
             }
             Err(e) => {
                 if is_sys {
                     e.display();
-                    log::sys(oper, e.level, None, vault_id);
+                    log::sys(oper, e.level, None, vec![vault_id]);
                 } else {
                     log::error(e);
                 }
@@ -112,14 +113,18 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
         }
     }
 
-    if count == 0 {
+    if succ_ids.len() == 0 {
         log::fail("No items were put. Please check your inputs.");
         return;
     }
 
     if items.len() > 1 {
-        succ!("{}/{} items are successfully archived", count, items.len());
-        log::succ(None, None);
+        succ!(
+            "{}/{} items are successfully archived",
+            succ_ids.len(),
+            items.len()
+        );
+        log::succ(succ_ids, vec![vault_id]);
     }
 }
 
@@ -146,9 +151,9 @@ pub fn restore(ids: &[u32]) {
                     entry.get_item_path_string()
                 );
                 if is_sys {
-                    log::sys(oper, LogLevel::Success, *id, None);
+                    log::sys(oper, LogLevel::Success, vec![*id], None);
                 } else {
-                    log::succ(entry.id, entry.vault_id);
+                    log::succ(vec![*id], None);
                 }
                 count += 1;
             }
@@ -170,7 +175,7 @@ pub fn restore(ids: &[u32]) {
 
     if ids.len() > 1 {
         succ!("{}/{} are restored", count, ids.len());
-        log::succ(None, None);
+        log::succ(Vec::from(ids), None);
     }
 }
 
@@ -198,17 +203,17 @@ pub fn mov(ids: &[u32], to: &str) {
             Ok(_) => {
                 succ!("Id: {} is now in '{}'", id.styled_id(), to.styled_vault());
                 if is_sys {
-                    log::sys(oper, LogLevel::Success, *id, vault_id);
+                    log::sys(oper, LogLevel::Success, vec![*id], vec![vault_id]);
                 } else {
                     // 此分支只可能在总数为1，且成功1个的时候进入
-                    log::succ(None, vault_id);
+                    log::succ(vec![*id], vec![vault_id]);
                 }
                 count += 1;
             }
             Err(e) => {
                 if is_sys {
                     e.display();
-                    log::sys(oper, e.level, *id, vault_id);
+                    log::sys(oper, e.level, vec![*id], vec![vault_id]);
                 } else {
                     log::error(e);
                 }
@@ -228,7 +233,7 @@ pub fn mov(ids: &[u32], to: &str) {
             ids.len(),
             to.styled_vault(),
         );
-        log::succ(None, vault_id);
+        log::succ(Vec::from(ids), vec![vault_id]);
     }
 }
 
@@ -312,4 +317,6 @@ pub fn update() {
     }
 }
 
-pub fn check() {}
+pub fn check(verbose: &bool) {
+    check::check(*verbose);
+}

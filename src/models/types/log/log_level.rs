@@ -22,10 +22,6 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-    pub fn is_succ(&self) -> bool {
-        matches!(self, LogLevel::Success)
-    }
-
     pub fn to_mark(&self) -> String {
         match self {
             LogLevel::Success => mark::succ(),

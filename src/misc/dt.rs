@@ -9,8 +9,10 @@ pub const MIN_DT: NaiveDateTime = NaiveDateTime::MIN;
 
 pub const MAX_DT: NaiveDateTime = NaiveDateTime::MAX;
 
+#[allow(dead_code)]
 pub const MIN_D: NaiveDate = NaiveDate::MIN;
 
+#[allow(dead_code)]
 pub const MAX_D: NaiveDate = NaiveDate::MAX;
 
 /// 获取1970年1月1日的日期时间
