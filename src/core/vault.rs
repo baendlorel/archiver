@@ -120,7 +120,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
 
     // 告知删除会导致归档对象移动到默认库
     println!(
-        "All archived objects in '{}' {}{}{} (which is the default vault).",
+        "All archived items in '{}' {}{}{} (which is the default vault).",
         name.styled_vault(),
         "shall be moved to '".underline().bold(),
         vault_defaults::NAME.styled_vault().underline().bold(),
@@ -161,15 +161,29 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
     let to = vault_defaults::NAME;
     let styled_to = to.styled_vault();
     let succ = clap_mark::succ();
-    for id in ids {
+    for id in &ids {
         println!("Moving id: {} into {}", id.styled_id(), styled_to);
-        archive::mov(id, vault_defaults::ID).ok_then_or_log(|_| {
-            println!("{} Id: {} is now in '{}'", succ, id.styled_id(), styled_to);
-            let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
-            log::sys(oper, LogLevel::Success, id, vault_defaults::ID);
-            count += 1;
-        });
+        let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
+        match archive::mov(*id, vault_defaults::ID) {
+            Ok(_) => {
+                println!("{} Id: {} is now in '{}'", succ, id.styled_id(), styled_to);
+                log::sys(oper, LogLevel::Success, *id, vault_defaults::ID);
+                count += 1;
+            }
+            Err(e) => {
+                e.display();
+                log::sys(oper, e.level, *id, vault_defaults::ID);
+            }
+        }
     }
+
+    println!(
+        "{} {}/{} items are successfully moved to vault '{}'",
+        clap_mark::succ(),
+        count,
+        ids.len(),
+        styled_to
+    );
 
     // 修改vaults.jsonl
     vaults[index].status = VaultStatus::Removed;

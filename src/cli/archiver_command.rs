@@ -31,7 +31,7 @@ pub enum ArchiverCommand {
         ids: Vec<u32>,
     },
 
-    /// Move archived objects to a new vault
+    /// Move archived items to a new vault
     #[command(visible_aliases = ["m", "mv", main::MOVE])]
     Move {
         /// id to be moved. Can be obtained by command `arv list`
@@ -47,14 +47,14 @@ pub enum ArchiverCommand {
     #[command(subcommand, visible_aliases = ["v", main::VAULT])]
     Vault(VaultAction),
 
-    /// Show the list of archived objects
+    /// Show the list of archived items
     #[command(visible_aliases = ["l", main::LIST])]
     List {
-        /// Show all archived objects
+        /// Show all archived items
         #[arg[short, long, group = "list_options"]]
         all: bool,
 
-        /// Show restored objects
+        /// Show restored items
         #[arg[short, long, group = "list_options"]]
         restored: bool,
     },

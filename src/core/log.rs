@@ -49,7 +49,6 @@ pub fn sys(
         e.display();
         return;
     }
-    // 有没有可能需要记录失败的日志？
     sl::save(oper, level, archive_id, vault_id, String::new()).allow_and_display();
 }
 

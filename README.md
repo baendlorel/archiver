@@ -39,7 +39,7 @@ graph TD
 
 # Commands
 
-You can use following commands to manage your archived objects.
+You can use following commands to manage your archived items.
 
 ## Put
 

@@ -84,22 +84,32 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
     let mut count = 0;
     for item in items {
         println!("Putting '{}' into archive", item);
+        let oper = oper!(main::PUT, None, [item], opt_map![message, vault], "sys");
         // 循环中使用message必须clone，否则move一次就没了
-        archive::put(&item, message.clone(), vault_id).ok_then_or_log(|entry| {
-            succ!(
-                "'{}' is now archived (id: {}, vault: {})",
-                item,
-                entry.id.styled_id(),
-                vault::get_name(entry.vault_id).styled_vault(),
-            );
-            if is_sys {
-                let oper = oper!(main::PUT, None, [entry.id], opt_map![message, vault], "sys");
-                log::sys(oper, LogLevel::Success, entry.id, entry.vault_id);
-            } else {
-                log::succ(entry.id, entry.vault_id);
+        match archive::put(&item, message.clone(), vault_id) {
+            Ok(entry) => {
+                succ!(
+                    "'{}' is now archived (id: {}, vault: {})",
+                    item,
+                    entry.id.styled_id(),
+                    vault::get_name(vault_id).styled_vault(),
+                );
+                if is_sys {
+                    log::sys(oper, LogLevel::Success, entry.id, vault_id);
+                } else {
+                    log::succ(entry.id, vault_id);
+                }
+                count += 1;
             }
-            count += 1;
-        });
+            Err(e) => {
+                if is_sys {
+                    e.display();
+                    log::sys(oper, e.level, None, vault_id);
+                } else {
+                    log::error(e);
+                }
+            }
+        }
     }
 
     if count == 0 {
@@ -123,23 +133,34 @@ pub fn restore(ids: &[u32]) {
     let mut count = 0;
     for id in ids {
         println!("Restoring id: {}", id.styled_id());
-        archive::restore(*id).ok_then_or_log(|entry| {
-            succ!(
-                "{}{}{}({}) is restored to '{}'",
-                vault::get_name(entry.vault_id).styled_vault(),
-                config::CONFIG.vault_item_sep.styled_vault_item_sep(),
-                entry.id.styled_id(),
-                entry.item,
-                entry.get_item_path_string()
-            );
-            if is_sys {
-                let oper = oper!(main::RESTORE, None, [id], None, "sys");
-                log::sys(oper, LogLevel::Success, *id, None);
-            } else {
-                log::succ(entry.id, entry.vault_id);
+
+        let oper = oper!(main::RESTORE, None, [id], None, "sys");
+        match archive::restore(*id) {
+            Ok(entry) => {
+                succ!(
+                    "{}{}{}({}) is restored to '{}'",
+                    vault::get_name(entry.vault_id).styled_vault(),
+                    config::CONFIG.vault_item_sep.styled_vault_item_sep(),
+                    entry.id.styled_id(),
+                    entry.item,
+                    entry.get_item_path_string()
+                );
+                if is_sys {
+                    log::sys(oper, LogLevel::Success, *id, None);
+                } else {
+                    log::succ(entry.id, entry.vault_id);
+                }
+                count += 1;
             }
-            count += 1;
-        });
+            Err(e) => {
+                if is_sys {
+                    e.display();
+                    log::sys(oper, e.level, None, None);
+                } else {
+                    log::error(e);
+                }
+            }
+        }
     }
 
     if count == 0 {
@@ -172,11 +193,11 @@ pub fn mov(ids: &[u32], to: &str) {
     let mut count = 0;
     for id in ids {
         println!("Moving id: {} into {}", id.styled_id(), to.styled_vault());
+        let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
         match archive::mov(*id, vault_id) {
             Ok(_) => {
                 succ!("Id: {} is now in '{}'", id.styled_id(), to.styled_vault());
                 if is_sys {
-                    let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
                     log::sys(oper, LogLevel::Success, *id, vault_id);
                 } else {
                     // 此分支只可能在总数为1，且成功1个的时候进入
@@ -185,12 +206,12 @@ pub fn mov(ids: &[u32], to: &str) {
                 count += 1;
             }
             Err(e) => {
-                log::error(e);
-                println!(
-                    "{} Moving process has been terminated. Please use `arv log` for details.",
-                    clap_mark::error()
-                );
-                return;
+                if is_sys {
+                    e.display();
+                    log::sys(oper, e.level, *id, vault_id);
+                } else {
+                    log::error(e);
+                }
             }
         }
     }
@@ -202,7 +223,7 @@ pub fn mov(ids: &[u32], to: &str) {
 
     if ids.len() > 1 {
         succ!(
-            "{}/{} objects are successfully moved to vault '{}'",
+            "{}/{} items are successfully moved to vault '{}'",
             count,
             ids.len(),
             to.styled_vault(),
