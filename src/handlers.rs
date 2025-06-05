@@ -1,3 +1,17 @@
+/// ^ 批量处理日志规则，可能要支持日志一次加好多行这样
+/// count=0
+///   输出完全失败，直接返回
+/// len=1, count=1
+///   不总结，输出单条user的
+/// len>1, count>0
+///   输出单条sys，一条总结
+/// ^ 现行处理顺序
+/// 1. 设置is_sys为数组长度是否>1，count设为0
+/// 2. ok_then_or_log中，成功时打印相同的succ!
+///     - 先进行succ!打印，再区分is_sys记录日志，最后count自增
+/// 3. 总结
+///     - 如果count==0，输出失败信息
+///     - 如果len>1，输出总结信息
 use crate::{oper, opt_map};
 
 use owo_colors::OwoColorize;
@@ -40,21 +54,13 @@ pub fn vault(action: &VaultAction) {
             log::succ(None, vault_id);
         }),
         VaultAction::Remove { name } => {
-            vault::use_by_name(name).ok_then_or_log(|vault_id| {
-                succ!("Vault '{}' is successfully removed", name);
+            vault::remove(name).ok_then_or_log(|vault_id| {
+                succ!("Vault '{}' is removed", name);
                 log::succ(None, vault_id);
             });
         }
     }
 }
-
-// todo 批量处理日志规则，可能要支持日志一次加好多行这样
-// count=0
-//   输出完全失败，直接返回
-// len=1, count=1
-//   不总结，输出单条user的
-// len>1, count>0
-//   输出单条sys，一条总结
 
 pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>) {
     let vault_id = match vault {
@@ -74,6 +80,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
     }
 
     // 校验结束，开始处理
+    let is_sys = items.len() > 1;
     let mut count = 0;
     for item in items {
         println!("Putting '{}' into archive", item);
@@ -85,15 +92,25 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                 entry.id.styled_id(),
                 vault::get_name(entry.vault_id).styled_vault(),
             );
-            log::succ(entry.id, entry.vault_id);
+            if is_sys {
+                let oper = oper!(main::PUT, None, [entry.id], opt_map![message, vault], "sys");
+                log::sys(oper, LogLevel::Success, entry.id, entry.vault_id);
+            } else {
+                log::succ(entry.id, entry.vault_id);
+            }
             count += 1;
         });
     }
 
+    if count == 0 {
+        log::fail("No items were put. Please check your inputs.");
+        return;
+    }
+
     if items.len() > 1 {
         succ!("{}/{} items are successfully archived", count, items.len());
+        log::succ(None, None);
     }
-    println!("You can use `arv list` to check the details.");
 }
 
 pub fn restore(ids: &[u32]) {
@@ -107,18 +124,18 @@ pub fn restore(ids: &[u32]) {
     for id in ids {
         println!("Restoring id: {}", id.styled_id());
         archive::restore(*id).ok_then_or_log(|entry| {
+            succ!(
+                "{}{}{}({}) is restored to '{}'",
+                vault::get_name(entry.vault_id).styled_vault(),
+                config::CONFIG.vault_item_sep.styled_vault_item_sep(),
+                entry.id.styled_id(),
+                entry.item,
+                entry.get_item_path_string()
+            );
             if is_sys {
                 let oper = oper!(main::RESTORE, None, [id], None, "sys");
-                log::sys(oper, LogLevel::Success, *id, None, String::new());
+                log::sys(oper, LogLevel::Success, *id, None);
             } else {
-                succ!(
-                    "{}{}{}({}) is successfully restored to '{}'",
-                    vault::get_name(entry.vault_id).styled_vault(),
-                    config::CONFIG.vault_item_sep.styled_vault_item_sep(),
-                    entry.id.styled_id(),
-                    entry.item,
-                    entry.get_item_path_string()
-                );
                 log::succ(entry.id, entry.vault_id);
             }
             count += 1;
@@ -131,7 +148,8 @@ pub fn restore(ids: &[u32]) {
     }
 
     if ids.len() > 1 {
-        println!("{} {}/{} are restored", clap_mark::succ(), count, ids.len());
+        succ!("{}/{} are restored", count, ids.len());
+        log::succ(None, None);
     }
 }
 
@@ -159,7 +177,7 @@ pub fn mov(ids: &[u32], to: &str) {
                 succ!("Id: {} is now in '{}'", id.styled_id(), to.styled_vault());
                 if is_sys {
                     let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
-                    log::sys(oper, LogLevel::Success, *id, vault_id, String::new());
+                    log::sys(oper, LogLevel::Success, *id, vault_id);
                 } else {
                     // 此分支只可能在总数为1，且成功1个的时候进入
                     log::succ(None, vault_id);
@@ -182,19 +200,15 @@ pub fn mov(ids: &[u32], to: &str) {
         return;
     }
 
-    // 如果是总共1个（此处count一定为1，因为不为0），就不需要总结了
-    if ids.len() == 1 {
-        return;
+    if ids.len() > 1 {
+        succ!(
+            "{}/{} objects are successfully moved to vault '{}'",
+            count,
+            ids.len(),
+            to.styled_vault(),
+        );
+        log::succ(None, vault_id);
     }
-
-    // 做一下总结
-    succ!(
-        "{}/{} objects are successfully moved to vault '{}'",
-        count,
-        ids.len(),
-        to.styled_vault(),
-    );
-    log::succ(None, vault_id);
 }
 
 pub fn list(all: bool, restored: bool) {

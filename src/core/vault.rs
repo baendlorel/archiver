@@ -1,15 +1,16 @@
-use crate::{info, must_ok, must_some, wrap_result};
+use crate::{info, must_ok, must_some, oper, opt_map, wrap_result};
 
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 
 use super::config;
-use crate::core::archive;
-use crate::misc::{console, jsonl, paths, rand};
+use crate::cli::short::main;
+use crate::core::{archive, log};
+use crate::misc::{clap_mark, console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
-use crate::models::types::{ListEntry, ListStatus, Vault, VaultStatus, vault_defaults};
-use crate::traits::CustomColors;
+use crate::models::types::{ListEntry, ListStatus, LogLevel, Vault, VaultStatus, vault_defaults};
+use crate::traits::{CustomColors, ResultExt};
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     let vaults = must_ok!(
@@ -100,7 +101,6 @@ pub fn display() {
     });
 }
 
-// todo 删除一个vault
 /// 根据名字删除一个vault
 /// - 其中的归档对象会被转移到default库
 pub fn remove(name: &str) -> ArchiverResult<u32> {
@@ -145,11 +145,31 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
     // * 删除
     // 移动归档对象到默认库
     // 已回收的就不管了
-    let satisfies = |entry: &ListEntry| {
-        matches!(entry.status, ListStatus::Archived) && entry.vault_id == vaults[index].id
-    };
+    let list = wrap_result!(jsonl::load::<ListEntry>(paths::LIST_FILE_PATH.as_path()))?;
+    let ids = list
+        .iter()
+        .filter(|entry| {
+            matches!(entry.status, ListStatus::Archived) && entry.vault_id == vaults[index].id
+        })
+        .map(|entry| entry.id)
+        .collect::<Vec<u32>>();
 
-    wrap_result!(archive::batch_mov(satisfies, vault_defaults::ID))?;
+    wrap_result!(archive::mov_check(&ids, vault_defaults::ID))?;
+
+    // 下面开始mov，过程类似于handlers中的mov，但是是精简版
+    let mut count = 0;
+    let to = vault_defaults::NAME;
+    let styled_to = to.styled_vault();
+    let succ = clap_mark::succ();
+    for id in ids {
+        println!("Moving id: {} into {}", id.styled_id(), styled_to);
+        archive::mov(id, vault_defaults::ID).ok_then_or_log(|_| {
+            println!("{} Id: {} is now in '{}'", succ, id.styled_id(), styled_to);
+            let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
+            log::sys(oper, LogLevel::Success, id, vault_defaults::ID);
+            count += 1;
+        });
+    }
 
     // 修改vaults.jsonl
     vaults[index].status = VaultStatus::Removed;

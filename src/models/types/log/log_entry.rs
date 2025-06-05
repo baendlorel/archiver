@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use strip_ansi_escapes::strip_str;
 
 use super::LogLevel;
-use crate::cli::{Operation, short};
+use crate::cli::{OperSource, Operation, short};
 use crate::core::{auto_incr, config, vault};
 use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
 use crate::misc::dt;
@@ -60,7 +60,14 @@ impl LogEntry {
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
         let rows = vec![
-            TableRow::new(vec!["Id".styled_field(), self.id.styled_id()]),
+            TableRow::new(vec![
+                "Id".styled_field(),
+                if matches!(self.oper.source, OperSource::System) {
+                    self.id.styled_sys_id()
+                } else {
+                    self.id.styled_id()
+                },
+            ]),
             TableRow::new(vec![
                 "Opered At".styled_field(),
                 dt::to_dt_string(&self.opered_at).bright_black().to_string(),
@@ -103,7 +110,11 @@ impl LogEntry {
 impl TableRowify for LogEntry {
     fn to_table_row(&self) -> crate::misc::console::table::TableRow {
         let mut cells = vec![
-            self.id.styled_id(),
+            if matches!(self.oper.source, OperSource::System) {
+                self.id.styled_sys_id()
+            } else {
+                self.id.styled_id()
+            },
             dt::to_omitted_dt_string(&self.opered_at)
                 .bright_black()
                 .to_string(),

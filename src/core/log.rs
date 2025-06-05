@@ -43,15 +43,14 @@ pub fn sys(
     level: LogLevel,
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
-    message: String,
 ) {
     if !matches!(oper.source, OperSource::System) {
         let e = err_warn!("User operations should not call this function directly");
         e.display();
         return;
     }
-
-    sl::save(oper, level, archive_id, vault_id, message).allow_and_display();
+    // 有没有可能需要记录失败的日志？
+    sl::save(oper, level, archive_id, vault_id, String::new()).allow_and_display();
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {

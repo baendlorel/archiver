@@ -69,13 +69,15 @@ pub fn mov_check(ids: &[u32], vault_id: u32) -> ArchiverResult<()> {
 /// & 在mov_check都满足后调用
 pub fn mov(id: u32, vault_id: u32) -> ArchiverResult<()> {
     let mut list = wrap_result!(list::find_all())?;
-    let entry = list.iter_mut().find(|entry| entry.id == id).unwrap();
+    let index = list.iter().position(|entry| entry.id == id).unwrap();
 
     // 校验过了，该有的有，不该有的没有
-    let from = paths::get_archived_path(entry.id, entry.vault_id);
-    let to = paths::get_archived_path(entry.id, vault_id);
+    let from = paths::get_archived_path(list[index].id, list[index].vault_id);
+    let to = paths::get_archived_path(list[index].id, vault_id);
 
+    // 动手
     as_fatal!(fs::rename(&from, &to))?;
+    list[index].vault_id = vault_id;
     wrap_result!(sl::save(&list))?;
     Ok(())
 }

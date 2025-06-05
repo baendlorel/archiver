@@ -20,6 +20,11 @@ pub trait CustomColors: std::fmt::Display {
         self.fg_rgb::<255, 80, 164>().to_string()
     }
 
+    /// rgb(118, 255, 232)
+    fn styled_sys_id(&self) -> String {
+        self.fg_rgb::<118, 255, 232>().to_string()
+    }
+
     /// rgb(194, 241, 118)
     fn styled_vault(&self) -> String {
         self.fg_rgb::<194, 241, 118>().to_string()
