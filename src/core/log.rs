@@ -13,8 +13,7 @@ mod sl;
 // ! 写入失败时只会输出到控制台，不会重试写入
 
 /// 写一条操作成功的日志
-/// - 入参message仅供控制台展示
-///     - 因为操作本身的成功已经蕴含了message的信息
+/// - 取消了入参message，因为不需要记入remark的字段不应该耦合于此
 pub fn succ(archive_id: impl Into<Option<u32>>, vault_id: impl Into<Option<u32>>) {
     // message没必要写入，因为level和operation已携带成功信息
     sl::save_simple(LogLevel::Success, archive_id, vault_id, None).allow_and_display();
@@ -29,7 +28,8 @@ pub fn error(e: ArchiverError) {
     sl::save_simple(level, None, None, str).allow_and_display();
 }
 
-/// 输出一段字符串
+/// 输出一段字符串，并以error级别记录日志
+/// - error日志需要把message记入remark字段
 pub fn fail(message: &str) {
     let e = err_error!("{}", message);
     let str = e.to_string();
@@ -43,7 +43,7 @@ pub fn sys(
     level: LogLevel,
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
-    remark: String,
+    message: String,
 ) {
     if !matches!(oper.source, OperSource::System) {
         let e = err_warn!("User operations should not call this function directly");
@@ -51,7 +51,7 @@ pub fn sys(
         return;
     }
 
-    sl::save(oper, level, archive_id, vault_id, remark).allow_and_display();
+    sl::save(oper, level, archive_id, vault_id, message).allow_and_display();
 }
 
 pub fn display(range: &Option<String>) -> ArchiverResult<()> {

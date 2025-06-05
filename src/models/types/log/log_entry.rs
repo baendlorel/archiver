@@ -25,8 +25,8 @@ pub struct LogEntry {
     #[serde(rename = "o")]
     pub oper: Operation, // 操作的完整信息
 
-    #[serde(rename = "r")]
-    pub remark: String, // 备注
+    #[serde(rename = "m")]
+    pub message: String, // 备注
 
     #[serde(rename = "aid", skip_serializing_if = "Option::is_none")]
     pub archive_id: Option<u32>, // archive id，如果有的话
@@ -39,7 +39,7 @@ impl LogEntry {
     pub fn new(
         oper: Operation,
         level: LogLevel,
-        remark: String,
+        message: String,
         archive_id: Option<u32>,
         vault_id: Option<u32>,
     ) -> Self {
@@ -48,7 +48,7 @@ impl LogEntry {
             opered_at: dt::now_dt(),
             oper,
             level,
-            remark: strip_str(remark),
+            message: strip_str(message),
             archive_id,
             vault_id,
         }
@@ -89,7 +89,7 @@ impl LogEntry {
             ]),
             TableRow::new(vec![
                 "remark".styled_field(),
-                self.remark
+                self.message
                     .replace("\n", "\\n")
                     .to_string()
                     .styled_string_value(),
@@ -131,7 +131,7 @@ impl TableRowify for LogEntry {
             String::new()
         };
 
-        let remark = config::alias::apply(&self.remark)
+        let message = config::alias::apply(&self.message)
             .replace("\n", "\\n")
             .to_string();
 
@@ -148,14 +148,14 @@ impl TableRowify for LogEntry {
         };
 
         // 下面处理remark、archive_id和vault_name的显示
-        let rav = match (self.remark.is_empty(), avid.is_empty()) {
+        let mav = match (self.message.is_empty(), avid.is_empty()) {
             (true, true) => String::new(),
-            (false, true) => remark.bright_black().to_string(),
+            (false, true) => message.bright_black().to_string(),
             (true, false) => avid,
-            (false, false) => format!("{} {}", remark.bright_black(), avid),
+            (false, false) => format!("{} {}", message.bright_black(), avid),
         };
 
-        cells.push(rav);
+        cells.push(mav);
 
         TableRow::new(cells)
     }

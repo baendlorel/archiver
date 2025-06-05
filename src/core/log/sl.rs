@@ -20,11 +20,10 @@ pub fn save(
     level: LogLevel,
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
-    remark: String,
+    message: String,
 ) -> ArchiverResult<()> {
     // 准备日志内容
-    let log_entry = LogEntry::new(oper, level, remark, archive_id.into(), vault_id.into());
-
+    let log_entry = LogEntry::new(oper, level, message, archive_id.into(), vault_id.into());
     // 获取日志文件路径
     let log_file_path = paths::get_log_path(dt::now_year());
     wrap_result!(jsonl::append(&log_entry, &log_file_path))?;
@@ -36,11 +35,11 @@ pub fn save_simple(
     level: LogLevel,
     archive_id: impl Into<Option<u32>>,
     vault_id: impl Into<Option<u32>>,
-    remark: impl Into<Option<String>>,
+    message: impl Into<Option<String>>,
 ) -> ArchiverResult<()> {
     let oper = FULL_CMD.to_operation();
-    let remark = remark.into().unwrap_or(String::new());
-    wrap_result!(save(oper, level, archive_id, vault_id, remark))?;
+    let message = message.into().unwrap_or(String::new());
+    wrap_result!(save(oper, level, archive_id, vault_id, message))?;
     Ok(())
 }
 
