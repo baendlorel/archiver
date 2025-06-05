@@ -10,7 +10,7 @@ use crate::core::{archive, log};
 use crate::misc::{clap_mark, console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus, LogLevel, Vault, VaultStatus, vault_defaults};
-use crate::traits::{CustomColors, ResultExt};
+use crate::traits::CustomColors;
 
 static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
     let vaults = must_ok!(

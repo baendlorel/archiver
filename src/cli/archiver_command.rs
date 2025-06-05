@@ -57,6 +57,11 @@ pub enum ArchiverCommand {
         /// Show restored items
         #[arg[short, long, group = "list_options"]]
         restored: bool,
+
+        // todo finish this
+        /// Choose which vault to list
+        #[arg[short, long]]
+        vault: Option<String>,
     },
 
     /// Show the log of archiving operations
@@ -99,7 +104,11 @@ impl ArchiverCommand {
             C::Restore { ids } => oper!(main::RESTORE, ids),
             C::Move { ids, to } => oper!(main::MOVE, ids, opt_map![to]),
             C::Vault(action) => action.to_operation(),
-            C::List { all, restored } => oper!(main::LIST, None, opt_map![all, restored]),
+            C::List {
+                all,
+                restored,
+                vault,
+            } => oper!(main::LIST, None, opt_map![all, restored]),
             C::Log { range, id } => oper!(main::LOG, [range], opt_map![id]),
             C::Config(action) => action.to_operation(),
             C::Update => oper!(main::UPDATE),

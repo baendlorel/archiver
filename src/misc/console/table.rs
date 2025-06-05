@@ -14,6 +14,7 @@ pub struct Column {
     width: (usize, usize),
 }
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub enum ColumnAlign {
     Left,

@@ -102,6 +102,18 @@ macro_rules! warn {
 /// - 为Err会直接panic
 #[macro_export]
 macro_rules! must_ok {
+    ($e:expr) => {
+        $e.unwrap_or_else(|error| {
+            panic!(
+                "{} {}\n at {} {}:{}",
+                crate::misc::clap_mark::fatal(),
+                error.to_string(),
+                file!(),
+                line!(),
+                column!()
+            )
+        })
+    };
     ($e:expr, $s:expr) => {
         $e.unwrap_or_else(|error| {
             panic!(
