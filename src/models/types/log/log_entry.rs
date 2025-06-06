@@ -9,7 +9,7 @@ use super::LogLevel;
 use crate::cli::short::main;
 use crate::cli::{OperSource, Operation};
 use crate::core::{archive, auto_incr, config, vault};
-use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
+use crate::misc::console::table::{Column, ColumnAlign, Table, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -189,6 +189,16 @@ impl TableRowify for LogEntry {
         cells.push(mav);
 
         TableRow::new(cells)
+    }
+
+    fn get_table_columns() -> Vec<Column> {
+        vec![
+            Column::left("Id"),
+            Column::left("Time"),
+            Column::center("⚑"),
+            Column::left("Operation"),
+            Column::new("Remark", ColumnAlign::Left, (6, 25)),
+        ]
     }
 }
 

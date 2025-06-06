@@ -141,6 +141,15 @@ impl TableRowify for ListEntry {
         let dir = config::alias::apply(&self.dir).bright_grey();
         TableRow::new(vec![archived_at, id, item, dir])
     }
+
+    fn get_table_columns() -> Vec<Column> {
+        vec![
+            Column::left("Archived At"),
+            Column::left("Id"),
+            Column::left("Item"),
+            Column::left("Directory"),
+        ]
+    }
 }
 
 impl ListStatus {

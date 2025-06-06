@@ -108,8 +108,7 @@ impl Table {
         Self { columns, rows }
     }
 
-    // todo 进一步改造为只要T符合就可以直接用rows，不需要cols，cols将直接从T的函数获取
-    pub fn display<T>(columns: Vec<Column>, rows: &Vec<T>)
+    pub fn display<T>(rows: &Vec<T>)
     where
         T: TableRowify,
     {
@@ -117,6 +116,7 @@ impl Table {
             .iter()
             .map(|r| r.to_table_row())
             .collect::<Vec<TableRow>>();
+        let columns = T::get_table_columns();
         let table = Self::new(columns, table_rows);
         table.display_header();
         table.display_rows();
@@ -186,6 +186,8 @@ impl Table {
 
 pub trait TableRowify {
     fn to_table_row(&self) -> TableRow;
+
+    fn get_table_columns() -> Vec<Column>;
 }
 
 #[macro_export]

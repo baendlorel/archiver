@@ -56,14 +56,7 @@ pub fn display(range: &Option<String>) -> ArchiverResult<()> {
     let (mut logs, reach_casual_limit) = wrap_result!(sl::load(range))?;
     logs.reverse();
 
-    let cols = vec![
-        Column::left("Id"),
-        Column::left("Time"),
-        Column::center("⚑"),
-        Column::left("Operation"),
-        Column::new("Remark", ColumnAlign::Left, (6, 25)),
-    ];
-    Table::display(cols, &logs);
+    Table::display(&logs);
 
     if reach_casual_limit {
         println!("Recent {} logs displayed.", logs.len());

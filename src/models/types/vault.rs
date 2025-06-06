@@ -3,7 +3,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::auto_incr;
-use crate::misc::console::table::{TableRow, TableRowify};
+use crate::misc::console::table::{Column, ColumnAlign, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -83,5 +83,15 @@ impl TableRowify for Vault {
             self.remark.bright_black().to_string(),
         ];
         TableRow::new(cells)
+    }
+
+    fn get_table_columns() -> Vec<Column> {
+        vec![
+            Column::left("Created At"),
+            Column::left("Id"),
+            Column::left("Name"),
+            Column::left("Status"),
+            Column::new("Remark", ColumnAlign::Left, (6, 25)),
+        ]
     }
 }

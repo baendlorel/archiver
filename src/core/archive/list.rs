@@ -44,15 +44,7 @@ pub fn display(all: bool, restored: bool, vault: &Option<String>) -> ArchiverRes
     }
 
     // 下面开始输出对好了空格的列表
-    Table::display(
-        vec![
-            Column::left("Archived At"),
-            Column::left("Id"),
-            Column::left("Item"),
-            Column::left("Directory"),
-        ],
-        &list,
-    );
+    Table::display(&list);
 
     Ok(())
 }

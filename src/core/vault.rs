@@ -99,14 +99,7 @@ pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverRe
 }
 
 pub fn display() {
-    let cols = vec![
-        Column::left("Created At"),
-        Column::left("Id"),
-        Column::left("Name"),
-        Column::left("Status"),
-        Column::new("Remark", ColumnAlign::Left, (6, 25)),
-    ];
-    Table::display(cols, &VAULT_LIST);
+    Table::display(&VAULT_LIST);
 }
 
 /// 根据名字删除一个vault
