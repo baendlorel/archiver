@@ -20,10 +20,10 @@ echo -e "\n分类统计："
 awk -F'|' '{
     content = substr($0, index($0, $2))
     lc = tolower(content)
-    if (lc ~ /\/ todo/)   {todo++}
-    if (lc ~ /\/ fixme/)  {fixme++}
-    if (lc ~ /\/ hack/)   {hack++}
-    if (lc ~ /\/ lt/)     {lt++}
+    if (lc ~ /(\/\/|#|\/\*|<!--)[[:space:]]*todo/)   {todo++}
+    if (lc ~ /(\/\/|#|\/\*|<!--)[[:space:]]*fixme/)  {fixme++}
+    if (lc ~ /(\/\/|#|\/\*|<!--)[[:space:]]*hack/)   {hack++}
+    if (lc ~ /(\/\/|#|\/\*|<!--)[[:space:]]*lt/)     {lt++}
 }
 END {
     printf "TODO:   %d\nFIXME:  %d\nHACK:   %d\nLT:     %d\n", todo, fixme, hack, lt
