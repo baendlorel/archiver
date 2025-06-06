@@ -22,7 +22,7 @@ use crate::cli::short::main;
 use crate::cli::{ConfigAction, VaultAction};
 use crate::core::{archive, check, config, log, update, vault};
 use crate::misc::clap_mark;
-use crate::models::types::{LogLevel, vault_defaults};
+use crate::models::types::LogLevel;
 use crate::traits::{CustomColors, ResultExt};
 
 macro_rules! succ {
@@ -65,8 +65,8 @@ pub fn vault(action: &VaultAction) {
 
 pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>) {
     let vault_id = match vault {
-        Some(name) => match vault::find_by_name(&name) {
-            Some(v) => v.id,
+        Some(name) => match vault::get_id(&name) {
+            Some(id) => id,
             None => {
                 log::fail(&format!("Vault '{}' not found", name));
                 return;
@@ -180,8 +180,8 @@ pub fn restore(ids: &[u32]) {
 }
 
 pub fn mov(ids: &[u32], to: &str) {
-    let vault_id = match vault::find_by_name(to) {
-        Some(v) => v.id,
+    let vault_id = match vault::get_id(to) {
+        Some(id) => id,
         None => {
             log::fail("Vault not found");
             return;

@@ -1,7 +1,12 @@
 use chrono::NaiveDateTime;
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::{core::auto_incr, misc::dt, models::serde_custom::naive_date_time};
+use crate::core::auto_incr;
+use crate::misc::console::table::{TableRow, TableRowify};
+use crate::misc::dt;
+use crate::models::serde_custom::naive_date_time;
+use crate::traits::CustomColors;
 
 pub mod vault_defaults {
     /// 默认仓库的名字，确定了以后更新就不太好改了
@@ -59,5 +64,24 @@ impl Vault {
             created_at: dt::now_dt(),
             status: VaultStatus::Valid,
         }
+    }
+}
+
+impl TableRowify for Vault {
+    fn to_table_row(&self) -> TableRow {
+        let cells = vec![
+            dt::to_dt_string(&self.created_at)
+                .bright_black()
+                .to_string(),
+            self.id.styled_vault(),
+            self.name.clone(),
+            match self.status {
+                VaultStatus::Valid => "Valid".styled_valid(),
+                VaultStatus::Removed => "Removed".styled_invalid(),
+                VaultStatus::Protected => "Protected".styled_const(),
+            },
+            self.remark.bright_black().to_string(),
+        ];
+        TableRow::new(cells)
     }
 }

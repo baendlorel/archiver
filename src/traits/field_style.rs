@@ -59,6 +59,16 @@ pub trait CustomColors: std::fmt::Display {
     fn styled_comment(&self) -> String {
         self.fg_rgb::<110, 156, 90>().to_string()
     }
+
+    /// rgb(68, 190, 255)
+    fn styled_valid(&self) -> String {
+        self.fg_rgb::<68, 190, 255>().to_string()
+    }
+
+    /// rgb(255, 59, 59)
+    fn styled_invalid(&self) -> String {
+        self.fg_rgb::<255, 59, 59>().to_string()
+    }
 }
 
 impl CustomColors for String {}

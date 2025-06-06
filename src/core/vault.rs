@@ -7,30 +7,36 @@ use std::collections::HashMap;
 use super::config;
 use crate::cli::short::main;
 use crate::core::{archive, log};
+use crate::misc::console::table::{Column, ColumnAlign, Table};
 use crate::misc::{clap_mark, console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus, LogLevel, Vault, VaultStatus, vault_defaults};
 use crate::traits::CustomColors;
 
-static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
-    let vaults = must_ok!(
+static VAULT_LIST: Lazy<Vec<Vault>> = Lazy::new(|| {
+    let mut vaults = must_ok!(
         jsonl::load::<Vault>(&paths::VAULTS_FILE_PATH),
         "Failed to load vaults data"
     );
+    vaults.insert(0, Vault::default()); // 默认库
+    vaults
+});
 
-    let mut vault_map: HashMap<u32, Vault> = HashMap::new();
-    vault_map.insert(0, Vault::default()); // 默认vault
-    for v in vaults {
-        vault_map.insert(v.id, v);
-    }
+static VAULT_MAP: Lazy<HashMap<u32, Vault>> = Lazy::new(|| {
+    let m: HashMap<u32, Vault> = HashMap::from_iter(VAULT_LIST.iter().map(|v| (v.id, v.clone())));
+    m
+});
 
-    vault_map
+static VAULT_NAME_MAP: Lazy<HashMap<String, Vault>> = Lazy::new(|| {
+    let m: HashMap<String, Vault> =
+        HashMap::from_iter(VAULT_LIST.iter().map(|v| (v.name.clone(), v.clone())));
+    m
 });
 
 /// 根据name搜索的，一般只要搜一条就行，但根据vid搜却可能要几百次（例如LogEntry），所以id做键
-pub fn find_by_name(name: &str) -> Option<Vault> {
-    if let Some((_, vault)) = VAULT_MAP.iter().find(|(_, vault)| vault.name == name) {
-        Some(vault.clone())
+pub fn get_id(name: &str) -> Option<u32> {
+    if let Some(vault) = VAULT_NAME_MAP.get(name) {
+        Some(vault.id)
     } else {
         None
     }
@@ -47,13 +53,13 @@ pub fn get_name(id: u32) -> String {
 
 /// 修改当前使用的 vault
 pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
-    let vault = find_by_name(name);
-    if vault.is_none() {
+    let id: Option<u32> = get_id(name);
+    if id.is_none() {
         return info!("Vault '{}' not found", name);
     }
 
     // 更新current_vault_id
-    let id = vault.unwrap().id;
+    let id = id.unwrap();
     let mut config = config::CONFIG.clone();
     config.current_vault_id = id;
     wrap_result!(config::save(&config))?;
@@ -63,8 +69,8 @@ pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
 
 /// 创建一个新的 vault，不能重名
 pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverResult<Vault> {
-    if let Some(vault) = find_by_name(name) {
-        if vault.name == vault_defaults::NAME {
+    if let Some(id) = get_id(name) {
+        if id == vault_defaults::ID {
             // 如果是默认库，则不允许创建同名库
             return info!(
                 "'{}' means default vault, please choose another name",
@@ -93,21 +99,20 @@ pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverRe
 }
 
 pub fn display() {
-    VAULT_MAP.iter().for_each(|(id, vault)| {
-        println!(
-            "{} {} {} {}",
-            id, vault.name, vault.remark, vault.created_at
-        );
-    });
+    let cols = vec![
+        Column::left("Created At"),
+        Column::left("Id"),
+        Column::left("Name"),
+        Column::left("Status"),
+        Column::new("Remark", ColumnAlign::Left, (6, 25)),
+    ];
+    Table::display(cols, &VAULT_LIST);
 }
 
 /// 根据名字删除一个vault
 /// - 其中的归档对象会被转移到default库
 pub fn remove(name: &str) -> ArchiverResult<u32> {
-    let mut vaults = VAULT_MAP
-        .iter()
-        .map(|(_, v)| v.clone())
-        .collect::<Vec<Vault>>();
+    let mut vaults = VAULT_LIST.clone();
     let index = vaults
         .iter()
         .position(|v| matches!(v.status, VaultStatus::Valid) && v.name == name);

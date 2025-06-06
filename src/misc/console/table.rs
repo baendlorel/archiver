@@ -108,6 +108,7 @@ impl Table {
         Self { columns, rows }
     }
 
+    // todo 进一步改造为只要T符合就可以直接用rows，不需要cols，cols将直接从T的函数获取
     pub fn display<T>(columns: Vec<Column>, rows: &Vec<T>)
     where
         T: TableRowify,
