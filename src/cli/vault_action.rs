@@ -33,6 +33,7 @@ pub enum VaultAction {
         name: String,
     },
 
+    // todo 格式化输出vault列表
     /// List all vaults
     #[command(visible_aliases = ["ls"])]
     List,

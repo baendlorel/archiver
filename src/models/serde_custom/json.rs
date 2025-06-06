@@ -16,12 +16,8 @@ fn strip_json_comments(json_str: &str) -> String {
         }
 
         match ch {
-            '"' if !in_string => {
-                in_string = true;
-                result.push(ch);
-            }
-            '"' if in_string => {
-                in_string = false;
+            '"' => {
+                in_string = !in_string;
                 result.push(ch);
             }
             '\\' if in_string => {

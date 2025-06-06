@@ -8,7 +8,8 @@ use crate::models::{error::ArchiverResult, serde_custom::SerdeJson};
 
 /// 看一下自增主键的下一个值
 /// - 不会更新
-pub fn peek_next(name: &str) -> u32 {
+/// Returns a reference to the next() value without advancing the iterator.
+pub fn peek(name: &str) -> u32 {
     let auto_incr = must_ok!(load(), "Failed to parse auto increment file");
     match auto_incr {
         AutoIncrVars(m) => {

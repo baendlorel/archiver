@@ -20,8 +20,8 @@ mod raw {
     // 特定文件
     pub const LIST_FILE: &str = "list.jsonl";
     pub const VAULTS_FILE: &str = "vaults.jsonl";
-    pub const AUTO_INCR_FILE: &str = "auto-incr.json";
-    pub const CONFIG_FILE: &str = "config.json";
+    pub const AUTO_INCR_FILE: &str = "auto-incr.jsonc";
+    pub const CONFIG_FILE: &str = "config.jsonc";
 }
 
 /// 确保文件夹路径存在的宏，仅在本文件范围使用

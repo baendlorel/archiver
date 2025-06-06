@@ -58,6 +58,9 @@ impl TableRow {
     }
 }
 
+// lt table组件自动换行
+// todo 当只有最后一个column的宽度为0时，启动自动探测终端宽度模式
+
 impl Table {
     pub fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
         // 确保列数不为0

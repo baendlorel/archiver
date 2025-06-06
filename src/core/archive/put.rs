@@ -14,7 +14,7 @@ use crate::traits::{CustomColors, ForceToString};
 /// - 重复的不行
 pub fn put_check(items: &[String], vault_id: u32) -> ArchiverResult<()> {
     let mut set: HashSet<PathBuf> = HashSet::new();
-    let mut pre_id = auto_incr::peek_next("archive_id");
+    let mut pre_id = auto_incr::peek("archive_id");
     // 检查每个路径是否存在
     for item in items {
         let item_path = as_fatal!(paths::CWD.join(item).canonicalize())?;

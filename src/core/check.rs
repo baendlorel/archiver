@@ -215,9 +215,9 @@ pub fn check(verbose: bool) {
         }
 
         // 检查是否能和auto-incr对得上
-        let aid = auto_incr::peek_next("archive_id");
-        let vid = auto_incr::peek_next("vault_id");
-        let lid = auto_incr::peek_next("log_id");
+        let aid = auto_incr::peek("archive_id");
+        let vid = auto_incr::peek("vault_id");
+        let lid = auto_incr::peek("log_id");
         if aid <= max_aid {
             add!(
                 "Next archive id {} is not greater than the maximum id {}. Please edit file '{}' and set 'archive_id' to '{}'",
