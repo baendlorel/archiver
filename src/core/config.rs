@@ -8,6 +8,6 @@ pub mod vault_item_sep;
 pub use common::{CONFIG, VLT_ITEM_SEP};
 pub use sl::save;
 
-pub fn display() {
-    CONFIG.display();
+pub fn display(comment: bool) {
+    CONFIG.display(comment);
 }

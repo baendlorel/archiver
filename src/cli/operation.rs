@@ -176,6 +176,10 @@ macro_rules! oper {
         use crate::traits::EnsureOption;
         crate::cli::Operation::new($main, $sub.ensure_option(), None, None)
     }};
+    ($main:expr,$sub:expr,None,$opts:expr) => {{
+        use crate::traits::EnsureOption;
+        crate::cli::Operation::new($main, $sub.ensure_option(), None, $opts)
+    }};
 
     // * 带$args处理的情形
     ($main:expr,$args:expr) => {{ oper!($main, None, $args, None) }};

@@ -27,7 +27,7 @@ fn handle(command: &AC) {
             all,
             restored,
             vault,
-        } => handlers::list(*all, *restored),
+        } => handlers::list(*all, *restored, vault),
         AC::Log { range, id } => handlers::log(range, id),
         AC::Config(action) => handlers::config(&action),
         AC::Update => handlers::update(),

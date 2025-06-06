@@ -1,4 +1,3 @@
-use crate::core::config::alias;
 use crate::map;
 
 use chrono::NaiveDate;
@@ -6,6 +5,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use std::vec;
 
+use crate::core::{config::alias, vault};
 use crate::misc::{dt, paths};
 use crate::traits::{CustomColors, ForceToString};
 
@@ -42,7 +42,7 @@ impl ArchiverConfig {
         }
     }
 
-    pub fn display(&self) {
+    pub fn display(&self, comment: bool) {
         // 保留map以供未来扩展
         // 此为3元组的数组，依次是（字段名，字段值，注释文本）
         let m = vec![
@@ -50,6 +50,16 @@ impl ArchiverConfig {
                 "ArchiverPath",
                 alias::apply(&paths::ROOT_DIR.force_to_string()).styled_const(),
                 "Archived items, configs, etc. are here.",
+            ),
+            (
+                "CurrentVault",
+                format!(
+                    "{}({})",
+                    vault::get_name(self.current_vault_id),
+                    self.current_vault_id
+                )
+                .styled_vault(),
+                "`put` command shall put items into this vault.",
             ),
             (
                 "Alias",
@@ -117,17 +127,15 @@ impl ArchiverConfig {
             ),
         ];
 
-        m.iter().for_each(|(field, value, comment)| {
-            println!(
-                "{}: {}  {}{}",
-                field.styled_field(),
-                value,
-                "// ".styled_comment(),
-                comment.styled_comment()
-            );
+        m.iter().for_each(|(field, value, comment_str)| {
+            if comment {
+                println!("{}{}", "// ".styled_comment(), comment_str.styled_comment());
+                println!("{}: {}\n", field.styled_field(), value);
+            } else {
+                println!("{}: {}", field.styled_field(), value);
+            }
         });
 
-        println!();
         println!(
             "{} means you cannot modify it.",
             "This color".styled_const().underline()

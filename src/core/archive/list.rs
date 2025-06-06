@@ -1,5 +1,6 @@
-use crate::wrap_result;
+use crate::{err, wrap_result};
 
+use crate::core::vault;
 use crate::misc::console::table::{Column, Table};
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
@@ -23,8 +24,20 @@ pub fn insert(entry: &ListEntry) -> ArchiverResult<()> {
     Ok(())
 }
 
-pub fn display(all: bool, restored: bool) -> ArchiverResult<()> {
-    let list = wrap_result!(find(|entry| all || (restored == entry.is_restored())))?;
+pub fn display(all: bool, restored: bool, vault: &Option<String>) -> ArchiverResult<()> {
+    let list = match vault {
+        Some(v) => {
+            let vault = vault::find_by_name(v);
+            if vault.is_none() {
+                return err!("Vault '{}' not found", v);
+            }
+            let vault_id = vault.unwrap().id;
+            wrap_result!(find(
+                |entry| entry.vault_id == vault_id && (all || (restored == entry.is_restored()))
+            ))?
+        }
+        None => wrap_result!(find(|entry| all || (restored == entry.is_restored())))?,
+    };
 
     if list.len() == 0 {
         println!("No archived object found");

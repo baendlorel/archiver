@@ -9,7 +9,10 @@ use crate::cli::short::main;
 pub enum ConfigAction {
     /// Show all configuration of Archiver
     #[command(aliases = ["l", "ls", "show"])]
-    List,
+    List {
+        #[arg(short, long, help = "Show configs with comment")]
+        comment: bool,
+    },
 
     /// Set alias entries
     Alias {
@@ -43,7 +46,7 @@ type CA = ConfigAction;
 impl ConfigAction {
     pub fn to_operation(&self) -> Operation {
         match self {
-            CA::List => ca_oper!("list", None, None),
+            CA::List { comment } => ca_oper!("list", None, opt_map![comment]),
             CA::Alias { entry, remove } => ca_oper!("alias", [entry], opt_map![remove]),
             CA::UpdateCheck { status } => ca_oper!("update-check", [status], None),
             CA::VaultItemSep { sep } => ca_oper!("vault-item-sep", [sep], None),

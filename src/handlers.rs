@@ -72,7 +72,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                 return;
             }
         },
-        None => vault_defaults::ID, // 默认使用0号vault
+        None => config::CONFIG.current_vault_id, // 默认使用config配置里的
     };
 
     if let Err(e) = archive::put_check(items, vault_id) {
@@ -237,8 +237,8 @@ pub fn mov(ids: &[u32], to: &str) {
     }
 }
 
-pub fn list(all: bool, restored: bool) {
-    archive::list::display(all, restored).allow_and_display();
+pub fn list(all: bool, restored: bool, vault: &Option<String>) {
+    archive::list::display(all, restored, vault).allow_and_display();
 }
 
 pub fn log(range: &Option<String>, id: &Option<u32>) {
@@ -258,7 +258,7 @@ pub fn log(range: &Option<String>, id: &Option<u32>) {
 
 pub fn config(action: &ConfigAction) {
     match action {
-        ConfigAction::List => config::display(),
+        ConfigAction::List { comment } => config::display(*comment),
         ConfigAction::Alias { entry, remove } => {
             if *remove {
                 config::alias::remove(&entry).ok_then_or_log(|_| {
