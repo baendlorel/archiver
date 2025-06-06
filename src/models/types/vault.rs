@@ -75,7 +75,7 @@ impl Vault {
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
         let rows = vec![
-            kv_row!("Vault Id", self.id.styled_id()),
+            kv_row!("Vault Id", self.id.styled_vault()),
             kv_row!("Name", self.name.clone()),
             kv_row!("Created At", time),
             kv_row!("Status", self.status.to_display()),

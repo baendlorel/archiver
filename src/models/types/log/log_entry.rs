@@ -76,11 +76,13 @@ impl LogEntry {
             ),
             kv_row!("Level", self.level.to_display()),
             kv_row!("Operation", self.oper.to_detailed_display()),
-            kv_row!("Archive Id", join_archive_ids(&self.archive_ids)),
-            kv_row!("Vault", join_vault_ids(&self.vault_ids)),
+            kv_row!("Archive Ids", join_archive_ids(&self.archive_ids)),
+            kv_row!("Vaults", join_vault_ids(&self.vault_ids)),
             kv_row!("remark", self.message.replace("\n", "\\n").styled_string()),
         ];
         let table = Table::new(cols, rows);
+
+        println!("--- Log:");
         table.display_rows();
 
         let display_related_list_entries = |ids: &[u32]| {
@@ -206,10 +208,9 @@ fn join_archive_ids(ids: &Option<Vec<u32>>) -> String {
 fn join_vault_ids(ids: &Option<Vec<u32>>) -> String {
     if let Some(ids) = ids {
         ids.iter()
-            .map(|n| format!("{}({})", vault::get_name(*n), n))
+            .map(|n| format!("{}({})", vault::get_name(*n), n.styled_vault()))
             .collect::<Vec<String>>()
             .join(", ")
-            .styled_vault()
     } else {
         String::new()
     }
