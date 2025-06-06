@@ -1,7 +1,7 @@
 use crate::{err, wrap_result};
 
 use crate::core::vault;
-use crate::misc::console::table::{Column, Table};
+use crate::misc::console::table::Table;
 use crate::misc::{jsonl, paths};
 use crate::models::error::ArchiverResult;
 use crate::models::types::ListEntry;

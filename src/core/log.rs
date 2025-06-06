@@ -2,7 +2,7 @@ use crate::{err_error, err_warn, info, wrap_result};
 
 use crate::cli::{OperSource, Operation};
 use crate::misc::clap_mark;
-use crate::misc::console::table::{Column, ColumnAlign, Table};
+use crate::misc::console::table::Table;
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
 use crate::traits::{CustomColors, ResultExt};

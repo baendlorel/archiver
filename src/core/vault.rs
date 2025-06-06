@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use super::config;
 use crate::cli::short::main;
 use crate::core::{archive, log};
-use crate::misc::console::table::{Column, ColumnAlign, Table};
+use crate::misc::console::table::Table;
 use crate::misc::{clap_mark, console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus, LogLevel, Vault, VaultStatus, vault_defaults};
@@ -129,7 +129,7 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
     }
 
     // 删除前确认
-    let verify_code = rand::string(6);
+    let verify_code = rand::string(4);
     println!(
         "To confirm removing vault '{}', please type: {}",
         name.styled_vault(),
@@ -152,37 +152,39 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         .map(|entry| entry.id)
         .collect::<Vec<u32>>();
 
-    wrap_result!(archive::mov_check(&ids, vault_defaults::ID))?;
+    if ids.len() > 0 {
+        wrap_result!(archive::mov_check(&ids, vault_defaults::ID))?;
 
-    // 下面开始mov，过程类似于handlers中的mov，但是是精简版
-    let mut count = 0;
-    let to = vault_defaults::NAME;
-    let styled_to = to.styled_vault();
-    let succ = clap_mark::succ();
-    for id in &ids {
-        println!("Moving id: {} into {}", id.styled_id(), styled_to);
+        // 下面开始mov，过程类似于handlers中的mov，但是是精简版
+        let mut count = 0;
+        let to = vault_defaults::NAME;
+        let styled_to = to.styled_vault();
+        let succ = clap_mark::succ();
+        for id in &ids {
+            println!("Moving id: {} into {}", id.styled_id(), styled_to);
 
-        let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
-        match archive::mov(*id, vault_defaults::ID) {
-            Ok(_) => {
-                println!("{} Id: {} is now in '{}'", succ, id.styled_id(), styled_to);
-                log::sys(oper, LogLevel::Success, vec![*id], vec![vault_defaults::ID]);
-                count += 1;
-            }
-            Err(e) => {
-                e.display();
-                log::sys(oper, e.level, vec![*id], vec![vault_defaults::ID]);
+            let oper = oper!(main::MOVE, None, [id], opt_map![to], "sys");
+            match archive::mov(*id, vault_defaults::ID) {
+                Ok(_) => {
+                    println!("{} Id: {} is now in '{}'", succ, id.styled_id(), styled_to);
+                    log::sys(oper, LogLevel::Success, vec![*id], vec![vault_defaults::ID]);
+                    count += 1;
+                }
+                Err(e) => {
+                    e.display();
+                    log::sys(oper, e.level, vec![*id], vec![vault_defaults::ID]);
+                }
             }
         }
-    }
 
-    println!(
-        "{} {}/{} items are successfully moved to vault '{}'",
-        clap_mark::succ(),
-        count,
-        ids.len(),
-        styled_to
-    );
+        println!(
+            "{} {}/{} items are successfully moved to vault '{}'",
+            clap_mark::succ(),
+            count,
+            ids.len(),
+            styled_to
+        );
+    }
 
     // 修改vaults.jsonl
     vaults[index].status = VaultStatus::Removed;
