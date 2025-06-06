@@ -58,7 +58,6 @@ pub enum ArchiverCommand {
         #[arg[short, long, group = "list_options"]]
         restored: bool,
 
-        // todo finish this
         /// Choose which vault to list
         #[arg[short, long]]
         vault: Option<String>,
@@ -83,10 +82,10 @@ pub enum ArchiverCommand {
     #[command(visible_aliases = ["u", main::UPDATE])]
     Update,
 
-    /// Check the integrity of Archiver's data. Will only display non-passed entries
+    /// Check whether the core data is logically correct. By default, only failed entries are displayed
     #[command(visible_aliases = [main::CHECK])]
     Check {
-        /// Show every entry, including those passed the check
+        /// Show every checked items, including the passed
         #[arg(short, long)]
         verbose: bool,
     },
@@ -108,7 +107,7 @@ impl ArchiverCommand {
                 all,
                 restored,
                 vault,
-            } => oper!(main::LIST, None, opt_map![all, restored]),
+            } => oper!(main::LIST, None, opt_map![all, restored, vault]),
             C::Log { range, id } => oper!(main::LOG, [range], opt_map![id]),
             C::Config(action) => action.to_operation(),
             C::Update => oper!(main::UPDATE),

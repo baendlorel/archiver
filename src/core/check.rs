@@ -5,7 +5,7 @@ use std::ops::Deref;
 use crate::core::{archive, auto_incr, config};
 use crate::misc::{jsonl, mark, paths};
 use crate::models::types::{ListStatus, LogEntry, Vault, VaultStatus};
-use crate::traits::CustomColors;
+use crate::traits::{CustomColors, ForceToString};
 
 macro_rules! must {
     ($e:expr) => {
@@ -18,8 +18,8 @@ pub trait OnPanic<T> {
     fn on_panic(self, msg: impl AsRef<str>);
 }
 
-// todo 可能需要增加check完成后的统计
 static mut INDEX: u32 = 0;
+static mut PASSED: u32 = 0;
 static mut VERBOSE: bool = false;
 
 impl<T> OnPanic<T> for std::thread::Result<T> {
@@ -29,6 +29,7 @@ impl<T> OnPanic<T> for std::thread::Result<T> {
         }
         match self {
             Ok(_) => unsafe {
+                PASSED += 1;
                 if VERBOSE {
                     let idx = INDEX;
                     println!(
@@ -55,7 +56,7 @@ impl<T> OnPanic<T> for std::thread::Result<T> {
                         "\n{} {}. {}\n    {}\n",
                         mark::fatal(),
                         idx.to_string().red(),
-                        msg.as_ref(),
+                        msg.as_ref().strikethrough(),
                         panic_msg.replace("\n", "\n    ")
                     );
                 };
@@ -71,6 +72,7 @@ where
     std::panic::catch_unwind(f).on_panic(m);
 }
 
+// lt 也许将来可以添加命令--fix，做成自动修复一些错误
 /// 检查Archiver所有文件内容是否符合逻辑
 pub fn check(verbose: bool) {
     unsafe {
@@ -80,13 +82,27 @@ pub fn check(verbose: bool) {
     // 防止panic输出到控制台，我要统一捕获
     std::panic::set_hook(Box::new(|_| {}));
 
+    println!("Start checking...");
+
     // 各个目录
-    it("Home directory is valid", || paths::HOME_DIR.exists());
-    it("Root directory is valid", || paths::ROOT_DIR.exists());
-    it("Current working directory is valid", || paths::CWD.exists());
-    it("Logs directory is valid", || paths::LOGS_DIR.exists());
-    it("Core directory is valid", || paths::CORE_DIR.exists());
-    it("Vaults directory is valid", || paths::VAULTS_DIR.exists());
+    it("Home directory is valid", || {
+        paths::HOME_DIR.force_to_string()
+    });
+    it("Root directory is valid", || {
+        paths::ROOT_DIR.force_to_string()
+    });
+    it("Current working directory is valid", || {
+        paths::CWD.force_to_string()
+    });
+    it("Logs directory is valid", || {
+        paths::LOGS_DIR.force_to_string()
+    });
+    it("Core directory is valid", || {
+        paths::CORE_DIR.force_to_string()
+    });
+    it("Vaults directory is valid", || {
+        paths::VAULTS_DIR.force_to_string()
+    });
 
     // 配置文件
     it("Configuration can be loaded", || config::CONFIG.deref());
@@ -204,22 +220,28 @@ pub fn check(verbose: bool) {
         let lid = auto_incr::peek_next("log_id");
         if aid <= max_aid {
             add!(
-                "Next archive id {} is not greater than the maximum id {}.",
+                "Next archive id {} is not greater than the maximum id {}. Please edit file '{}' and set 'archive_id' to '{}'",
                 aid.styled_id(),
+                max_aid.styled_id(),
+                paths::AUTO_INCR_FILE_PATH.display(),
                 max_aid.styled_id()
             );
         }
         if vid <= max_vid {
             add!(
-                "Next vault id {} is not greater than the maximum id {}.",
+                "Next vault id {} is not greater than the maximum id {}. Please edit file '{}' and set 'vault_id' to '{}'",
                 vid.styled_vault(),
+                max_vid.styled_vault(),
+                paths::AUTO_INCR_FILE_PATH.display(),
                 max_vid.styled_vault()
             );
         }
         if lid <= max_lid {
             add!(
-                "Next log id {} is not greater than the maximum id {}.",
+                "Next log id {} is not greater than the maximum id {}. Please edit file '{}' and set 'log_id' to '{}'",
                 lid.styled_id(),
+                max_lid.styled_id(),
+                paths::AUTO_INCR_FILE_PATH.display(),
                 max_lid.styled_id()
             );
         }
@@ -228,4 +250,10 @@ pub fn check(verbose: bool) {
             panic!("{}", errs.join("\n"));
         }
     });
+
+    println!(
+        "{}/{} checks passed.",
+        unsafe { PASSED }.to_string().green(),
+        unsafe { INDEX }.to_string(),
+    );
 }
