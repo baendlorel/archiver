@@ -62,6 +62,20 @@ impl TableRow {
 // todo 当只有最后一个column的宽度为0时，启动自动探测终端宽度模式
 
 impl Table {
+    pub fn display<T>(rows: &Vec<T>)
+    where
+        T: TableRowify,
+    {
+        let table_rows = rows
+            .iter()
+            .map(|r| r.to_table_row())
+            .collect::<Vec<TableRow>>();
+        let columns = T::get_table_columns();
+        let table = Self::new(columns, table_rows);
+        table.display_header();
+        table.display_rows();
+    }
+
     pub fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
         // 确保列数不为0
         if columns.is_empty() {
@@ -106,20 +120,6 @@ impl Table {
             }
         }
         Self { columns, rows }
-    }
-
-    pub fn display<T>(rows: &Vec<T>)
-    where
-        T: TableRowify,
-    {
-        let table_rows = rows
-            .iter()
-            .map(|r| r.to_table_row())
-            .collect::<Vec<TableRow>>();
-        let columns = T::get_table_columns();
-        let table = Self::new(columns, table_rows);
-        table.display_header();
-        table.display_rows();
     }
 
     pub fn format_row(&self, cells: &[String]) -> String {
@@ -181,6 +181,24 @@ impl Table {
             rows.push(self.format_row(&row.cells));
         }
         println!("{}", rows.join("\n"));
+    }
+
+    // 如果最后一列是0宽度，那么启用终端宽度为自动对齐
+    fn only_last_col_has_0_width(&self) -> bool {
+        let len = self.columns.len();
+        for i in 0..len {
+            let col = &self.columns[i];
+            // 非最后一位是0不行
+            if i != len - 1 && col.width.0 == 0 {
+                return false;
+            }
+
+            // 最后一位不是0不行
+            if i == len - 1 && col.width.0 != 0 {
+                return false;
+            }
+        }
+        true
     }
 }
 

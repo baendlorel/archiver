@@ -70,9 +70,6 @@ pub fn add(alias_entry: &str) -> ArchiverResult<()> {
 fn parse(alias_entry: &str) -> ArchiverResult<(String, String)> {
     if let Some((alias, origin)) = alias_entry.split_once("=") {
         // & 这里不需要origin解析出来非得不是空值，空值可以匹配任意值，方便remove
-        // if origin.is_empty() {
-        //     return warn!("origin is empty. Got '{}'", alias_entry);
-        // }
 
         // 去掉origin后面的斜杠
         let alias = alias.trim_end_matches(MAIN_SEPARATOR);

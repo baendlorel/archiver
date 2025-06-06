@@ -28,6 +28,7 @@ pub enum VaultAction {
     },
 
     /// Remove a vault by name
+    #[command(visible_aliases = ["rm"])]
     Remove {
         #[arg(value_name = "name", required = true)]
         name: String,
@@ -35,7 +36,11 @@ pub enum VaultAction {
 
     /// List all vaults
     #[command(visible_aliases = ["ls"])]
-    List,
+    List {
+        /// Show only valid vaults
+        #[arg(short, long)]
+        all: bool,
+    },
 }
 
 macro_rules! va_oper {
@@ -55,7 +60,7 @@ impl VaultAction {
                 activate,
             } => va_oper!("create", [name], opt_map![remark, activate]),
             VA::Remove { name } => va_oper!("remove", [name], None),
-            VA::List => va_oper!("list", None, None),
+            VA::List { all } => va_oper!("list", None, opt_map![all]),
         }
     }
 }

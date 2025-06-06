@@ -1,9 +1,11 @@
+use crate::kv_row;
+
 use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::auto_incr;
-use crate::misc::console::table::{Column, ColumnAlign, TableRow, TableRowify};
+use crate::misc::console::table::{Column, ColumnAlign, Table, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -65,21 +67,33 @@ impl Vault {
             status: VaultStatus::Valid,
         }
     }
+
+    pub fn display(&self) {
+        let time = dt::to_dt_string(&self.created_at)
+            .bright_black()
+            .to_string();
+        // 此处恰好也可以用表格来输出
+        let cols = vec![Column::left("Prop"), Column::left("Value")];
+        let rows = vec![
+            kv_row!("Vault Id", self.id.styled_id()),
+            kv_row!("Name", self.name.clone()),
+            kv_row!("Created At", time),
+            kv_row!("Status", self.status.to_display()),
+            kv_row!("Remark", self.remark.bright_black().to_string()),
+        ];
+        Table::new(cols, rows).display_rows();
+    }
 }
 
 impl TableRowify for Vault {
     fn to_table_row(&self) -> TableRow {
         let cells = vec![
-            dt::to_dt_string(&self.created_at)
+            dt::to_omitted_dt_string(&self.created_at)
                 .bright_black()
                 .to_string(),
             self.id.styled_vault(),
             self.name.clone(),
-            match self.status {
-                VaultStatus::Valid => "Valid".styled_valid(),
-                VaultStatus::Removed => "Removed".styled_invalid(),
-                VaultStatus::Protected => "Protected".styled_const(),
-            },
+            self.status.to_display(),
             self.remark.bright_black().to_string(),
         ];
         TableRow::new(cells)
@@ -93,5 +107,15 @@ impl TableRowify for Vault {
             Column::left("Status"),
             Column::new("Remark", ColumnAlign::Left, (6, 25)),
         ]
+    }
+}
+
+impl VaultStatus {
+    pub fn to_display(&self) -> String {
+        match self {
+            VaultStatus::Valid => "Valid".styled_valid(),
+            VaultStatus::Removed => "Removed".styled_invalid(),
+            VaultStatus::Protected => "Protected".styled_const(),
+        }
     }
 }

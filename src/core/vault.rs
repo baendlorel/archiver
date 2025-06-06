@@ -33,6 +33,14 @@ static VAULT_NAME_MAP: Lazy<HashMap<String, Vault>> = Lazy::new(|| {
     m
 });
 
+pub fn find(condition: impl Fn(&Vault) -> bool) -> Vec<Vault> {
+    VAULT_LIST
+        .iter()
+        .filter(|&v| condition(v))
+        .cloned()
+        .collect::<Vec<Vault>>()
+}
+
 /// 根据name搜索的，一般只要搜一条就行，但根据vid搜却可能要几百次（例如LogEntry），所以id做键
 pub fn get_id(name: &str) -> Option<u32> {
     if let Some(vault) = VAULT_NAME_MAP.get(name) {
@@ -98,8 +106,14 @@ pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverRe
     Ok(vault)
 }
 
-pub fn display() {
-    Table::display(&VAULT_LIST);
+pub fn display(all: bool) {
+    let vaults = VAULT_LIST
+        .iter()
+        .filter(|v| all || matches!(v.status, VaultStatus::Valid))
+        .cloned()
+        .collect::<Vec<Vault>>();
+
+    Table::display(&vaults);
 }
 
 /// 根据名字删除一个vault
@@ -130,10 +144,9 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
 
     // 删除前确认
     let verify_code = rand::string(4);
-    println!(
-        "To confirm removing vault '{}', please type: {}",
-        name.styled_vault(),
-        verify_code
+    print!(
+        "To confirm removing, please type: {} ",
+        verify_code.yellow().bold()
     );
 
     if !console::confirm_str("> ", &verify_code) {
@@ -188,7 +201,18 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
 
     // 修改vaults.jsonl
     vaults[index].status = VaultStatus::Removed;
-    wrap_result!(jsonl::save(&vaults, paths::VAULTS_FILE_PATH.as_path()))?;
+
+    // 这里要防止默认库也被写入文件
+    let vaults_exclude_default = vaults
+        .iter()
+        .filter(|v| v.id != vault_defaults::ID)
+        .cloned()
+        .collect::<Vec<Vault>>();
+
+    wrap_result!(jsonl::save(
+        &vaults_exclude_default,
+        paths::VAULTS_FILE_PATH.as_path()
+    ))?;
 
     Ok(vaults[index].id)
 }

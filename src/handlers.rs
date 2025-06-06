@@ -49,7 +49,7 @@ pub fn vault(action: &VaultAction) {
             );
             log::succ(None, vec![v.id]);
         }),
-        VaultAction::List => vault::display(),
+        VaultAction::List { all } => vault::display(*all),
         VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
             succ!("Vault '{}' is successfully set as current vault", name);
             log::succ(None, vec![vault_id]);

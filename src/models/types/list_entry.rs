@@ -134,7 +134,8 @@ impl TableRowify for ListEntry {
             let v = vault::get_name(self.vault_id).styled_vault();
             format!("{}{}{}{}", v, *config::VLT_ITEM_SEP, t, r)
         };
-        let archived_at = dt::to_dt_string(&self.archived_at)
+
+        let archived_at = dt::to_omitted_dt_string(&self.archived_at)
             .bright_black()
             .to_string();
         let id = self.id.styled_id();

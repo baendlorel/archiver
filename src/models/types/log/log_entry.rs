@@ -84,17 +84,26 @@ impl LogEntry {
         table.display_rows();
 
         let display_related_list_entries = |ids: &[u32]| {
-            let list = must_ok!(
+            let arr = must_ok!(
                 archive::list::find(|entry| ids.contains(&entry.id)),
-                format!(
-                    "Unable to find list entries for `put` operation with log id: {}",
-                    self.id
-                )
+                format!("Cannot find list entries with log id: {}", self.id)
             );
 
-            if list.len() > 0 {
+            if arr.len() > 0 {
                 println!("--- Related Archiver List Entries:");
-                list.iter().for_each(|entry| {
+                arr.iter().for_each(|entry| {
+                    entry.display();
+                    println!("---")
+                });
+            }
+        };
+
+        let display_related_vaults = |ids: &[u32]| {
+            let arr = vault::find(|entry| ids.contains(&entry.id));
+
+            if arr.len() > 0 {
+                println!("--- Related Vaults:");
+                arr.iter().for_each(|entry| {
                     entry.display();
                     println!("---")
                 });
@@ -102,56 +111,36 @@ impl LogEntry {
         };
 
         // 如果查询的是put、restore记录，那么关联查询list
-        match self.oper.main.as_str() {
-            // main::RESTORE if matches!(self.level, LogLevel::Success) => {
-            //     if self.oper.args.is_none() {
-            //         println!(
-            //             "{} No args provided for `put` with log id: {}. This shall not happen normally. Logs might be modified manually.",
-            //             clap_mark::fatal(),
-            //             self.id.styled_id()
-            //         );
-            //         return;
-            //     }
-
-            //     let ids = self
-            //         .oper
-            //         .args
-            //         .clone()
-            //         .unwrap()
-            //         .iter()
-            //         .map(|id| match id.parse::<u32>() {
-            //             Ok(n) => n,
-            //             Err(e) => {
-            //                 err_fatal!("Invalid id `{}` in args for `put`, {}", id, e).display();
-            //                 0
-            //             }
-            //         })
-            //         .filter(|id| *id != 0)
-            //         .collect::<Vec<u32>>();
-
-            //     display_related_list_entries(&ids);
-            // }
-            main::PUT | main::RESTORE if matches!(self.level, LogLevel::Success) => {
-                if let Some(ids) = &self.archive_ids {
-                    display_related_list_entries(ids);
+        if matches!(self.level, LogLevel::Success) {
+            match self.oper.main.as_str() {
+                main::PUT | main::RESTORE => {
+                    if let Some(ids) = &self.archive_ids {
+                        display_related_list_entries(ids);
+                    }
                 }
+                main::VAULT => {
+                    if let Some(ids) = &self.vault_ids {
+                        display_related_vaults(ids);
+                    }
+                }
+                _ => {}
             }
-            _ => {}
         }
     }
 }
 
 impl TableRowify for LogEntry {
     fn to_table_row(&self) -> crate::misc::console::table::TableRow {
+        let id = if matches!(self.oper.source, OperSource::System) {
+            self.id.styled_sys_id()
+        } else {
+            self.id.styled_id()
+        };
         let mut cells = vec![
-            if matches!(self.oper.source, OperSource::System) {
-                self.id.styled_sys_id()
-            } else {
-                self.id.styled_id()
-            },
             dt::to_omitted_dt_string(&self.opered_at)
                 .bright_black()
                 .to_string(),
+            id,
             self.level.to_mark(),
             self.oper.to_display(),
         ];
@@ -193,8 +182,8 @@ impl TableRowify for LogEntry {
 
     fn get_table_columns() -> Vec<Column> {
         vec![
-            Column::left("Id"),
             Column::left("Time"),
+            Column::left("Id"),
             Column::center("⚑"),
             Column::left("Operation"),
             Column::new("Remark", ColumnAlign::Left, (6, 25)),
