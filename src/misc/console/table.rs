@@ -161,7 +161,17 @@ impl Table {
                 );
             }
             let rest_width = terminal_width - all_other_width;
-            let last_width = rest_width - columns.len() * column_space;
+            let space = (columns.len() - 1) * column_space;
+            if rest_width <= space {
+                panic!(
+                    "{} rest width {} is smaller than space {}",
+                    clap_mark::fatal(),
+                    rest_width,
+                    space
+                );
+            }
+
+            let last_width = rest_width - space;
             let len = columns.len();
             columns[len - 1].width.0 = columns[len - 1].width.0.min(last_width);
             columns[len - 1].width.1 = columns[len - 1].width.0;
