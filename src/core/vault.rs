@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use super::config;
 use crate::cli::short::main;
 use crate::core::{archive, log};
-use crate::misc::console::table::Table;
+use crate::misc::console::{confirm, table::Table};
 use crate::misc::{clap_mark, console, jsonl, paths, rand};
 use crate::models::error::ArchiverResult;
 use crate::models::types::{ListEntry, ListStatus, LogLevel, Vault, VaultStatus, vault_defaults};
@@ -77,14 +77,35 @@ pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
 
 /// 创建一个新的 vault，不能重名
 pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverResult<Vault> {
-    if let Some(id) = get_id(name) {
-        if id == vault_defaults::ID {
-            // 如果是默认库，则不允许创建同名库
+    if let Some(vault) = VAULT_NAME_MAP.get(name) {
+        // 如果是默认库，则不允许创建和默认库同名的库
+        if vault.id == vault_defaults::ID {
             return info!(
                 "'{}' means default vault, please choose another name",
                 vault_defaults::NAME
             );
         }
+
+        if matches!(vault.status, VaultStatus::Removed) {
+            // 如果是已删除的库，则可以恢复
+            if confirm(&format!(
+                "'{}' is a removed vault, do you want to recover it?",
+                name
+            )) {
+                wrap_result!(recover(name))?;
+                log::trans(
+                    oper![main::VAULT, "restore", vec![name], None, "trans"],
+                    LogLevel::Success,
+                    None,
+                    vec![vault.id],
+                );
+            } else {
+                println!("{} recovery cancelled", clap_mark::info());
+            }
+            // 直接退出，同时也是为了避免日志记录奇怪
+            std::process::exit(0);
+        }
+
         return info!(
             "Vault named '{}' already exists, please choose another name",
             name
@@ -106,19 +127,9 @@ pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverRe
     Ok(vault)
 }
 
-pub fn display(all: bool) {
-    let vaults = VAULT_LIST
-        .iter()
-        .filter(|v| all || matches!(v.status, VaultStatus::Valid))
-        .cloned()
-        .collect::<Vec<Vault>>();
-
-    Table::display(&vaults);
-}
-
 /// 根据名字删除一个vault
 /// - 其中的归档对象会被转移到default库
-pub fn remove(name: &str) -> ArchiverResult<u32> {
+pub fn remove(name: &str) -> ArchiverResult<Vault> {
     let mut vaults = VAULT_LIST.clone();
     let index = vaults
         .iter()
@@ -214,5 +225,34 @@ pub fn remove(name: &str) -> ArchiverResult<u32> {
         paths::VAULTS_FILE_PATH.as_path()
     ))?;
 
-    Ok(vaults[index].id)
+    Ok(vaults[index].clone())
+}
+
+pub fn recover(name: &str) -> ArchiverResult<Vault> {
+    let mut vaults = VAULT_LIST.clone();
+    let index = vaults
+        .iter()
+        .position(|v| matches!(v.status, VaultStatus::Removed) && v.name == name);
+    if index.is_none() {
+        return info!("No removed vault '{}' was found", name);
+    }
+
+    // * 能找到，那么下面开始恢复
+    let index = index.unwrap();
+    vaults[index].status = VaultStatus::Valid;
+
+    // 修改vaults.jsonl
+    wrap_result!(jsonl::save(&vaults, paths::VAULTS_FILE_PATH.as_path()))?;
+
+    Ok(vaults[index].clone())
+}
+
+pub fn display(all: bool) {
+    let vaults = VAULT_LIST
+        .iter()
+        .filter(|v| all || matches!(v.status, VaultStatus::Valid))
+        .cloned()
+        .collect::<Vec<Vault>>();
+
+    Table::display(&vaults);
 }

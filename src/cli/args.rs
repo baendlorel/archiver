@@ -1,7 +1,6 @@
 use clap::{CommandFactory, Parser};
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
-use std::process::exit;
 
 use super::archiver_command::ArchiverCommand;
 
@@ -24,6 +23,6 @@ pub static FULL_CMD: Lazy<ArchiverCommand> = Lazy::new(|| {
             .print_help()
             .expect("Cannot print help text");
         println!(); // 添加一个空行
-        exit(1)
+        std::process::exit(1)
     }
 });

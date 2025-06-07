@@ -38,7 +38,10 @@ pub enum OperSource {
     User,
 
     #[serde(rename = "s")]
-    System = 2,
+    System,
+
+    #[serde(rename = "t")]
+    Transformed,
 }
 
 #[derive(Clone)]
@@ -54,7 +57,7 @@ pub enum Opt {
 }
 
 impl Operation {
-    pub fn new(
+    pub fn user(
         main: &str,
         sub: Option<String>,
         args: Option<Vec<String>>,
@@ -84,6 +87,21 @@ impl Operation {
         }
     }
 
+    pub fn trans(
+        main: &str,
+        sub: Option<String>,
+        args: Option<Vec<String>>,
+        opts: Option<HashMap<String, Opt>>,
+    ) -> Self {
+        Self {
+            main: main.to_string(),
+            sub,
+            args,
+            opts,
+            source: OperSource::Transformed,
+        }
+    }
+
     fn get_main(&self) -> String {
         match self.main.as_str() {
             short::main::PUT => self.main.bright_green().to_string(),
@@ -102,7 +120,7 @@ impl Operation {
 
         let mut result: Vec<String> = vec![main];
         if let Some(sub) = &self.sub {
-            result.push(sub.bright_black().to_string());
+            result.push(sub.grey());
         }
 
         if let Some(args) = &self.args {
@@ -137,7 +155,7 @@ impl Operation {
 
         let mut result: Vec<String> = vec![main];
         if let Some(sub) = &self.sub {
-            result.push(sub.bright_black().to_string());
+            result.push(sub.grey());
         }
 
         if let Some(args) = &self.args {
@@ -170,15 +188,15 @@ impl Operation {
 #[macro_export]
 macro_rules! oper {
     // * 不带$args处理的情形
-    ($main:expr) => {{ crate::cli::Operation::new($main, None, None, None) }};
-    ($main:expr,None,$opts:expr) => {{ crate::cli::Operation::new($main, None, None, $opts) }};
+    ($main:expr) => {{ crate::cli::Operation::user($main, None, None, None) }};
+    ($main:expr,None,$opts:expr) => {{ crate::cli::Operation::user($main, None, None, $opts) }};
     ($main:expr,$sub:expr,None,None) => {{
         use crate::traits::EnsureOption;
-        crate::cli::Operation::new($main, $sub.ensure_option(), None, None)
+        crate::cli::Operation::user($main, $sub.ensure_option(), None, None)
     }};
     ($main:expr,$sub:expr,None,$opts:expr) => {{
         use crate::traits::EnsureOption;
-        crate::cli::Operation::new($main, $sub.ensure_option(), None, $opts)
+        crate::cli::Operation::user($main, $sub.ensure_option(), None, $opts)
     }};
 
     // * 带$args处理的情形
@@ -198,10 +216,10 @@ macro_rules! oper {
             }
         }
 
-        if $src == "sys" {
-            Operation::sys($main, $sub.ensure_option(), args.ensure_option(), $opts)
-        } else {
-            Operation::new($main, $sub.ensure_option(), args.ensure_option(), $opts)
+        match $src {
+            "sys" => Operation::sys($main, $sub.ensure_option(), args.ensure_option(), $opts),
+            "trans" => Operation::trans($main, $sub.ensure_option(), args.ensure_option(), $opts),
+            "user" | _ => Operation::user($main, $sub.ensure_option(), args.ensure_option(), $opts),
         }
     }};
 }

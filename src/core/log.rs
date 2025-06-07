@@ -45,7 +45,23 @@ pub fn sys(
     vault_ids: impl Into<Option<Vec<u32>>>,
 ) {
     if !matches!(oper.source, OperSource::System) {
-        let e = err_warn!("User operations should not call this function directly");
+        let e = err_warn!("Non-system operations should not call this function directly");
+        e.display();
+        return;
+    }
+    sl::save(oper, level, archive_ids, vault_ids, String::new()).allow_and_display();
+}
+
+/// 保存经过转换的操作
+/// - 比如说create被删除的vault，转换为recover操作
+pub fn trans(
+    oper: Operation,
+    level: LogLevel,
+    archive_ids: impl Into<Option<Vec<u32>>>,
+    vault_ids: impl Into<Option<Vec<u32>>>,
+) {
+    if !matches!(oper.source, OperSource::Transformed) {
+        let e = err_warn!("Non-transformed operations should not call this function directly");
         e.display();
         return;
     }

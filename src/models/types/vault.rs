@@ -69,9 +69,7 @@ impl Vault {
     }
 
     pub fn display(&self) {
-        let time = dt::to_dt_string(&self.created_at)
-            .bright_black()
-            .to_string();
+        let time = dt::to_dt_string(&self.created_at).grey();
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
         let rows = vec![
@@ -79,7 +77,7 @@ impl Vault {
             kv_row!("Name", self.name.clone()),
             kv_row!("Created At", time),
             kv_row!("Status", self.status.to_display()),
-            kv_row!("Remark", self.remark.bright_black().to_string()),
+            kv_row!("Remark", self.remark.grey()),
         ];
         Table::new(cols, rows).display_rows();
     }
@@ -88,13 +86,11 @@ impl Vault {
 impl TableRowify for Vault {
     fn to_table_row(&self) -> TableRow {
         let cells = vec![
-            dt::to_omitted_dt_string(&self.created_at)
-                .bright_black()
-                .to_string(),
+            dt::to_omitted_dt_string(&self.created_at).grey(),
             self.id.styled_vault(),
             self.name.clone(),
             self.status.to_display(),
-            self.remark.bright_black().to_string(),
+            self.remark.grey(),
         ];
         TableRow::new(cells)
     }
@@ -103,7 +99,7 @@ impl TableRowify for Vault {
         vec![
             Column::left("Created At"),
             Column::left("Id"),
-            Column::left("Name"),
+            Column::left_with_max("Name", 30),
             Column::left("Status"),
             Column::left_flex("Remark"),
         ]

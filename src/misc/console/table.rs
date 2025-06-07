@@ -1,8 +1,7 @@
 use owo_colors::OwoColorize;
-use std::process::exit;
 
 use crate::misc::{clap_mark, console::get_terminal_width};
-use crate::traits::StripAnsi;
+use crate::traits::{CustomColors, StripAnsi};
 
 #[derive(Clone)]
 pub struct Column {
@@ -128,6 +127,7 @@ impl Table {
                 );
             }
 
+            // todo 格式化策略：为了避免某一条太长导致整列空出大量空白，采取类似“众数”的办法来决定最大宽度
             // 格式化每一列，包括预设宽度是0的最后一列
             for i in 0..columns.len() {
                 columns[i].width.0 = columns[i].width.0.max(row.cells[i].true_len());
@@ -168,7 +168,7 @@ impl Table {
                     "{} Please stretch your terminal window and try again.",
                     clap_mark::info()
                 );
-                exit(1);
+                std::process::exit(1);
             }
             let last_width = terminal_width - all_other_width - space;
             let len = columns.len();
@@ -201,7 +201,7 @@ impl Table {
                 formatted.push(format!(
                     "{}{}",
                     cell.omit_skip_ansi(col.width.0 - 2),
-                    "..".bright_black(), // 不管怎么变化，末尾的省略号永远使用灰色
+                    "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
                 ));
                 continue;
             } else {

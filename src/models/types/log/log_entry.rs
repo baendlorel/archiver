@@ -58,21 +58,17 @@ impl LogEntry {
 
     /// 单条输出，可用于按照log_id展示日志
     pub fn display(&self) {
+        let id = match self.oper.source {
+            OperSource::User => self.id.styled_id(),
+            OperSource::System => self.id.styled_sys_id(),
+            OperSource::Transformed => self.id.styled_trans_id(),
+        };
+
         // 此处恰好也可以用表格来输出
         let cols = vec![Column::left("Prop"), Column::left("Value")];
         let rows = vec![
-            kv_row!(
-                "Id",
-                if matches!(self.oper.source, OperSource::System) {
-                    self.id.styled_sys_id()
-                } else {
-                    self.id.styled_id()
-                }
-            ),
-            kv_row!(
-                "Opered At",
-                dt::to_dt_string(&self.opered_at).bright_black().to_string()
-            ),
+            kv_row!("Id", id),
+            kv_row!("Opered At", dt::to_dt_string(&self.opered_at).grey()),
             kv_row!("Level", self.level.to_display()),
             kv_row!("Operation", self.oper.to_detailed_display()),
             kv_row!("Archive Ids", join_archive_ids(&self.archive_ids)),
@@ -132,15 +128,14 @@ impl LogEntry {
 
 impl TableRowify for LogEntry {
     fn to_table_row(&self) -> crate::misc::console::table::TableRow {
-        let id = if matches!(self.oper.source, OperSource::System) {
-            self.id.styled_sys_id()
-        } else {
-            self.id.styled_id()
+        let id = match self.oper.source {
+            OperSource::User => self.id.styled_id(),
+            OperSource::System => self.id.styled_sys_id(),
+            OperSource::Transformed => self.id.styled_trans_id(),
         };
+
         let mut cells = vec![
-            dt::to_omitted_dt_string(&self.opered_at)
-                .bright_black()
-                .to_string(),
+            dt::to_omitted_dt_string(&self.opered_at).grey(),
             id,
             self.level.to_mark(),
             self.oper.to_display(),
@@ -171,9 +166,9 @@ impl TableRowify for LogEntry {
         // 下面处理remark、archive_id和vault_name的显示
         let mav = match (self.message.is_empty(), avid.is_empty()) {
             (true, true) => String::new(),
-            (false, true) => message.bright_black().to_string(),
+            (false, true) => message.grey(),
             (true, false) => avid,
-            (false, false) => format!("{} {}", message.bright_black(), avid),
+            (false, false) => format!("{} {}", message.grey(), avid),
         };
 
         cells.push(mav);

@@ -34,6 +34,12 @@ pub enum VaultAction {
         name: String,
     },
 
+    /// Recover a removed vault
+    Recover {
+        #[arg(value_name = "name", required = true)]
+        name: String,
+    },
+
     /// List all vaults
     #[command(visible_aliases = ["ls"])]
     List {
@@ -60,6 +66,7 @@ impl VaultAction {
                 activate,
             } => va_oper!("create", [name], opt_map![remark, activate]),
             VA::Remove { name } => va_oper!("remove", [name], None),
+            VA::Recover { name } => va_oper!("recover", [name], None),
             VA::List { all } => va_oper!("list", None, opt_map![all]),
         }
     }

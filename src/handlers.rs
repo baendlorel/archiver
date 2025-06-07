@@ -37,6 +37,10 @@ macro_rules! succ {
 
 pub fn vault(action: &VaultAction) {
     match action {
+        VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
+            succ!("Vault '{}' is successfully set as current vault", name);
+            log::succ(None, vec![vault_id]);
+        }),
         VaultAction::Create {
             name,
             remark,
@@ -49,17 +53,19 @@ pub fn vault(action: &VaultAction) {
             );
             log::succ(None, vec![v.id]);
         }),
-        VaultAction::List { all } => vault::display(*all),
-        VaultAction::Use { name } => vault::use_by_name(name).ok_then_or_log(|vault_id| {
-            succ!("Vault '{}' is successfully set as current vault", name);
-            log::succ(None, vec![vault_id]);
-        }),
         VaultAction::Remove { name } => {
-            vault::remove(name).ok_then_or_log(|vault_id| {
+            vault::remove(name).ok_then_or_log(|vault| {
                 succ!("Vault '{}' is removed", name);
-                log::succ(None, vec![vault_id]);
+                log::succ(None, vec![vault.id]);
             });
         }
+        VaultAction::Recover { name } => {
+            vault::recover(name).ok_then_or_log(|vault| {
+                succ!("Vault '{}' is recovered", name);
+                log::succ(None, vec![vault.id]);
+            });
+        }
+        VaultAction::List { all } => vault::display(*all),
     }
 }
 

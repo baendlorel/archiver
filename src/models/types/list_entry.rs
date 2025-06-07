@@ -96,9 +96,7 @@ impl ListEntry {
             self.item.clone()
         };
 
-        let archived_at = dt::to_dt_string(&self.archived_at)
-            .bright_black()
-            .to_string();
+        let archived_at = dt::to_dt_string(&self.archived_at).grey();
         let dir = config::alias::apply(&self.dir).bright_grey();
         let vault_info =
             format!("{}({})", vault::get_name(self.vault_id), self.vault_id).styled_vault();
@@ -135,9 +133,7 @@ impl TableRowify for ListEntry {
             format!("{}{}{}{}", v, *config::VLT_ITEM_SEP, t, r)
         };
 
-        let archived_at = dt::to_omitted_dt_string(&self.archived_at)
-            .bright_black()
-            .to_string();
+        let archived_at = dt::to_omitted_dt_string(&self.archived_at).grey();
         let id = self.id.styled_id();
         let dir = config::alias::apply(&self.dir).bright_grey();
         TableRow::new(vec![archived_at, id, item, dir])
@@ -147,8 +143,8 @@ impl TableRowify for ListEntry {
         vec![
             Column::left("Archived At"),
             Column::left("Id"),
-            Column::left("Item"),
-            Column::left("Directory"),
+            Column::left_with_max("Item", 30),
+            Column::left_flex("Directory"),
         ]
     }
 }

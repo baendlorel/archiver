@@ -1,6 +1,10 @@
 use owo_colors::OwoColorize;
 
 pub trait CustomColors: std::fmt::Display {
+    fn grey(&self) -> String {
+        self.fg_rgb::<148, 148, 152>().to_string()
+    }
+
     fn bright_grey(&self) -> String {
         self.fg_rgb::<170, 170, 170>().to_string()
     }
@@ -23,6 +27,11 @@ pub trait CustomColors: std::fmt::Display {
     /// rgb(118, 255, 232)
     fn styled_sys_id(&self) -> String {
         self.fg_rgb::<118, 255, 232>().to_string()
+    }
+
+    /// rgb(255, 225, 115)
+    fn styled_trans_id(&self) -> String {
+        self.fg_rgb::<255, 225, 115>().to_string()
     }
 
     /// rgb(194, 241, 118)
