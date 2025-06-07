@@ -5,7 +5,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::auto_incr;
-use crate::misc::console::table::{Column, ColumnAlign, Table, TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -105,7 +105,7 @@ impl TableRowify for Vault {
             Column::left("Id"),
             Column::left("Name"),
             Column::left("Status"),
-            Column::new("Remark", ColumnAlign::Left, (6, 25)),
+            Column::left_flex("Remark"),
         ]
     }
 }

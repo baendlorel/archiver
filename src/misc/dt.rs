@@ -80,10 +80,15 @@ pub fn to_dt_string(date_time: &NaiveDateTime) -> String {
 ///     - 2000-01-01 00:00:00
 ///     - 01-01 00:00:00 如果今年和年份相等
 pub fn to_omitted_dt_string(date_time: &NaiveDateTime) -> String {
-    if Local::now().year() == date_time.year() {
+    let dt = if Local::now().year() == date_time.year() {
         date_time.format("%m-%d %H:%M:%S").to_string()
     } else {
         date_time.format("%Y-%m-%d %H:%M:%S").to_string()
+    };
+    if dt == "1970-01-01 00:00:00" {
+        String::new()
+    } else {
+        dt
     }
 }
 

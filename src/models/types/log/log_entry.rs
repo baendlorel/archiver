@@ -3,13 +3,12 @@ use crate::{kv_row, must_ok};
 use chrono::NaiveDateTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use strip_ansi_escapes::strip_str;
 
 use super::LogLevel;
 use crate::cli::short::main;
 use crate::cli::{OperSource, Operation};
 use crate::core::{archive, auto_incr, config, vault};
-use crate::misc::console::table::{Column, ColumnAlign, Table, TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -51,7 +50,7 @@ impl LogEntry {
             opered_at: dt::now_dt(),
             oper,
             level,
-            message: strip_str(message),
+            message: strip_ansi_escapes::strip_str(message),
             archive_ids,
             vault_ids,
         }
@@ -188,7 +187,7 @@ impl TableRowify for LogEntry {
             Column::left("Id"),
             Column::center("⚑"),
             Column::left("Operation"),
-            Column::new("Remark", ColumnAlign::Left, (6, 25)),
+            Column::left_flex("Remark"),
         ]
     }
 }

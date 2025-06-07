@@ -1,6 +1,7 @@
 use owo_colors::OwoColorize;
 
-use crate::{misc::clap_mark, traits::StripAnsi};
+use crate::misc::{clap_mark, console::get_terminal_width};
+use crate::traits::StripAnsi;
 
 #[derive(Clone)]
 pub struct Column {
@@ -28,8 +29,14 @@ pub struct TableRow {
 }
 
 pub struct Table {
+    /// 表格列定义
     columns: Vec<Column>,
+
+    /// 数据行，每一行的len必须和columns的len一致
     rows: Vec<TableRow>,
+
+    /// 显示为表格的时候列之间的空隙
+    column_space: usize,
 }
 
 impl Column {
@@ -38,6 +45,13 @@ impl Column {
             name: name.to_string(),
             align,
             width,
+        }
+    }
+    pub fn left_flex(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            align: ColumnAlign::Left,
+            width: (0, 0),
         }
     }
 
@@ -70,8 +84,7 @@ impl Table {
             .iter()
             .map(|r| r.to_table_row())
             .collect::<Vec<TableRow>>();
-        let columns = T::get_table_columns();
-        let table = Self::new(columns, table_rows);
+        let table = Self::new(T::get_table_columns(), table_rows);
         table.display_header();
         table.display_rows();
     }
@@ -81,6 +94,9 @@ impl Table {
         if columns.is_empty() {
             panic!("{} Columns vec cannot be empty", clap_mark::fatal());
         }
+
+        // 列空隙默认为1
+        let column_space = 1;
 
         // 确保columns数组的width属性，只有末尾的任意个允许为0,不允许穿插0和非0
         // 因为为0的宽度不会进行padding
@@ -100,6 +116,7 @@ impl Table {
         }
 
         // 确保每行的单元格数量与列数一致
+        // 同时统一计算出列宽
         for row in &rows {
             if row.cells.len() != columns.len() {
                 panic!(
@@ -108,18 +125,67 @@ impl Table {
                 );
             }
 
-            // 宽度为0的，不格式化
+            // 格式化每一列，包括预设宽度是0的最后一列
             for i in 0..columns.len() {
-                if columns[i].width.0 != 0 {
-                    columns[i].width.0 = columns[i]
-                        .width
-                        .0
-                        .max(row.cells[i].true_len())
-                        .min(columns[i].width.1);
+                columns[i].width.0 = columns[i].width.0.max(row.cells[i].true_len());
+
+                // 最大宽度为0的是要准备flex的
+                if columns[i].width.1 != 0 {
+                    columns[i].width.0 = columns[i].width.0.min(columns[i].width.1);
                 }
             }
         }
-        Self { columns, rows }
+
+        // 最后一列是否自动调整宽度，触发条件为
+        // - 最后一列的最大宽度为0
+        // - 其他列宽度都不为0
+        // 如果为true，则会根据终端宽度自动调整最后一列的宽度
+        let flex_last_col = {
+            let len = columns.len();
+            columns[..len - 1].iter().all(|col| col.width.0 != 0) && columns[len - 1].width.1 == 0
+        };
+
+        if flex_last_col {
+            let terminal_width = get_terminal_width();
+            let all_other_width = columns[..columns.len() - 1]
+                .iter()
+                .map(|col| col.width.0)
+                .sum::<usize>();
+            // 将最后一列的宽度设置为终端宽度减去其他列的宽度
+            if terminal_width <= all_other_width {
+                panic!(
+                    "{} Terminal width {} is smaller than total column widths {}",
+                    clap_mark::fatal(),
+                    terminal_width,
+                    all_other_width
+                );
+            }
+            let rest_width = terminal_width - all_other_width;
+            let last_width = rest_width - columns.len() * column_space;
+            let len = columns.len();
+            columns[len - 1].width.0 = columns[len - 1].width.0.min(last_width);
+            columns[len - 1].width.1 = columns[len - 1].width.0;
+
+            // todo 最好option的最大长度也要限制，为此要新增构造函数
+            // // ^ 打一个测试用的标志行
+            // for i in 0..terminal_width {
+            //     let c = i + 1;
+            //     if c % 20 == 0 {
+            //         print!("^");
+            //     } else if c % 10 == 0 {
+            //         print!("|");
+            //     } else {
+            //         print!("_");
+            //     }
+            // }
+            // println!("");
+        }
+
+        Self {
+            columns,
+            rows,
+            column_space,
+        }
     }
 
     pub fn format_row(&self, cells: &[String]) -> String {
@@ -163,7 +229,7 @@ impl Table {
             };
             formatted.push(s);
         }
-        formatted.join(" ")
+        formatted.join(&" ".repeat(self.column_space))
     }
 
     pub fn display_header(&self) {
@@ -181,24 +247,6 @@ impl Table {
             rows.push(self.format_row(&row.cells));
         }
         println!("{}", rows.join("\n"));
-    }
-
-    // 如果最后一列是0宽度，那么启用终端宽度为自动对齐
-    fn only_last_col_has_0_width(&self) -> bool {
-        let len = self.columns.len();
-        for i in 0..len {
-            let col = &self.columns[i];
-            // 非最后一位是0不行
-            if i != len - 1 && col.width.0 == 0 {
-                return false;
-            }
-
-            // 最后一位不是0不行
-            if i == len - 1 && col.width.0 != 0 {
-                return false;
-            }
-        }
-        true
     }
 }
 
