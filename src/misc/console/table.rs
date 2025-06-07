@@ -51,7 +51,7 @@ impl Column {
         Self {
             name: name.to_string(),
             align: ColumnAlign::Left,
-            width: (0, 0),
+            width: (name.len(), 0),
         }
     }
 
@@ -197,6 +197,9 @@ impl Table {
             let cell_width = cell.true_len();
             // 考虑cell内容过长，省略号的情形
             let cell = if cell_width > col.width.0 {
+                // println!("col.width.0 {}", col.width.0);
+                // println!("cell_width {}", cell_width);
+                // println!("cell {}", cell);
                 // 已经撑满，不需要执行下面的padding了
                 formatted.push(format!(
                     "{}{}",

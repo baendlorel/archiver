@@ -24,7 +24,12 @@ pub fn succ(archive_ids: impl Into<Option<Vec<u32>>>, vault_ids: impl Into<Optio
 pub fn error(e: ArchiverError) {
     e.display();
     let str = e.to_string();
-    let level = e.level;
+
+    // 此处e的level只是表示输出到控制台的显示信息，实际都是错误，此处统一坍缩为error
+    let level = match e.level {
+        LogLevel::Fatal => LogLevel::Fatal,
+        _ => LogLevel::Error,
+    };
     sl::save_simple(level, None, None, str).allow_and_display();
 }
 

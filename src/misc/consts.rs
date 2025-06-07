@@ -8,11 +8,11 @@ pub mod mark {
     }
 
     pub fn error() -> String {
-        "!".red().bold().to_string()
+        "✗".bright_red().bold().to_string()
     }
 
     pub fn fatal() -> String {
-        "✗".bright_red().bold().to_string()
+        "!".red().bold().underline().to_string()
     }
 
     pub fn warn() -> String {

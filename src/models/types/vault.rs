@@ -1,7 +1,6 @@
 use crate::kv_row;
 
 use chrono::NaiveDateTime;
-use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::auto_incr;

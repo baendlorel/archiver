@@ -1,7 +1,6 @@
 use crate::{kv_row, must_ok};
 
 use chrono::NaiveDateTime;
-use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use super::LogLevel;
