@@ -186,7 +186,7 @@ impl TableRowify for LogEntry {
             Column::left("Time"),
             Column::left("Id"),
             Column::center("⚑"),
-            Column::left("Operation"),
+            Column::left_with_max("Operation", 30),
             Column::left_flex("Remark"),
         ]
     }

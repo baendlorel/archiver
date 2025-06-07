@@ -1,4 +1,5 @@
 use owo_colors::OwoColorize;
+use std::process::exit;
 
 use crate::misc::{clap_mark, console::get_terminal_width};
 use crate::traits::StripAnsi;
@@ -60,6 +61,10 @@ impl Column {
         Self::new(name, ColumnAlign::Left, (name.len(), usize::MAX))
     }
 
+    pub fn left_with_max(name: &str, max_width: usize) -> Self {
+        Self::new(name, ColumnAlign::Left, (name.len(), max_width))
+    }
+
     // 快速创建居中对齐的列
     pub fn center(name: &str) -> Self {
         Self::new(name, ColumnAlign::Center, (name.len(), usize::MAX))
@@ -73,8 +78,6 @@ impl TableRow {
 }
 
 // lt table组件自动换行
-// todo 当只有最后一个column的宽度为0时，启动自动探测终端宽度模式
-
 impl Table {
     pub fn display<T>(rows: &Vec<T>)
     where
@@ -151,44 +154,26 @@ impl Table {
                 .iter()
                 .map(|col| col.width.0)
                 .sum::<usize>();
-            // 将最后一列的宽度设置为终端宽度减去其他列的宽度
-            if terminal_width <= all_other_width {
-                panic!(
-                    "{} Terminal width {} is smaller than total column widths {}",
+            let space = (columns.len() - 1) * column_space;
+
+            if terminal_width <= all_other_width + space {
+                println!(
+                    "{} Terminal width({}) is not enough to display the data. Required: all_other_width ({}) + space ({})",
                     clap_mark::fatal(),
                     terminal_width,
-                    all_other_width
-                );
-            }
-            let rest_width = terminal_width - all_other_width;
-            let space = (columns.len() - 1) * column_space;
-            if rest_width <= space {
-                panic!(
-                    "{} rest width {} is smaller than space {}",
-                    clap_mark::fatal(),
-                    rest_width,
+                    all_other_width,
                     space
                 );
+                println!(
+                    "{} Please stretch your terminal window and try again.",
+                    clap_mark::info()
+                );
+                exit(1);
             }
-
-            let last_width = rest_width - space;
+            let last_width = terminal_width - all_other_width - space;
             let len = columns.len();
             columns[len - 1].width.0 = columns[len - 1].width.0.min(last_width);
             columns[len - 1].width.1 = columns[len - 1].width.0;
-
-            // todo 最好option的最大长度也要限制，为此要新增构造函数
-            // // ^ 打一个测试用的标志行
-            // for i in 0..terminal_width {
-            //     let c = i + 1;
-            //     if c % 20 == 0 {
-            //         print!("^");
-            //     } else if c % 10 == 0 {
-            //         print!("|");
-            //     } else {
-            //         print!("_");
-            //     }
-            // }
-            // println!("");
         }
 
         Self {
