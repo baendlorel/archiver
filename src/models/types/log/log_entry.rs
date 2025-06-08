@@ -77,7 +77,7 @@ impl LogEntry {
         let table = Table::new(cols, rows);
 
         println!("--- Log:");
-        table.display_rows();
+        table.display_tbody();
 
         let display_related_list_entries = |ids: &[u32]| {
             let arr = must_ok!(
@@ -177,7 +177,7 @@ impl TableRowify for LogEntry {
 
     fn get_table_columns() -> Vec<Column> {
         vec![
-            Column::left("Archived At"),
+            Column::right("Time"),
             Column::left("Id"),
             Column::left("⚑"),
             Column::left_nsigma("Oper"),

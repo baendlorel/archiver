@@ -7,6 +7,8 @@ use crate::traits::{CustomColors, StripAnsi};
 /// 最小的flex宽度，至少要能容纳省略号和一个字符
 const MIN_FLEX_WIDTH: usize = 3;
 
+const DEFAULT_COL_SPACE: usize = 1;
+
 #[derive(Clone)]
 pub struct Column {
     name: String,
@@ -77,6 +79,17 @@ impl Column {
         }
     }
 
+    pub fn right(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Right,
+            width: name.len(),
+            max_width: 0,
+            width_strategy: WidthStrategy::Max,
+        }
+    }
+
     pub fn left_flex(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -139,8 +152,8 @@ impl Table {
             .map(|r| r.to_table_row())
             .collect::<Vec<TableRow>>();
         let table = Self::new(T::get_table_columns(), table_rows);
-        table.display_header();
-        table.display_rows();
+        table.display_thead();
+        table.display_tbody();
     }
 
     pub fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
@@ -150,7 +163,7 @@ impl Table {
         }
 
         // 列空隙默认为1
-        let column_space = 1;
+        let column_space = DEFAULT_COL_SPACE;
 
         // 获取所有宽度，每个元素代表这一列所有的宽度
         let mut width_matrix: Vec<Vec<usize>> = vec![];
@@ -169,16 +182,9 @@ impl Table {
         let mut fixed_width = 0;
         for i in 0..field_count {
             let raw_max = match columns[i].width_strategy {
-                WidthStrategy::Max => {
-                    // 取最大值
-                    *width_matrix[i].iter().max().unwrap()
-                }
-                WidthStrategy::NSigma => {
-                    // 使用n-sigma原则
-                    nsigma(&width_matrix[i])
-                }
+                WidthStrategy::Max => *width_matrix[i].iter().max().unwrap(),
+                WidthStrategy::NSigma => nsigma(&width_matrix[i]),
                 WidthStrategy::Flex => {
-                    // flex的情况，暂时先取最大值
                     columns[i].width = *width_matrix[i].iter().max().unwrap();
                     flex_indexes.push(i);
                     continue;
@@ -229,10 +235,6 @@ impl Table {
                 col.width = col.width.min(col.max_width);
             }
         }
-
-        // columns
-        //     .iter()
-        //     .for_each(|c| println!("{}: {}", c.name, c.width));
 
         Self {
             columns,
@@ -287,12 +289,13 @@ impl Table {
                     format!("{}{}{}", " ".repeat(left_pad), cell, " ".repeat(right_pad))
                 }
             };
+
             formatted.push(s);
         }
         formatted.join(&" ".repeat(self.column_space))
     }
 
-    pub fn display_header(&self) {
+    pub fn display_thead(&self) {
         let th_list = self
             .columns
             .iter()
@@ -301,10 +304,10 @@ impl Table {
         println!("{}", &self.format_row(&th_list, true).bold().underline());
     }
 
-    pub fn display_rows(&self) {
+    pub fn display_tbody(&self) {
         let mut tr_list: Vec<String> = vec![];
         for row in &self.rows {
-            tr_list.push(self.format_row(&row.cells, true));
+            tr_list.push(self.format_row(&row.cells, false));
         }
         println!("{}", tr_list.join("\n"));
     }

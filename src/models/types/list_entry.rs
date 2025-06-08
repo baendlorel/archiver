@@ -111,7 +111,7 @@ impl ListEntry {
             kv_row!("Item Name", item),
             kv_row!("Status", self.status.to_display()),
         ];
-        Table::new(cols, rows).display_rows();
+        Table::new(cols, rows).display_tbody();
     }
 }
 

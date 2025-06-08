@@ -78,7 +78,7 @@ impl Vault {
             kv_row!("Status", self.status.to_display()),
             kv_row!("Remark", self.remark.grey()),
         ];
-        Table::new(cols, rows).display_rows();
+        Table::new(cols, rows).display_tbody();
     }
 }
 
