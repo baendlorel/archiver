@@ -25,17 +25,6 @@ pub struct Column {
     max_width: usize,
 
     width_strategy: WidthStrategy,
-
-    overflow: OverflowStrategy,
-}
-
-#[derive(Clone)]
-enum OverflowStrategy {
-    /// 省略
-    Omit,
-
-    /// 按单词换行
-    WordWrap,
 }
 
 /// 宽度策略，表示如何计算列宽
@@ -87,7 +76,6 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::Max,
-            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -99,7 +87,6 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::Max,
-            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -111,7 +98,6 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::Flex,
-            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -123,7 +109,6 @@ impl Column {
             width: name.len(),
             max_width,
             width_strategy: WidthStrategy::Flex,
-            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -135,7 +120,6 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::NSigma,
-            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -147,7 +131,6 @@ impl Column {
             width: name.len(),
             max_width,
             width_strategy: WidthStrategy::Max,
-            overflow: OverflowStrategy::Omit,
         }
     }
 }
@@ -221,27 +204,13 @@ impl Table {
 
         // 下面计算flex的情况
         let terminal_width = get_terminal_width();
-        // ^ 这里collen和flexlen可能有+1和-1的区别，先这样算着
-        let all_other_width = fixed_width + (columns.len() - flex_indexes.len()) * column_space;
         let least_width =
             fixed_width + (columns.len() - 1) * column_space + flex_indexes.len() * MIN_FLEX_WIDTH;
-        // 检查宽度够不够
-        if terminal_width <= least_width {
-            println!(
-                "{} Terminal width({}) is not enough to display the data. Required: fixed_width ({}) + column_space ({}) + min_flex_width ({})",
-                clap_mark::fatal(),
-                terminal_width,
-                fixed_width,
-                (columns.len() - 1) * column_space,
-                flex_indexes.len() * MIN_FLEX_WIDTH
-            );
-            println!(
-                "{} Please stretch your terminal window and try again.",
-                clap_mark::info()
-            );
-            std::process::exit(1);
-        }
-        let flex_widths = int_partition(terminal_width - all_other_width, flex_indexes.len());
+
+        // 不管宽度够不够了，超就超
+        let normalized_width = terminal_width.max(least_width);
+        let all_other_width = fixed_width + (columns.len() - flex_indexes.len()) * column_space;
+        let flex_widths = int_partition(normalized_width - all_other_width, flex_indexes.len());
 
         for i in 0..flex_indexes.len() {
             let col = &mut columns[flex_indexes[i]];
