@@ -177,11 +177,11 @@ impl TableRowify for LogEntry {
 
     fn get_table_columns() -> Vec<Column> {
         vec![
-            Column::left("Time"),
+            Column::left("Archived At"),
             Column::left("Id"),
-            Column::center("⚑"),
-            Column::left_with_max("Operation", 30),
-            Column::left_flex("Remark"),
+            Column::left("⚑"),
+            Column::left_nsigma("Oper"),
+            Column::left_flex_with_max("Remark", 36),
         ]
     }
 }

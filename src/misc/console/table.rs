@@ -1,18 +1,43 @@
 use owo_colors::OwoColorize;
 
+use crate::misc::math_util::{int_partition, nsigma};
 use crate::misc::{clap_mark, console::get_terminal_width};
 use crate::traits::{CustomColors, StripAnsi};
+
+/// 最小的flex宽度，至少要能容纳省略号和一个字符
+const MIN_FLEX_WIDTH: usize = 3;
 
 #[derive(Clone)]
 pub struct Column {
     name: String,
-    pub align: ColumnAlign,
 
-    /// `（宽度，最大宽度）`，用来计算padding
-    /// - 超过最大宽度，会缩减为省略号
-    /// - 会根据rows中每一格的宽度更新
-    /// - 为0的宽度不会进行padding
-    width: (usize, usize),
+    head_align: ColumnAlign,
+
+    cell_align: ColumnAlign,
+
+    /// 宽度，用来计算padding
+    width: usize,
+
+    /// 超过最大宽度，会缩减为省略号
+    /// - 就算计算得到的宽度大于这个值，也仍以此值为准
+    max_width: usize,
+
+    width_strategy: WidthStrategy,
+}
+
+/// 宽度策略，表示如何计算列宽
+#[derive(Clone)]
+enum WidthStrategy {
+    /// 使用这一列所有cell里最宽的作为宽度
+    Max,
+
+    /// 使用`n-sigma`原则来消除明显太宽的宽度
+    /// - 避免某一列过宽导致产生大量空白，导致空间利用率低、不美观
+    NSigma,
+
+    /// 取`Max`和`终端剩余宽度`中，较小的一个值
+    /// - 如果有多列是这个配置，那么会平均分配宽度
+    Flex,
 }
 
 #[allow(dead_code)]
@@ -40,33 +65,60 @@ pub struct Table {
 }
 
 impl Column {
-    pub fn new(name: &str, align: ColumnAlign, width: (usize, usize)) -> Self {
+    // 快速创建左对齐的列
+    pub fn left(name: &str) -> Self {
         Self {
             name: name.to_string(),
-            align,
-            width,
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Left,
+            width: name.len(),
+            max_width: 0,
+            width_strategy: WidthStrategy::Max,
         }
     }
+
     pub fn left_flex(name: &str) -> Self {
         Self {
             name: name.to_string(),
-            align: ColumnAlign::Left,
-            width: (name.len(), 0),
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Left,
+            width: name.len(),
+            max_width: 0,
+            width_strategy: WidthStrategy::Flex,
         }
     }
 
-    // 快速创建左对齐的列
-    pub fn left(name: &str) -> Self {
-        Self::new(name, ColumnAlign::Left, (name.len(), usize::MAX))
+    pub fn left_flex_with_max(name: &str, max_width: usize) -> Self {
+        Self {
+            name: name.to_string(),
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Left,
+            width: name.len(),
+            max_width,
+            width_strategy: WidthStrategy::Flex,
+        }
+    }
+
+    pub fn left_nsigma(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Left,
+            width: name.len(),
+            max_width: 0,
+            width_strategy: WidthStrategy::NSigma,
+        }
     }
 
     pub fn left_with_max(name: &str, max_width: usize) -> Self {
-        Self::new(name, ColumnAlign::Left, (name.len(), max_width))
-    }
-
-    // 快速创建居中对齐的列
-    pub fn center(name: &str) -> Self {
-        Self::new(name, ColumnAlign::Center, (name.len(), usize::MAX))
+        Self {
+            name: name.to_string(),
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Left,
+            width: name.len(),
+            max_width,
+            width_strategy: WidthStrategy::Max,
+        }
     }
 }
 
@@ -100,81 +152,87 @@ impl Table {
         // 列空隙默认为1
         let column_space = 1;
 
-        // 确保columns数组的width属性，只有末尾的任意个允许为0,不允许穿插0和非0
-        // 因为为0的宽度不会进行padding
-        let mut zero_found = false;
-        for col in &columns {
-            if zero_found == false && col.width.0 == 0 {
-                zero_found = true;
-                continue;
-            }
-
-            if zero_found && col.width.0 != 0 {
-                panic!(
-                    "{} Columns width cannot have non-zero after zero",
-                    clap_mark::fatal()
-                );
-            }
+        // 获取所有宽度，每个元素代表这一列所有的宽度
+        let mut width_matrix: Vec<Vec<usize>> = vec![];
+        let field_count = columns.len();
+        for i in 0..field_count {
+            width_matrix.push(vec![columns[i].width]);
         }
-
-        // 确保每行的单元格数量与列数一致
-        // 同时统一计算出列宽
         for row in &rows {
-            if row.cells.len() != columns.len() {
-                panic!(
-                    "{} Row cell count does not match column count",
-                    clap_mark::fatal()
-                );
+            for i in 0..field_count {
+                width_matrix[i].push(row.cells[i].true_len());
             }
+        }
 
-            // todo 格式化策略：为了避免某一条太长导致整列空出大量空白，采取类似“众数”的办法来决定最大宽度
-            // 格式化每一列，包括预设宽度是0的最后一列
-            for i in 0..columns.len() {
-                columns[i].width.0 = columns[i].width.0.max(row.cells[i].true_len());
-
-                // 最大宽度为0的是要准备flex的
-                if columns[i].width.1 != 0 {
-                    columns[i].width.0 = columns[i].width.0.min(columns[i].width.1);
+        // 格式化每一列，不包括预设宽度是0的最后一列
+        let mut flex_indexes: Vec<usize> = vec![];
+        let mut fixed_width = 0;
+        for i in 0..field_count {
+            let raw_max = match columns[i].width_strategy {
+                WidthStrategy::Max => {
+                    // 取最大值
+                    *width_matrix[i].iter().max().unwrap()
                 }
+                WidthStrategy::NSigma => {
+                    // 使用n-sigma原则
+                    nsigma(&width_matrix[i])
+                }
+                WidthStrategy::Flex => {
+                    // flex的情况，暂时先取最大值
+                    columns[i].width = *width_matrix[i].iter().max().unwrap();
+                    flex_indexes.push(i);
+                    continue;
+                }
+            };
+
+            // 这里只会有Max和NSigma的情况，Flex的已经被跳过
+            // 不能超过上确界
+            columns[i].width = if columns[i].max_width != 0 {
+                raw_max.min(columns[i].max_width)
+            } else {
+                raw_max
+            };
+
+            fixed_width += columns[i].width;
+        }
+
+        // 下面计算flex的情况
+        let terminal_width = get_terminal_width();
+        // ^ 这里collen和flexlen可能有+1和-1的区别，先这样算着
+        let all_other_width = fixed_width + (columns.len() - flex_indexes.len()) * column_space;
+        let least_width =
+            fixed_width + (columns.len() - 1) * column_space + flex_indexes.len() * MIN_FLEX_WIDTH;
+        // 检查宽度够不够
+        if terminal_width <= least_width {
+            println!(
+                "{} Terminal width({}) is not enough to display the data. Required: fixed_width ({}) + column_space ({}) + min_flex_width ({})",
+                clap_mark::fatal(),
+                terminal_width,
+                fixed_width,
+                (columns.len() - 1) * column_space,
+                flex_indexes.len() * MIN_FLEX_WIDTH
+            );
+            println!(
+                "{} Please stretch your terminal window and try again.",
+                clap_mark::info()
+            );
+            std::process::exit(1);
+        }
+        let flex_widths = int_partition(terminal_width - all_other_width, flex_indexes.len());
+
+        for i in 0..flex_indexes.len() {
+            let col = &mut columns[flex_indexes[i]];
+            col.width = flex_widths[i].min(col.width);
+
+            // 忽略掉最大宽度为0的情况，避免这一列直接没了
+            if col.max_width != 0 {
+                col.width = col.width.min(col.max_width);
             }
         }
 
-        // 最后一列是否自动调整宽度，触发条件为
-        // - 最后一列的最大宽度为0
-        // - 其他列宽度都不为0
-        // 如果为true，则会根据终端宽度自动调整最后一列的宽度
-        let flex_last_col = {
-            let len = columns.len();
-            columns[..len - 1].iter().all(|col| col.width.0 != 0) && columns[len - 1].width.1 == 0
-        };
-
-        if flex_last_col {
-            let terminal_width = get_terminal_width();
-            let all_other_width = columns[..columns.len() - 1]
-                .iter()
-                .map(|col| col.width.0)
-                .sum::<usize>();
-            let space = (columns.len() - 1) * column_space;
-
-            if terminal_width <= all_other_width + space {
-                println!(
-                    "{} Terminal width({}) is not enough to display the data. Required: all_other_width ({}) + space ({})",
-                    clap_mark::fatal(),
-                    terminal_width,
-                    all_other_width,
-                    space
-                );
-                println!(
-                    "{} Please stretch your terminal window and try again.",
-                    clap_mark::info()
-                );
-                std::process::exit(1);
-            }
-            let last_width = terminal_width - all_other_width - space;
-            let len = columns.len();
-            columns[len - 1].width.0 = columns[len - 1].width.0.min(last_width);
-            columns[len - 1].width.1 = columns[len - 1].width.0;
-        }
+        // columns
+        //     .iter()
+        //     .for_each(|c| println!("{}: {}", c.name, c.width));
 
         Self {
             columns,
@@ -183,27 +241,24 @@ impl Table {
         }
     }
 
-    pub fn format_row(&self, cells: &[String]) -> String {
+    pub fn format_row(&self, cells: &[String], is_head: bool) -> String {
         let mut formatted: Vec<String> = vec![];
         for i in 0..self.columns.len() {
             let col = &self.columns[i];
             let cell = &cells[i];
             // 宽度为0不参与padding
-            if col.width.0 == 0 {
+            if col.width == 0 {
                 formatted.push(cell.to_string());
                 continue;
             }
 
             let cell_width = cell.true_len();
             // 考虑cell内容过长，省略号的情形
-            let cell = if cell_width > col.width.0 {
-                // println!("col.width.0 {}", col.width.0);
-                // println!("cell_width {}", cell_width);
-                // println!("cell {}", cell);
+            let cell = if cell_width > col.width {
                 // 已经撑满，不需要执行下面的padding了
                 formatted.push(format!(
                     "{}{}",
-                    cell.omit_skip_ansi(col.width.0 - 2),
+                    cell.omit_skip_ansi(col.width - 2),
                     "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
                 ));
                 continue;
@@ -211,12 +266,19 @@ impl Table {
                 cell.to_string()
             };
 
-            let padding = if col.width.0 > cell_width {
-                col.width.0 - cell_width
+            let padding = if col.width > cell_width {
+                col.width - cell_width
             } else {
                 0
             };
-            let s = match col.align {
+
+            let align = if is_head {
+                &col.head_align
+            } else {
+                &col.cell_align
+            };
+
+            let s = match align {
                 ColumnAlign::Left => format!("{}{}", cell, " ".repeat(padding)),
                 ColumnAlign::Right => format!("{}{}", " ".repeat(padding), cell),
                 ColumnAlign::Center => {
@@ -231,20 +293,20 @@ impl Table {
     }
 
     pub fn display_header(&self) {
-        let cells = self
+        let th_list = self
             .columns
             .iter()
             .map(|col| col.name.clone())
             .collect::<Vec<String>>();
-        println!("{}", &self.format_row(&cells).bold().underline());
+        println!("{}", &self.format_row(&th_list, true).bold().underline());
     }
 
     pub fn display_rows(&self) {
-        let mut rows: Vec<String> = vec![];
+        let mut tr_list: Vec<String> = vec![];
         for row in &self.rows {
-            rows.push(self.format_row(&row.cells));
+            tr_list.push(self.format_row(&row.cells, true));
         }
-        println!("{}", rows.join("\n"));
+        println!("{}", tr_list.join("\n"));
     }
 }
 
