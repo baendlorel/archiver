@@ -4,7 +4,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::core::auto_incr;
-use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, Tablify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -82,7 +82,7 @@ impl Vault {
     }
 }
 
-impl TableRowify for Vault {
+impl Tablify for Vault {
     fn to_table_row(&self) -> TableRow {
         let cells = vec![
             dt::to_omitted_dt_string(&self.created_at).grey(),

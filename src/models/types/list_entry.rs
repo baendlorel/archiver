@@ -5,7 +5,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::core::{auto_incr, config, vault};
-use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, Tablify};
 use crate::misc::dt;
 use crate::models::serde_custom::{boolean, naive_date_time};
 use crate::traits::CustomColors;
@@ -115,7 +115,7 @@ impl ListEntry {
     }
 }
 
-impl TableRowify for ListEntry {
+impl Tablify for ListEntry {
     fn to_table_row(&self) -> TableRow {
         let item = {
             let t = if self.is_dir {

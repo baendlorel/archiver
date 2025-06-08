@@ -20,11 +20,22 @@ pub struct Column {
     /// 宽度，用来计算padding
     width: usize,
 
-    /// 超过最大宽度，会缩减为省略号
+    /// 宽度的上限，在经过下方的策略进行计算后，予以修正
     /// - 就算计算得到的宽度大于这个值，也仍以此值为准
     max_width: usize,
 
     width_strategy: WidthStrategy,
+
+    overflow: OverflowStrategy,
+}
+
+#[derive(Clone)]
+enum OverflowStrategy {
+    /// 省略
+    Omit,
+
+    /// 按单词换行
+    WordWrap,
 }
 
 /// 宽度策略，表示如何计算列宽
@@ -76,6 +87,7 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::Max,
+            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -87,6 +99,7 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::Max,
+            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -98,6 +111,7 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::Flex,
+            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -109,6 +123,7 @@ impl Column {
             width: name.len(),
             max_width,
             width_strategy: WidthStrategy::Flex,
+            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -120,6 +135,7 @@ impl Column {
             width: name.len(),
             max_width: 0,
             width_strategy: WidthStrategy::NSigma,
+            overflow: OverflowStrategy::Omit,
         }
     }
 
@@ -131,6 +147,7 @@ impl Column {
             width: name.len(),
             max_width,
             width_strategy: WidthStrategy::Max,
+            overflow: OverflowStrategy::Omit,
         }
     }
 }
@@ -145,7 +162,7 @@ impl TableRow {
 impl Table {
     pub fn display<T>(rows: &Vec<T>)
     where
-        T: TableRowify,
+        T: Tablify,
     {
         let table_rows = rows
             .iter()
@@ -255,14 +272,26 @@ impl Table {
             }
 
             let cell_width = cell.true_len();
-            // 考虑cell内容过长，省略号的情形
+
+            // todo table：这里写换行逻辑
+            // 考虑cell内容过长，根据策略处理
             let cell = if cell_width > col.width {
-                // 已经撑满，不需要执行下面的padding了
-                formatted.push(format!(
-                    "{}{}",
-                    cell.omit_skip_ansi(col.width - 2),
-                    "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
-                ));
+                match col.width {
+                    0 => {
+                        formatted.push(String::new()); // 其实不应该是0的
+                    }
+                    1 => {
+                        formatted.push(String::from(".")); // 是1也夸张了
+                    }
+                    _ => {
+                        // 已经撑满，不需要执行下面的padding了
+                        formatted.push(format!(
+                            "{}{}",
+                            cell.omit_skip_ansi(col.width - 2),
+                            "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
+                        ));
+                    }
+                }
                 continue;
             } else {
                 cell.to_string()
@@ -313,7 +342,7 @@ impl Table {
     }
 }
 
-pub trait TableRowify {
+pub trait Tablify {
     fn to_table_row(&self) -> TableRow;
 
     fn get_table_columns() -> Vec<Column>;

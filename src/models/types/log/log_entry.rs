@@ -7,7 +7,7 @@ use super::LogLevel;
 use crate::cli::short::main;
 use crate::cli::{OperSource, Operation};
 use crate::core::{archive, auto_incr, config, vault};
-use crate::misc::console::table::{Column, Table, TableRow, TableRowify};
+use crate::misc::console::table::{Column, Table, TableRow, Tablify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
 use crate::traits::CustomColors;
@@ -125,7 +125,7 @@ impl LogEntry {
     }
 }
 
-impl TableRowify for LogEntry {
+impl Tablify for LogEntry {
     fn to_table_row(&self) -> crate::misc::console::table::TableRow {
         let id = match self.oper.source {
             OperSource::User => self.id.styled_id(),
