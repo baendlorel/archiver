@@ -1,8 +1,8 @@
 use owo_colors::OwoColorize;
 
-use crate::misc::math_util::{int_partition, nsigma};
+use crate::misc::util::{chunkify, int_partition, nsigma};
 use crate::misc::{clap_mark, console::get_terminal_width};
-use crate::traits::{CustomColors, StripAnsi};
+use crate::traits::StripAnsi;
 
 /// 最小的flex宽度，至少要能容纳省略号和一个字符
 const MIN_FLEX_WIDTH: usize = 3;
@@ -243,52 +243,64 @@ impl Table {
             let cell_width = cell.true_len();
 
             // todo table：这里写换行逻辑
-            // 考虑cell内容过长，根据策略处理
-            let cell = if cell_width > col.width {
-                match col.width {
-                    0 => {
-                        formatted.push(String::new()); // 其实不应该是0的
+            // 下面开始换行处理
+            let chunks = chunkify(cell, col.width);
+            println!(
+                "cell_width:{}   col.width:{}, chunks.len:{}",
+                cell_width,
+                col.width,
+                chunks.len()
+            );
+
+            // // 考虑cell内容过长，根据策略处理
+            // let cell = if cell_width > col.width {
+            //     match col.width {
+            //         0 => {
+            //             formatted.push(String::new()); // 其实不应该是0的
+            //         }
+            //         1 => {
+            //             formatted.push(String::from(".")); // 是1也夸张了
+            //         }
+            //         _ => {
+            //             // 已经撑满，不需要执行下面的padding了
+            //             formatted.push(format!(
+            //                 "{}{}",
+            //                 cell.omit_skip_ansi(col.width - 2),
+            //                 "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
+            //             ));
+            //         }
+            //     }
+            //     continue;
+            // } else {
+            //     cell.to_string()
+            // };
+
+            for chunk in chunks {
+                let chunk_width = chunk.true_len();
+                let padding = if col.width > chunk_width {
+                    col.width - chunk_width
+                } else {
+                    0
+                };
+
+                let align = if is_head {
+                    &col.head_align
+                } else {
+                    &col.cell_align
+                };
+
+                let s = match align {
+                    ColumnAlign::Left => format!("{}{}", chunk, " ".repeat(padding)),
+                    ColumnAlign::Right => format!("{}{}", " ".repeat(padding), chunk),
+                    ColumnAlign::Center => {
+                        let left_pad = padding / 2;
+                        let right_pad = padding - left_pad;
+                        format!("{}{}{}", " ".repeat(left_pad), chunk, " ".repeat(right_pad))
                     }
-                    1 => {
-                        formatted.push(String::from(".")); // 是1也夸张了
-                    }
-                    _ => {
-                        // 已经撑满，不需要执行下面的padding了
-                        formatted.push(format!(
-                            "{}{}",
-                            cell.omit_skip_ansi(col.width - 2),
-                            "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
-                        ));
-                    }
-                }
-                continue;
-            } else {
-                cell.to_string()
-            };
+                };
 
-            let padding = if col.width > cell_width {
-                col.width - cell_width
-            } else {
-                0
-            };
-
-            let align = if is_head {
-                &col.head_align
-            } else {
-                &col.cell_align
-            };
-
-            let s = match align {
-                ColumnAlign::Left => format!("{}{}", cell, " ".repeat(padding)),
-                ColumnAlign::Right => format!("{}{}", " ".repeat(padding), cell),
-                ColumnAlign::Center => {
-                    let left_pad = padding / 2;
-                    let right_pad = padding - left_pad;
-                    format!("{}{}{}", " ".repeat(left_pad), cell, " ".repeat(right_pad))
-                }
-            };
-
-            formatted.push(s);
+                formatted.push(s);
+            }
         }
         formatted.join(&" ".repeat(self.column_space))
     }
