@@ -31,7 +31,7 @@ impl Perform for MyParser {
 #[test]
 fn a() {
     let input = "\x1b[31mRed Tex\n\t\rt\x1b[0m Normal";
-    let mut parser = Parser::new();
+    let mut parser: Parser<1024> = Parser::new();
     let mut performer = MyParser;
 
     println!("Input: {}", input);
