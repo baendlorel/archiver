@@ -1,18 +1,21 @@
-use strip_ansi_escapes::strip_str;
+use crate::misc::console::ansi;
 
-pub trait StripAnsi {
+pub trait StripAnsi: AsRef<str> {
     fn omit_skip_ansi(&self, len: usize) -> String;
 
-    fn strip_ansi(&self) -> String;
+    fn strip_ansi(&self) -> String {
+        ansi::strip(self.as_ref())
+    }
 
     fn true_len(&self) -> usize {
-        match self.strip_ansi().as_str() {
+        let s: String = ansi::strip(self);
+        match s.as_ref() {
             // & 特殊处理这些长度为3的符号
             "✓" => 1,
             "✗" => 1,
             "⚠" => 1,
             "⚑" => 1,
-            _ => self.strip_ansi().len(),
+            _ => s.len(),
         }
     }
 }
@@ -24,7 +27,7 @@ where
 {
     fn omit_skip_ansi(&self, len: usize) -> String {
         let s = self.as_ref();
-        let stripped = strip_str(s);
+        let stripped = ansi::strip(s);
         let mut index: usize = 0;
         let mut result = String::new();
         let mut has_controll = false;
@@ -50,9 +53,5 @@ where
             result.push_str("\x1b[0m");
         }
         result
-    }
-
-    fn strip_ansi(&self) -> String {
-        strip_str(self.as_ref())
     }
 }

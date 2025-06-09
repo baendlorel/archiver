@@ -10,7 +10,7 @@ use crate::core::{archive, auto_incr, config, vault};
 use crate::misc::console::table::{Column, Table, TableRow, Tablify};
 use crate::misc::dt;
 use crate::models::serde_custom::naive_date_time;
-use crate::traits::CustomColors;
+use crate::traits::{CustomColors, StripAnsi};
 
 /// 定义用于序列化到JSON的日志条目结构
 #[derive(Serialize, Deserialize)]
@@ -49,7 +49,7 @@ impl LogEntry {
             opered_at: dt::now_dt(),
             oper,
             level,
-            message: strip_ansi_escapes::strip_str(message),
+            message: message.strip_ansi(),
             archive_ids,
             vault_ids,
         }
