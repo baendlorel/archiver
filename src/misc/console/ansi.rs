@@ -1,35 +1,17 @@
 use vte::{Parser, Perform};
 
-pub struct Ansi {
-    pub chunks: Vec<String>,
-    pub chunk: String,
-    pub ansi_chunk: String,
-    pub chunk_size: usize,
-    pub count: usize,
-}
-
-impl Ansi {
-    pub fn chunkify(s: impl AsRef<str>, chunk_size: usize) -> Self {
-        let input = s.as_ref();
-        let mut parser: Parser<1024> = Parser::new();
-        let mut performer = Ansi {
-            chunks: vec![],
-            chunk: String::new(),
-            ansi_chunk: String::new(),
-            chunk_size,
-            count: 0,
-        };
-        let bytes = input.as_bytes();
-        for &b in bytes {
-            parser.advance(&mut performer, &[b]);
-        }
-        performer
-    }
-}
-
 const CSI_END: &str = "\x1b[0m"; // ANSI控制序列结束符
 
-impl Perform for Ansi {
+/// 为带样式拆分字符串所用
+struct Chunkifier {
+    chunks: Vec<String>,
+    chunk: String,
+    ansi_chunk: String,
+    chunk_size: usize,
+    count: usize,
+}
+
+impl Perform for Chunkifier {
     fn print(&mut self, c: char) {
         self.chunk.push(c);
         self.count += 1;
@@ -85,15 +67,67 @@ impl Perform for Ansi {
     }
 }
 
+struct Stripper {
+    plain_str: String,
+}
+
+impl Perform for Stripper {
+    fn print(&mut self, c: char) {
+        self.plain_str.push(c);
+    }
+    fn execute(&mut self, byte: u8) {
+        // 只要是有效的Unicode控制字符，都保留
+        if let Some(c) = char::from_u32(byte as u32) {
+            self.plain_str.push(c);
+        }
+    }
+}
+
+pub fn chunkify(s: impl AsRef<str>, chunk_size: usize) -> Vec<String> {
+    let input = s.as_ref();
+    let mut parser: Parser<1024> = Parser::new();
+    let mut performer = Chunkifier {
+        chunks: vec![],
+        chunk: String::new(),
+        ansi_chunk: String::new(),
+        chunk_size,
+        count: 0,
+    };
+    let bytes = input.as_bytes();
+    for &b in bytes {
+        parser.advance(&mut performer, &[b]);
+    }
+    performer.chunks
+}
+
+pub fn strip(s: impl AsRef<str>) -> String {
+    let mut parser: Parser<1024> = Parser::new();
+    let mut performer = Stripper {
+        plain_str: String::new(),
+    };
+    let bytes = s.as_ref().as_bytes();
+    for &b in bytes {
+        parser.advance(&mut performer, &[b]);
+    }
+    performer.plain_str
+}
+
 #[test]
 fn 测试() {
     let input = "\x1b[31mRed Tex\n\t\rt\x1b[0m Normal";
-    let result = Ansi::chunkify(input, 5);
 
-    result.chunks.iter().for_each(|s| println!("{}", s));
+    let stripped = strip(input);
+    assert!(
+        stripped == "Red Tex\n\t\rt Normal",
+        "Stripped: {}",
+        stripped
+    );
+
+    let result = chunkify(input, 5);
+
+    result.iter().for_each(|s| println!("{}", s));
     println!("-------");
     result
-        .chunks
         .iter()
         .for_each(|s| println!("{}", s.escape_default()));
 }
