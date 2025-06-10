@@ -16,16 +16,7 @@ impl Perform for Chunkifier {
         self.chunk.push(c);
         self.count += 1;
         if self.count >= self.chunk_size {
-            // 当chunk大小达到指定值时，将其添加到chunks中并重置chunk
-            if self.ansi_chunk.is_empty() {
-                self.chunks.push(self.chunk.clone());
-            } else {
-                self.chunks.push(format!("{}{}", self.chunk, CSI_END));
-            }
-            self.chunk.clear();
-            self.chunk.push_str(&self.ansi_chunk);
-            self.count = 0;
-            // ansi_chunk也要对应进入到下一行，但是会保持
+            self.attach();
         }
     }
 
@@ -67,6 +58,20 @@ impl Perform for Chunkifier {
     }
 }
 
+impl Chunkifier {
+    fn attach(&mut self) {
+        // 当chunk大小达到指定值时，将其添加到chunks中并重置chunk
+        if self.ansi_chunk.is_empty() {
+            self.chunks.push(self.chunk.clone());
+        } else {
+            self.chunks.push(format!("{}{}", self.chunk, CSI_END));
+        }
+        self.chunk.clear();
+        self.chunk.push_str(&self.ansi_chunk);
+        self.count = 0;
+    }
+}
+
 struct Stripper {
     plain_str: String,
 }
@@ -97,6 +102,11 @@ pub fn chunkify(s: impl AsRef<str>, chunk_size: usize) -> Vec<String> {
     for &b in bytes {
         parser.advance(&mut performer, &[b]);
     }
+    // 把最后一小段接上去，严谨起见如果为空就不要接上了
+    if !performer.chunk.is_empty() {
+        performer.attach();
+    }
+
     performer.chunks
 }
 

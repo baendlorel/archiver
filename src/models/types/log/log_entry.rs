@@ -72,7 +72,10 @@ impl LogEntry {
             kv_row!("Operation", self.oper.to_detailed_display()),
             kv_row!("Archive Ids", join_archive_ids(&self.archive_ids)),
             kv_row!("Vaults", join_vault_ids(&self.vault_ids)),
-            kv_row!("remark", self.message.replace("\n", "\\n").styled_string()),
+            kv_row!(
+                "Remark",
+                self.message.escape_default().to_string().styled_string()
+            ),
         ];
         let table = Table::new(cols, rows);
 
@@ -147,7 +150,7 @@ impl Tablify for LogEntry {
         };
 
         let message = config::alias::apply(&self.message)
-            .replace("\n", "\\n")
+            .escape_default()
             .to_string();
 
         let avid = match (archive_id.is_empty(), vault_name.is_empty()) {

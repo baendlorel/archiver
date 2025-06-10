@@ -12,7 +12,7 @@ use crate::traits::ForceToString;
 
 /// 在不加range直接arv log的时候，只输出最近这么多条
 /// 避免日志太多
-const CASUAL_LIMIT: usize = 16;
+const CASUAL_LIMIT: usize = 15;
 
 /// 保存日志
 pub fn save(

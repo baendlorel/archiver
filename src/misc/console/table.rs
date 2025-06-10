@@ -74,7 +74,7 @@ impl Column {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Left,
-            width: name.len(),
+            width: name.true_len(),
             max_width: 0,
             width_strategy: WidthStrategy::Max,
         }
@@ -85,7 +85,7 @@ impl Column {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Right,
-            width: name.len(),
+            width: name.true_len(),
             max_width: 0,
             width_strategy: WidthStrategy::Max,
         }
@@ -96,7 +96,7 @@ impl Column {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Left,
-            width: name.len(),
+            width: name.true_len(),
             max_width: 0,
             width_strategy: WidthStrategy::Flex,
         }
@@ -107,7 +107,7 @@ impl Column {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Left,
-            width: name.len(),
+            width: name.true_len(),
             max_width,
             width_strategy: WidthStrategy::Flex,
         }
@@ -118,7 +118,7 @@ impl Column {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Left,
-            width: name.len(),
+            width: name.true_len(),
             max_width: 0,
             width_strategy: WidthStrategy::NSigma,
         }
@@ -129,7 +129,7 @@ impl Column {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Left,
-            width: name.len(),
+            width: name.true_len(),
             max_width,
             width_strategy: WidthStrategy::Max,
         }
@@ -250,8 +250,7 @@ impl Table {
                 continue;
             }
 
-            // todo table：这里写换行逻辑
-            // 下面开始换行处理
+            // & 下面开始单元格内换行
             let chunks = ansi::chunkify(cell, col.width);
             let td: Vec<String> = chunks
                 .iter()
@@ -295,18 +294,19 @@ impl Table {
         println!("{}", tr_list.join("\n"));
     }
 
-    fn pad_td(column: &Column, chunk: &str, is_head: bool) -> String {
+    fn pad_td(col: &Column, chunk: &str, is_head: bool) -> String {
         let width = chunk.true_len();
-        let padding = if column.width > width {
-            column.width - width
+        let padding = if col.width > width {
+            col.width - width
         } else {
-            0
+            // 真满格也不需要padding了
+            return chunk.to_string();
         };
 
         let align = if is_head {
-            &column.head_align
+            &col.head_align
         } else {
-            &column.cell_align
+            &col.cell_align
         };
 
         match align {
