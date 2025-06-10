@@ -1,6 +1,7 @@
 use owo_colors::OwoColorize;
 
-use crate::misc::util::{chunkify, int_partition, nsigma};
+use super::ansi;
+use crate::misc::util::{int_partition, nsigma};
 use crate::misc::{clap_mark, console::get_terminal_width};
 use crate::traits::StripAnsi;
 
@@ -231,78 +232,50 @@ impl Table {
 
     pub fn format_row(&self, cells: &[String], is_head: bool) -> String {
         let mut formatted: Vec<String> = vec![];
+        let mut linefeed: Vec<Vec<String>> = vec![];
+        let mut max_lines = 1;
+
+        // self.columns
+        //     .iter()
+        //     .for_each(|c| println!("{}:{}", c.name, c.width));
+        // 把每一个单元格都按照宽度限制拆分为多行
         for i in 0..self.columns.len() {
             let col = &self.columns[i];
             let cell = &cells[i];
             // 宽度为0不参与padding
-            if col.width == 0 {
-                formatted.push(cell.to_string());
+            if cell.true_len() <= col.width {
+                let s = Table::pad_td(col, &cell, is_head);
+
+                linefeed.push(vec![s]);
                 continue;
             }
 
-            let cell_width = cell.true_len();
-
             // todo table：这里写换行逻辑
             // 下面开始换行处理
-            let chunks = chunkify(cell, col.width);
-            println!(
-                "cell_width:{}   col.width:{}, chunks.len:{}",
-                cell_width,
-                col.width,
-                chunks.len()
-            );
+            let chunks = ansi::chunkify(cell, col.width);
+            let td: Vec<String> = chunks
+                .iter()
+                .map(|chunk| Table::pad_td(col, &chunk, is_head))
+                .collect::<Vec<String>>();
 
-            // // 考虑cell内容过长，根据策略处理
-            // let cell = if cell_width > col.width {
-            //     match col.width {
-            //         0 => {
-            //             formatted.push(String::new()); // 其实不应该是0的
-            //         }
-            //         1 => {
-            //             formatted.push(String::from(".")); // 是1也夸张了
-            //         }
-            //         _ => {
-            //             // 已经撑满，不需要执行下面的padding了
-            //             formatted.push(format!(
-            //                 "{}{}",
-            //                 cell.omit_skip_ansi(col.width - 2),
-            //                 "..".grey(), // 不管怎么变化，末尾的省略号永远使用灰色
-            //             ));
-            //         }
-            //     }
-            //     continue;
-            // } else {
-            //     cell.to_string()
-            // };
-
-            for chunk in chunks {
-                let chunk_width = chunk.true_len();
-                let padding = if col.width > chunk_width {
-                    col.width - chunk_width
-                } else {
-                    0
-                };
-
-                let align = if is_head {
-                    &col.head_align
-                } else {
-                    &col.cell_align
-                };
-
-                let s = match align {
-                    ColumnAlign::Left => format!("{}{}", chunk, " ".repeat(padding)),
-                    ColumnAlign::Right => format!("{}{}", " ".repeat(padding), chunk),
-                    ColumnAlign::Center => {
-                        let left_pad = padding / 2;
-                        let right_pad = padding - left_pad;
-                        format!("{}{}{}", " ".repeat(left_pad), chunk, " ".repeat(right_pad))
-                    }
-                };
-
-                formatted.push(s);
-            }
+            max_lines = max_lines.max(td.len());
+            linefeed.push(td);
         }
-        formatted.join(&" ".repeat(self.column_space))
+
+        // 把多行的单元格拼接成真正的行
+        for i in 0..max_lines {
+            let mut row = vec![];
+            for j in 0..self.columns.len() {
+                if i < linefeed[j].len() {
+                    row.push(linefeed[j][i].clone());
+                } else {
+                    // 如果这一行没有内容，就填充空白
+                    row.push(" ".repeat(self.columns[j].width));
+                }
+            }
+            formatted.push(row.join(&" ".repeat(self.column_space)));
+        }
+        formatted.join("\n")
     }
 
     pub fn display_thead(&self) {
@@ -320,6 +293,31 @@ impl Table {
             tr_list.push(self.format_row(&row.cells, false));
         }
         println!("{}", tr_list.join("\n"));
+    }
+
+    fn pad_td(column: &Column, chunk: &str, is_head: bool) -> String {
+        let width = chunk.true_len();
+        let padding = if column.width > width {
+            column.width - width
+        } else {
+            0
+        };
+
+        let align = if is_head {
+            &column.head_align
+        } else {
+            &column.cell_align
+        };
+
+        match align {
+            ColumnAlign::Left => format!("{}{}", chunk, " ".repeat(padding)),
+            ColumnAlign::Right => format!("{}{}", " ".repeat(padding), chunk),
+            ColumnAlign::Center => {
+                let left_pad = padding / 2;
+                let right_pad = padding - left_pad;
+                format!("{}{}{}", " ".repeat(left_pad), chunk, " ".repeat(right_pad))
+            }
+        }
     }
 }
 
