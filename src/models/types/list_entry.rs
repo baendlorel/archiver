@@ -87,32 +87,6 @@ impl ListEntry {
     pub fn is_restored(&self) -> bool {
         matches!(self.status, ListStatus::Restored)
     }
-
-    /// 用于单条记录详细信息的输出
-    pub fn display(&self) {
-        let item = if self.is_dir {
-            format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
-        } else {
-            self.item.clone()
-        };
-
-        let archived_at = dt::to_dt_string(&self.archived_at).grey();
-        let dir = config::alias::apply(&self.dir).bright_grey();
-        let vault_info =
-            format!("{}({})", vault::get_name(self.vault_id), self.vault_id).styled_vault();
-
-        // 此处恰好也可以用表格来输出
-        let cols = vec![Column::left("Prop"), Column::left("Value")];
-        let rows = vec![
-            kv_row!("Archive Id", self.id.styled_id()),
-            kv_row!("Vault", vault_info),
-            kv_row!("Archived At", archived_at),
-            kv_row!("Source Dir", dir),
-            kv_row!("Item Name", item),
-            kv_row!("Status", self.status.to_display()),
-        ];
-        Table::new(cols, rows).display_tbody();
-    }
 }
 
 impl Tablify for ListEntry {
@@ -146,6 +120,32 @@ impl Tablify for ListEntry {
             Column::left_with_max("Item", 30),
             Column::left_flex("Directory"),
         ]
+    }
+
+    /// 用于单条记录详细信息的输出
+    fn display_vertically(&self) {
+        let item = if self.is_dir {
+            format!("{}{}", self.item.styled_dir(), std::path::MAIN_SEPARATOR)
+        } else {
+            self.item.clone()
+        };
+
+        let archived_at = dt::to_dt_string(&self.archived_at).grey();
+        let dir = config::alias::apply(&self.dir).bright_grey();
+        let vault_info =
+            format!("{}({})", vault::get_name(self.vault_id), self.vault_id).styled_vault();
+
+        // 此处恰好也可以用表格来输出
+        let cols = Table::default_vertical_columns();
+        let rows = vec![
+            kv_row!("Archive Id", self.id.styled_id()),
+            kv_row!("Vault", vault_info),
+            kv_row!("Archived At", archived_at),
+            kv_row!("Source Dir", dir),
+            kv_row!("Item Name", item),
+            kv_row!("Status", self.status.to_display()),
+        ];
+        Table::new(cols, rows).display_tbody();
     }
 }
 

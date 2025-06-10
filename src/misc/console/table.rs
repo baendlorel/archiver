@@ -8,6 +8,8 @@ use crate::traits::StripAnsi;
 /// 最小的flex宽度，至少要能容纳省略号和一个字符
 const MIN_FLEX_WIDTH: usize = 3;
 
+const DEFAULT_MAX_FLEX_WIDTH: usize = 36;
+
 const DEFAULT_COL_SPACE: usize = 1;
 
 #[derive(Clone)]
@@ -79,6 +81,17 @@ impl Column {
             width_strategy: WidthStrategy::Max,
         }
     }
+    // 快速创建左对齐的列
+    pub fn left_with_width(name: &str, width: usize) -> Self {
+        Self {
+            name: name.to_string(),
+            head_align: ColumnAlign::Left,
+            cell_align: ColumnAlign::Left,
+            width,
+            max_width: 0,
+            width_strategy: WidthStrategy::Max,
+        }
+    }
 
     pub fn right(name: &str) -> Self {
         Self {
@@ -102,13 +115,13 @@ impl Column {
         }
     }
 
-    pub fn left_flex_with_max(name: &str, max_width: usize) -> Self {
+    pub fn left_flex_with_max(name: &str, max_width: impl Into<Option<usize>>) -> Self {
         Self {
             name: name.to_string(),
             head_align: ColumnAlign::Left,
             cell_align: ColumnAlign::Left,
             width: name.true_len(),
-            max_width,
+            max_width: max_width.into().unwrap_or(DEFAULT_MAX_FLEX_WIDTH),
             width_strategy: WidthStrategy::Flex,
         }
     }
@@ -156,6 +169,15 @@ impl Table {
         table.display_tbody();
     }
 
+    /// 用来竖排展示单独一条记录的时候用到的表头定义
+    /// - 一般这个就够用了
+    pub fn default_vertical_columns() -> Vec<Column> {
+        vec![
+            Column::left_with_width("Prop", 12),
+            Column::left_flex_with_max("Value", None),
+        ]
+    }
+
     pub fn new(mut columns: Vec<Column>, rows: Vec<TableRow>) -> Self {
         // 确保列数不为0
         if columns.is_empty() {
@@ -200,6 +222,15 @@ impl Table {
             };
 
             fixed_width += columns[i].width;
+        }
+
+        // 没有flex的列，直接返回
+        if flex_indexes.is_empty() {
+            return Self {
+                columns,
+                rows,
+                column_space,
+            };
         }
 
         // 下面计算flex的情况
@@ -324,6 +355,8 @@ pub trait Tablify {
     fn to_table_row(&self) -> TableRow;
 
     fn get_table_columns() -> Vec<Column>;
+
+    fn display_vertically(&self);
 }
 
 #[macro_export]

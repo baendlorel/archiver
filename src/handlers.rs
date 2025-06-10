@@ -99,7 +99,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
                     "'{}' is now archived (id: {}, vault: {})",
                     item,
                     entry.id.styled_id(),
-                    vault::get_name(vault_id).styled_vault(),
+                    vault::get_name_styled(vault_id),
                 );
                 if is_sys {
                     log::sys(oper, LogLevel::Success, vec![entry.id], vec![vault_id]);
@@ -150,7 +150,7 @@ pub fn restore(ids: &[u32]) {
             Ok(entry) => {
                 succ!(
                     "{}{}{}({}) is restored to '{}'",
-                    vault::get_name(entry.vault_id).styled_vault(),
+                    vault::get_name_styled(entry.vault_id),
                     config::CONFIG.vault_item_sep.styled_vault_item_sep(),
                     entry.id.styled_id(),
                     entry.item,

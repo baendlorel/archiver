@@ -1,4 +1,4 @@
-use crate::{info, must_ok, must_some, oper, opt_map, wrap_result};
+use crate::{info, must_ok, oper, opt_map, wrap_result};
 
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
@@ -52,11 +52,17 @@ pub fn get_id(name: &str) -> Option<u32> {
 
 /// 根据vault_id获取vault名字，用于log、list等展示
 pub fn get_name(id: u32) -> String {
-    let vault = must_some!(
-        VAULT_MAP.get(&id),
-        format!("vault_id: {} not found", id.styled_vault())
-    );
-    vault.name.clone()
+    match VAULT_MAP.get(&id) {
+        Some(v) => v.name.clone(),
+        None => format!("<vault not found:{}>", id),
+    }
+}
+
+pub fn get_name_styled(id: u32) -> String {
+    match VAULT_MAP.get(&id) {
+        Some(v) => v.name.styled_vault(),
+        None => format!("<vault not found:{}>", id).styled_invalid(),
+    }
 }
 
 /// 修改当前使用的 vault

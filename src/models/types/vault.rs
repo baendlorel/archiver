@@ -66,20 +66,6 @@ impl Vault {
             status: VaultStatus::Valid,
         }
     }
-
-    pub fn display(&self) {
-        let time = dt::to_dt_string(&self.created_at).grey();
-        // 此处恰好也可以用表格来输出
-        let cols = vec![Column::left("Prop"), Column::left("Value")];
-        let rows = vec![
-            kv_row!("Vault Id", self.id.styled_vault()),
-            kv_row!("Name", self.name.clone()),
-            kv_row!("Created At", time),
-            kv_row!("Status", self.status.to_display()),
-            kv_row!("Remark", self.remark.grey()),
-        ];
-        Table::new(cols, rows).display_tbody();
-    }
 }
 
 impl Tablify for Vault {
@@ -102,6 +88,20 @@ impl Tablify for Vault {
             Column::left("Status"),
             Column::left_flex("Remark"),
         ]
+    }
+
+    fn display_vertically(&self) {
+        let time = dt::to_dt_string(&self.created_at).grey();
+        // 此处恰好也可以用表格来输出
+        let cols = Table::default_vertical_columns();
+        let rows = vec![
+            kv_row!("Vault Id", self.id.styled_vault()),
+            kv_row!("Name", self.name.styled_vault()),
+            kv_row!("Created At", time),
+            kv_row!("Status", self.status.to_display()),
+            kv_row!("Remark", self.remark.grey()),
+        ];
+        Table::new(cols, rows).display_tbody();
     }
 }
 

@@ -2,7 +2,7 @@ use crate::{err_error, err_warn, info, wrap_result};
 
 use crate::cli::{OperSource, Operation};
 use crate::misc::clap_mark;
-use crate::misc::console::table::Table;
+use crate::misc::console::table::{Table, Tablify};
 use crate::models::error::{ArchiverError, ArchiverResult};
 use crate::models::types::LogLevel;
 use crate::traits::{CustomColors, ResultExt};
@@ -101,7 +101,7 @@ pub fn display_by_id(id: u32) -> ArchiverResult<()> {
     }
 
     for log in logs {
-        log.display();
+        log.display_vertically();
     }
 
     Ok(())

@@ -55,10 +55,9 @@ impl ArchiverConfig {
                 "CurrentVault",
                 format!(
                     "{}({})",
-                    vault::get_name(self.current_vault_id),
-                    self.current_vault_id
-                )
-                .styled_vault(),
+                    vault::get_name_styled(self.current_vault_id),
+                    self.current_vault_id.styled_vault()
+                ),
                 "`put` command shall put items into this vault.",
             ),
             (
