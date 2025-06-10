@@ -4,6 +4,8 @@ Troubled with too many projects? Cannot focus on your current work?
 
 **Archiver helps you now!**
 
+// todo 根据现在的版本更新 readme
+
 ## Install
 
 Install script recommended （supports Linux/macOS）

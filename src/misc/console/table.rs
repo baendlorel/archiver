@@ -142,7 +142,6 @@ impl TableRow {
     }
 }
 
-// lt table组件自动换行
 impl Table {
     pub fn display<T>(rows: &Vec<T>)
     where
