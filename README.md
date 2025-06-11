@@ -4,16 +4,16 @@ Troubled with too many projects? Cannot focus on your current work?
 
 **Archiver helps you now!**
 
-Archiver is a command line tool that helps you manage your unused but still cannot be removed files and directories. You can use `put` to move items into Archiver, and `restore` to move them back. You can also use `list` to see what you have archived, and `vault` to group your archived items.
+Archiver is a command line tool that helps you manage files and directories you may not use recently but cannot be removed. You can use `put` to move items into Archiver, and `restore` to move them back. You can also use `list` to see what you have archived, and `vault` to group your archived items.
 
 ## Installation
 
-Install script recommended （supports Linux/macOS）
+Using installation script recommended （supports Linux/macOS）
 
 <details>
   <summary>_Does not support Windows yet_ (click to show why)</summary>
-    <p>The code itself is Windows compatible, but it is weired to use command line tools in Windows. And I am not supposed to make a gui for it.</p>
-    <p>If you are windows users, you can use WSL to run Archiver (just like I did).</p>
+    <p>The code itself is Windows compatible, but it is weird to use command line tools in Windows. And I do not intend to make a GUI for it.</p>
+    <p>If you are  Windows users, you can use WSL to run Archiver (just like I did).</p>
 </details>
 <br>
 
@@ -21,9 +21,9 @@ Install script recommended （supports Linux/macOS）
 curl -fsSL https://github.com/baendlorel/archiver/blob/release/archiver-installer.sh | sh
 ```
 
-## Where does the files go?
+## Where do the files go?
 
-Archived files are stored in `~/.archive` where `~` means home directory.
+Archived files are stored in `~/.archiver` where `~` means home directory.
 
 `.archiver` structure is as follows:
 
@@ -46,15 +46,15 @@ graph TD
 
 # Commands
 
-You can use following commands to manage your archived items.
+You can use the following commands to manage your archived items.
 
 ## Put
 
-Put a file/directory into the archive.
+Put a file/directory into Archiver.
 
-Just get into a directory, run this command and you can move your target into `.archive`.
+Simply navigate to a directory, run this command, and you can move your target into `.archiver`.
 
-- Archived target will be given an unique id. The id is auto incremental.
+- Archived target will be given a unique id. The id is auto incremental.
 
 ```bash
 # also `arv p`
@@ -64,7 +64,7 @@ arv put temp1.txt temp2.txt temp3
 
 ### option: --vault/-v
 
-Put the archived items into a specific vault. Shall fail if the vault does not exist.
+Put the archived items into a specific vault. This would fail if the vault does not exist.
 
 ```bash
 arv put --vault <vault-name> <items>
@@ -73,7 +73,7 @@ arv put -v myvault temp1.txt temp2.txt
 
 ### option: --message/-m
 
-You can tell why you archive it by using this option.
+You can specify your archiving reason by using this option.
 
 ```bash
 arv put <item> --message xxx
@@ -81,13 +81,13 @@ arv put <item> --message xxx
 
 ## Restore
 
-Move archived files/directories back to where they came from.
+Restore archived files or directories to their original locations.
 
 - Will fail if there is an object with the same name, or archived file is missing
 
 - `<ids>` can be obtained from the `list` command
 
-- The restored targets will be hidden when executing `list` command, unless you use `list --all`.
+- Restored targets will be hidden when running `arv list`, unless you use `arv list --all`.
 
 ```bash
 # also `arv r` or `arv rst`
@@ -97,7 +97,7 @@ arv restore 4 5 6
 
 ## Move
 
-Move archived items to a different vault.
+Move archived items to another vault.
 
 ```bash
 # also `arv m`, `arv mv` or `arv mov`
@@ -107,11 +107,11 @@ arv move 1 2 3 -t myvault
 
 ## Vault
 
-Manage vaults, which are used to group archived items.
+Manage vaults, which group archived items.
 
 ### use
 
-Change the current vault. Default vault is `@` with internal vault id `0`.
+Change the current vault. The default vault is `@` with an internal vault id `0`.
 
 ```bash
 # also `arv v` or `arv vlt`
@@ -152,7 +152,7 @@ arv vault remove <vault-name>
 
 ### recover
 
-When you want to use the same name as removed vault, use this.
+When you want to use the same name as a removed vault, use this.
 
 ```bash
 arv vault recover <vault-name>
@@ -160,9 +160,9 @@ arv vault recover <vault-name>
 
 ## List
 
-Show all entries in the archive.
+Show the archived items.
 
-- The list will contain archived time, id, target name and original directory
+- The list table will contain archived time, id, item name, original directory and message
 - If the target is a directory, its name will be shown in blue
 
 ```bash
@@ -172,7 +172,7 @@ arv list
 
 ### option: --all
 
-Show all archived records, including the restored ones.
+Show all archived records, including restored ones.
 
 ```bash
 # also `arv ls -a`
@@ -199,14 +199,15 @@ arv list --vault <vault-name>
 
 ## Log
 
-Show the logs of `put`, `restore`, and `config` operations.
+Show the logs for `put`, `restore`, and `config` operations.
 
-`[range]` is optional. It means showing logs within a specific period of time. It can take the following forms:
+`[range]` is optional and specifies a time period for the logs to display.
+
+Supported formats:
 
 1. normal ranges : `YYYYMM-YYYYMM`
 2. left side only : `YYYYMM`
 3. Common Era only
-4. Archiver will always consider the last 2 digits of the number as the month, and the rest as the year.
 
 ```bash
 # also `arv lg 20250101`
@@ -215,7 +216,7 @@ arv log [range]
 
 ### option: --id
 
-Show logs of a specific id. Will display related list and vault records.
+Show logs for a specific id. Related list and vault records will also be displayed.
 
 ```bash
 # also `arv lg -i 123`
@@ -234,7 +235,7 @@ arv config list # show all configs
 
 ### alias
 
-Aliases will shorten the paths shown in command `list` and `log`. However, Archiver will still keep the full version. This is just for display purposes.
+Aliases shorten the paths shown in `list` and `log` commands. Archiver will still stores the full path. Aliases are for display only.
 
 ```bash
 arv config alias <alias>=<absolute-path>
@@ -244,7 +245,9 @@ arv config alias --remove mytemp=/etc/aa
 
 ### update-check
 
-Will check for updates automatically when you run the non-display commands. Default value is `on`. If you want to disable this feature, you can set it to `off`.
+Automatically checks for updates when you run non-display commands.
+
+Default value is `on`. To disable this feature, set it to `off`.
 
 ```bash
 arv config update-check off
@@ -252,7 +255,7 @@ arv config update-check off
 
 ### vault-item-sep
 
-Will change the separator between vault name and item name in the `list` or other commands. Default value is `:`. You can change it to any character you like.
+Changes the separator between the vault name and item name in the `list` and other commands. Default value is `:`. You can change it to any character you like.
 
 ```bash
 arv config vault-item-sep <character>
@@ -260,7 +263,7 @@ arv config vault-item-sep <character>
 
 ## Update
 
-Check whether there is a newer version of Archiver. If there is, it will be downloaded and installed automatically.
+Check for a newer version of Archiver. If available, it will be downloaded and installed automatically.
 
 _Internet connection required!_
 
@@ -270,9 +273,9 @@ arv update
 
 ## Check
 
-Checking whether the core files of Archiver is logically valid. Will show errors and advise you to fix them.
+Check whether the core files of Archiver are logically valid. Errors will be shown with advice for fixing them.
 
-By default, it will only display the entries that do not pass the check.
+By default, only entries that fail the check will be displayed.
 
 Checks include:
 

@@ -110,7 +110,12 @@ impl Tablify for ListEntry {
         let archived_at = dt::to_omitted_dt_string(&self.archived_at).grey();
         let id = self.id.styled_id();
         let dir = config::alias::apply(&self.dir).bright_grey();
-        TableRow::new(vec![archived_at, id, item, dir])
+        let msg = if self.message.is_empty() {
+            "<none>".grey()
+        } else {
+            self.message.styled_string()
+        };
+        TableRow::new(vec![archived_at, id, item, dir, msg])
     }
 
     fn get_table_columns() -> Vec<Column> {
@@ -118,7 +123,8 @@ impl Tablify for ListEntry {
             Column::left("Archived At"),
             Column::left("Id"),
             Column::left_with_max("Item", 30),
-            Column::left_flex("Directory"),
+            Column::left_flex_with_max("Directory", None),
+            Column::left_flex_with_max("Message", None),
         ]
     }
 
@@ -134,8 +140,13 @@ impl Tablify for ListEntry {
         let dir = config::alias::apply(&self.dir).bright_grey();
         let vault_info =
             format!("{}({})", vault::get_name(self.vault_id), self.vault_id).styled_vault();
-
+        let msg = if self.message.is_empty() {
+            "<none>".grey()
+        } else {
+            self.message.styled_string()
+        };
         // 此处恰好也可以用表格来输出
+
         let cols = Table::default_vertical_columns();
         let rows = vec![
             kv_row!("Archive Id", self.id.styled_id()),
@@ -143,6 +154,7 @@ impl Tablify for ListEntry {
             kv_row!("Archived At", archived_at),
             kv_row!("Source Dir", dir),
             kv_row!("Item Name", item),
+            kv_row!("Message", msg),
             kv_row!("Status", self.status.to_display()),
         ];
         Table::new(cols, rows).display_tbody();
