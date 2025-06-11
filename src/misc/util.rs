@@ -19,13 +19,6 @@ pub fn nsigma(arr: &[usize]) -> usize {
         }
     }
 
-    println!(
-        "true max:{}, proper max:{} , sigma:{}",
-        arr.iter().max().unwrap(),
-        pmax,
-        sigma
-    );
-
     pmax
 }
 
