@@ -18,7 +18,7 @@ Using installation script recommended （supports Linux/macOS）
 <br>
 
 ```bash
-curl -fsSL https://github.com/baendlorel/archiver/blob/release/archiver-installer.sh | sh
+curl -fsSL https://github.com/baendlorel/archiver/releases/download/scripts/archiver-installer.sh | sh
 ```
 
 ## Where do the files go?
