@@ -40,6 +40,15 @@ pub enum VaultAction {
         name: String,
     },
 
+    /// Rename a vault
+    Rename {
+        #[arg(value_name = "old_name", required = true)]
+        old_name: String,
+
+        #[arg(value_name = "new_name", required = true)]
+        new_name: String,
+    },
+
     /// List all vaults
     #[command(visible_aliases = ["ls"])]
     List {
@@ -67,6 +76,7 @@ impl VaultAction {
             } => va_oper!("create", [name], opt_map![remark, activate]),
             VA::Remove { name } => va_oper!("remove", [name], None),
             VA::Recover { name } => va_oper!("recover", [name], None),
+            VA::Rename { old_name, new_name } => va_oper!("rename", [old_name, new_name], None),
             VA::List { all } => va_oper!("list", None, opt_map![all]),
         }
     }

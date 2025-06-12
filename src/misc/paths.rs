@@ -106,7 +106,7 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 /// - 如果文件不存在，则创建一个默认的
 /// - 如果是目录，则panic
 pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let path = ROOT_DIR.join(raw::CORE_DIR).join(raw::AUTO_INCR_FILE);
+    let path = CORE_DIR.join(raw::AUTO_INCR_FILE);
     if !path.exists() {
         let json = must_ok!(
             AutoIncrVars::default().to_formatted_string(),
@@ -129,12 +129,10 @@ pub static AUTO_INCR_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 });
 
 /// 归档记录文件路径
-pub static LIST_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| ROOT_DIR.join(raw::CORE_DIR).join(raw::LIST_FILE));
+pub static LIST_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| CORE_DIR.join(raw::LIST_FILE));
 
 /// 库列表文件路径
-pub static VAULTS_FILE_PATH: Lazy<PathBuf> =
-    Lazy::new(|| ROOT_DIR.join(raw::CORE_DIR).join(raw::VAULTS_FILE));
+pub static VAULTS_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| CORE_DIR.join(raw::VAULTS_FILE));
 
 // # 与路径相关的函数
 
@@ -178,13 +176,7 @@ pub fn get_vault_path(vault_id: u32) -> PathBuf {
 
 /// 根据archive_id和vault_id获取归档对象的路径
 pub fn get_archived_path(archive_id: u32, vault_id: u32) -> PathBuf {
-    let vault_path = VAULTS_DIR.join(vault_id.to_string());
-    if !vault_path.exists() {
-        must_ok!(
-            fs::create_dir_all(&vault_path),
-            format!("Failed to create vault directory for vid: {}", vault_id)
-        );
-    }
+    let vault_path = get_vault_path(vault_id);
     let path = vault_path.join(archive_id.to_string());
     path
 }

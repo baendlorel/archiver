@@ -111,7 +111,7 @@ impl Tablify for LogEntry {
             Column::right("Time"),
             Column::left("Id"),
             Column::left("⚑"),
-            Column::left_nsigma("Oper"),
+            Column::left_with_max("Oper", 25),
             Column::left_flex_with_max("Remark", None),
         ]
     }

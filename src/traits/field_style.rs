@@ -64,6 +64,8 @@ pub trait CustomColors: std::fmt::Display {
         self.fg_rgb::<207, 148, 124>().to_string()
     }
 
+    fn styled_message(&self) -> String;
+
     /// rgb(110,156,90)
     fn styled_comment(&self) -> String {
         self.fg_rgb::<110, 156, 90>().to_string()
@@ -80,6 +82,27 @@ pub trait CustomColors: std::fmt::Display {
     }
 }
 
-impl CustomColors for String {}
-impl CustomColors for str {}
-impl CustomColors for u32 {}
+impl CustomColors for String {
+    fn styled_message(&self) -> String {
+        if self.is_empty() {
+            "<none>".grey()
+        } else {
+            self.fg_rgb::<255, 255, 255>().to_string()
+        }
+    }
+}
+impl CustomColors for str {
+    fn styled_message(&self) -> String {
+        if self.is_empty() {
+            "<none>".grey()
+        } else {
+            self.fg_rgb::<255, 255, 255>().to_string()
+        }
+    }
+}
+
+impl CustomColors for u32 {
+    fn styled_message(&self) -> String {
+        self.fg_rgb::<255, 255, 255>().to_string()
+    }
+}

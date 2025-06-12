@@ -74,6 +74,13 @@ pub fn use_by_name(name: &str) -> ArchiverResult<u32> {
 
     // 更新current_vault_id
     let id = id.unwrap();
+    wrap_result!(use_by_id(id))?;
+    Ok(id)
+}
+
+/// 修改当前使用的 vault
+pub fn use_by_id(id: u32) -> ArchiverResult<u32> {
+    // 更新current_vault_id
     let mut config = config::CONFIG.clone();
     config.current_vault_id = id;
     wrap_result!(config::save(&config))?;
@@ -126,7 +133,7 @@ pub fn create(name: &str, activate: bool, remark: &Option<String>) -> ArchiverRe
 
     if activate {
         // 如果需要立即使用这个vault
-        wrap_result!(use_by_name(name))?;
+        wrap_result!(use_by_id(vault.id))?;
     }
 
     // 此处不需要VAULTS.push(vault)，因为创建结束后就退出了
@@ -220,16 +227,7 @@ pub fn remove(name: &str) -> ArchiverResult<Vault> {
     vaults[index].status = VaultStatus::Removed;
 
     // 这里要防止默认库也被写入文件
-    let vaults_exclude_default = vaults
-        .iter()
-        .filter(|v| v.id != vault_defaults::ID)
-        .cloned()
-        .collect::<Vec<Vault>>();
-
-    wrap_result!(jsonl::save(
-        &vaults_exclude_default,
-        paths::VAULTS_FILE_PATH.as_path()
-    ))?;
+    wrap_result!(save(&vaults))?;
 
     Ok(vaults[index].clone())
 }
@@ -248,11 +246,44 @@ pub fn recover(name: &str) -> ArchiverResult<Vault> {
     vaults[index].status = VaultStatus::Valid;
 
     // 修改vaults.jsonl
-    wrap_result!(jsonl::save(&vaults, paths::VAULTS_FILE_PATH.as_path()))?;
+    wrap_result!(save(&vaults))?;
 
     Ok(vaults[index].clone())
 }
 
+pub fn rename(old_name: &str, new_name: &str) -> ArchiverResult<Vault> {
+    if old_name.is_empty() {
+        return info!("Old name cannot be empty");
+    }
+
+    if new_name.is_empty() {
+        return info!("New name cannot be empty");
+    }
+
+    if old_name == new_name {
+        return info!("Old name and new name cannot be the same");
+    }
+
+    if VAULT_NAME_MAP.contains_key(new_name) {
+        return info!(
+            "Vault '{}' already exists, please choose another name",
+            new_name
+        );
+    }
+
+    let mut vaults = VAULT_LIST.clone();
+    let index = vaults.iter().position(|v| v.name == old_name);
+    if index.is_none() {
+        return info!("Vault '{}' not found", old_name);
+    }
+    // * 能找到，那么下面开始重命名
+    let index = index.unwrap();
+    vaults[index].name = new_name.to_string();
+
+    // 修改vaults.jsonl
+    wrap_result!(save(&vaults))?;
+    Ok(vaults[index].clone())
+}
 pub fn display(all: bool) {
     let vaults = VAULT_LIST
         .iter()
@@ -261,4 +292,18 @@ pub fn display(all: bool) {
         .collect::<Vec<Vault>>();
 
     Table::display(&vaults);
+}
+
+fn save(vaults: &[Vault]) -> ArchiverResult<()> {
+    // 这里要防止默认库也被写入文件
+    let vaults_exclude_default = vaults
+        .iter()
+        .filter(|v| v.id != vault_defaults::ID)
+        .cloned()
+        .collect::<Vec<Vault>>();
+
+    wrap_result!(jsonl::save(
+        &vaults_exclude_default,
+        paths::VAULTS_FILE_PATH.as_path()
+    ))
 }

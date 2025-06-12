@@ -110,11 +110,7 @@ impl Tablify for ListEntry {
         let archived_at = dt::to_omitted_dt_string(&self.archived_at).grey();
         let id = self.id.styled_id();
         let dir = config::alias::apply(&self.dir).bright_grey();
-        let msg = if self.message.is_empty() {
-            "<none>".grey()
-        } else {
-            self.message.styled_string()
-        };
+        let msg = self.message.styled_message();
         TableRow::new(vec![archived_at, id, item, dir, msg])
     }
 
@@ -140,13 +136,9 @@ impl Tablify for ListEntry {
         let dir = config::alias::apply(&self.dir).bright_grey();
         let vault_info =
             format!("{}({})", vault::get_name(self.vault_id), self.vault_id).styled_vault();
-        let msg = if self.message.is_empty() {
-            "<none>".grey()
-        } else {
-            self.message.styled_string()
-        };
-        // 此处恰好也可以用表格来输出
+        let msg = self.message.styled_message();
 
+        // 此处恰好也可以用表格来输出
         let cols = Table::default_vertical_columns();
         let rows = vec![
             kv_row!("Archive Id", self.id.styled_id()),

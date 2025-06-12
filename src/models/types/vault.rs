@@ -75,7 +75,7 @@ impl Tablify for Vault {
             self.id.styled_vault(),
             self.name.clone(),
             self.status.to_display(),
-            self.remark.grey(),
+            self.remark.styled_message(),
         ];
         TableRow::new(cells)
     }
@@ -99,7 +99,7 @@ impl Tablify for Vault {
             kv_row!("Name", self.name.styled_vault()),
             kv_row!("Created At", time),
             kv_row!("Status", self.status.to_display()),
-            kv_row!("Remark", self.remark.grey()),
+            kv_row!("Remark", self.remark.styled_message()),
         ];
         Table::new(cols, rows).display_tbody();
     }

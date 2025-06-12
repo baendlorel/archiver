@@ -65,6 +65,16 @@ pub fn vault(action: &VaultAction) {
                 log::succ(None, vec![vault.id]);
             });
         }
+        VaultAction::Rename { old_name, new_name } => {
+            vault::rename(old_name, new_name).ok_then_or_log(|vault| {
+                succ!(
+                    "Vault '{}' is renamed to '{}'",
+                    old_name.styled_vault(),
+                    new_name.styled_vault()
+                );
+                log::succ(None, vec![vault.id]);
+            });
+        }
         VaultAction::List { all } => vault::display(*all),
     }
 }
