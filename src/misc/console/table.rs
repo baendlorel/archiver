@@ -38,6 +38,7 @@ enum WidthStrategy {
 
     /// 使用`n-sigma`原则来消除明显太宽的宽度
     /// - 避免某一列过宽导致产生大量空白，导致空间利用率低、不美观
+    #[allow(dead_code)]
     NSigma,
 
     /// 取`Max`和`终端剩余宽度`中，较小的一个值
@@ -126,6 +127,7 @@ impl Column {
         }
     }
 
+    #[allow(dead_code)]
     pub fn left_nsigma(name: &str) -> Self {
         Self {
             name: name.to_string(),
