@@ -79,7 +79,10 @@ pub fn prepare_versions() -> ArchiverResult<(Version, Version)> {
         .unwrap_or("");
 
     if latest_version.is_empty() {
-        return info!("Failed to parse latest version from GitHub releases");
+        return info!(
+            "Failed to parse latest version from GitHub releases. Response: {}",
+            json
+        );
     }
 
     let latest = Version::from(latest_version);

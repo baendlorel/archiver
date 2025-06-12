@@ -1,6 +1,6 @@
 [package]
 name = "arv"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["KasukabeTsumugi <futami16237@gmail.com>"]
 edition = "2024"
 

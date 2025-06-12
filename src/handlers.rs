@@ -119,7 +119,7 @@ pub fn put(items: &Vec<String>, message: &Option<String>, vault: &Option<String>
         }
     }
 
-    if succ_ids.len() == 0 {
+    if succ_ids.len() == 0 && items.len() > 1 {
         log::fail("No items were put. Please check your inputs.");
         return;
     }
@@ -174,7 +174,7 @@ pub fn restore(ids: &[u32]) {
         }
     }
 
-    if count == 0 {
+    if count == 0 && ids.len() > 1 {
         log::fail("No items were restored. Please check the ids.");
         return;
     }
@@ -227,7 +227,7 @@ pub fn mov(ids: &[u32], to: &str) {
         }
     }
 
-    if count == 0 {
+    if count == 0 && ids.len() > 1 {
         log::fail("No items were moved. Please check the ids and vault name.");
         return;
     }
