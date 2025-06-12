@@ -178,8 +178,13 @@ pub fn get_vault_path(vault_id: u32) -> PathBuf {
 
 /// 根据archive_id和vault_id获取归档对象的路径
 pub fn get_archived_path(archive_id: u32, vault_id: u32) -> PathBuf {
-    let path = VAULTS_DIR
-        .join(vault_id.to_string())
-        .join(archive_id.to_string());
+    let vault_path = VAULTS_DIR.join(vault_id.to_string());
+    if !vault_path.exists() {
+        must_ok!(
+            fs::create_dir_all(&vault_path),
+            format!("Failed to create vault directory for vid: {}", vault_id)
+        );
+    }
+    let path = vault_path.join(archive_id.to_string());
     path
 }
