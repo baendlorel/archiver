@@ -1,0 +1,5 @@
+{
+  "name": "archiver",
+  "description": "An archive manager that puts your files/dirs into an archive. You can see the list, logs and restore them.",
+  "description_zh": "一个归档管理器，可以将您的文件/目录放入归档中。您可以查看列表、日志并恢复它们。"
+}

@@ -1,4 +1,8 @@
 {
   "rust-analyzer.cargo.features": ["dev"],
-  "todo-tree.tree.showBadges": true
+  "todo-tree.tree.showBadges": true,
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#400272ff",
+    "titleBar.inactiveBackground": "#3e2254ff"
+  }
 }

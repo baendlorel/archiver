@@ -2,6 +2,7 @@
 
 Troubled with too many projects? Cannot focus on your current work?
 
+For more awesome packages, check out [my homepage💛](https://baendlorel.github.io/?repoType=npm)
 **Archiver helps you now!**
 
 Archiver is a command line tool that helps you manage files and directories you may not use recently but cannot be removed. You can use `put` to move items into Archiver, and `restore` to move them back. You can also use `list` to see what you have archived, and `vault` to group your archived items.

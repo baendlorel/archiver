@@ -119,6 +119,7 @@ impl Tablify for ListEntry {
             Column::left("Archived At"),
             Column::left("Id"),
             Column::left_with_max("Item", 30),
+            // todo 待优化：这里会导致message和dir占据一样的空间，但是实际上message不需要那么多空间
             Column::left_flex_with_max("Directory", None),
             Column::left_flex_with_max("Message", None),
         ]
